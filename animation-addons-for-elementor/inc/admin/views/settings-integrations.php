@@ -22,8 +22,7 @@ $plugins = [
 				'basename' => 'extension-for-animation-addons/extension-for-animation-addons.php',
 				'source'   => 'custom',
 				'is_pro'   => false,
-				'demo_url' => '',
-				'doc_url'  => '',
+				'download_url' => 'https://animation-addons.com/',
 			],
 		]
 	],
@@ -65,8 +64,8 @@ $plugins = apply_filters( 'wcf_integrated_plugins', $plugins );
 	                    $action = '';
 	                    $data_base = '';
 	                    if ( wcf_addons_get_local_plugin_data( $plugin['basename'] ) === false ) {
-		                    $action = 'Install';
-		                    $data_base = $key;
+		                    $action = 'Download';
+		                    $data_base = $plugin['download_url'];
 	                    } else {
 		                    if ( is_plugin_active( $plugin['basename'] ) ) {
 			                    $action = 'Activated';
