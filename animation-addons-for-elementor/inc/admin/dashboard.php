@@ -59,6 +59,33 @@ class WCF_Admin_Init {
 		add_action( 'wp_ajax_save_smooth_scroller_settings', [ $this, 'save_smooth_scroller_settings' ] );
 
 		add_action( 'admin_footer', [ $this, 'render_popup' ] );
+
+		if ( wcf_addons_get_local_plugin_data( 'extension-for-animation-addons/extension-for-animation-addons.php' ) === false ) {
+			add_action( 'admin_notices', array( $this, 'admin_notice_extension_plugin_download' ) );
+		}
+	}
+
+	public function admin_notice_extension_plugin_download() {
+		?>
+        <style>
+            .wcf-notice:before{
+                background-color: #f12529;
+            }
+            .wcf-notice p{
+                margin: 10px 0 20px 0;
+                font-size: 16px;
+            }
+        </style>
+        <div class="notice e-notice wcf-notice notice-info is-dismissible e-notice--extended"">
+            <div class="e-notice__content">
+                <h3><?php echo esc_html__( 'Install the Extension for Full Animation Features', 'animation-addons-for-elementor' ); ?></h3>
+                <p><?php echo esc_html__( 'To access the full features of our animation addons for Elementor, we recommend installing our extension', 'animation-addons-for-elementor' ); ?></p>
+                <a href="https://animation-addons.com/" target="_blank" class="e-button e-button e-button--cta">
+	                <?php echo esc_html__( 'Download Extension', 'animation-addons-for-elementor' ); ?>
+                </a>
+            </div>
+        </div>
+		<?php
 	}
 
 	/**

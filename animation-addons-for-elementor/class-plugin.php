@@ -590,6 +590,7 @@ class Plugin {
 	 */
 	private function include_files() {
 		require_once WCF_ADDONS_PATH . 'config.php';
+		require_once WCF_ADDONS_PATH . 'inc/helper.php';
 
 		if ( is_admin() ) {
 
@@ -601,8 +602,6 @@ class Plugin {
 		}
 
 		require_once( WCF_ADDONS_PATH . 'inc/theme-builder/theme-builder.php' );
-
-		require_once WCF_ADDONS_PATH . 'inc/helper.php';
 		require_once WCF_ADDONS_PATH . 'inc/hook.php';
 		require_once WCF_ADDONS_PATH . 'inc/ajax-handler.php';
 		include_once WCF_ADDONS_PATH . 'inc/trait-wcf-post-query.php';
