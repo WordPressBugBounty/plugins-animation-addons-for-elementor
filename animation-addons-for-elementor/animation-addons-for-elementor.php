@@ -3,7 +3,7 @@
  * Plugin Name: Animation Addon for Elementor
  * Description: Animation Addons for Elementor comes with GSAP Animation Builder, Customizable Widgets, Header Footer, Single Post, Archive Page Builder, and more.
  * Plugin URI:  https://wealcoder.com//
- * Version:     1.1.5
+ * Version:     1.1.6
  * Author:      wealcoder
  * Author URI:  https://wealcoder.com//
  * License:           GPL v2 or later
@@ -23,7 +23,7 @@ if ( ! defined( 'WCF_ADDONS_VERSION' ) ) {
 	/**
 	 * Plugin Version.
 	 */
-	define( 'WCF_ADDONS_VERSION', '1.1.5' );
+	define( 'WCF_ADDONS_VERSION', '1.1.6' );
 }
 if ( ! defined( 'WCF_ADDONS_FILE' ) ) {
 	/**
@@ -76,7 +76,7 @@ final class WCF_ADDONS_Plugin {
 	 * @since 1.0.0
 	 * @var string The plugin version.
 	 */
-	const VERSION = '1.1.5';
+	const VERSION = '1.1.6';
 
 	/**
 	 * Minimum Elementor Version
@@ -106,6 +106,7 @@ final class WCF_ADDONS_Plugin {
 		register_uninstall_hook( WCF_ADDONS_BASE, [ __CLASS__, 'plugin_deactivation_hook' ] );
 
 		// Init Plugin
+		add_action( 'init', array( $this, 'domain_text_init' ) );
 		add_action( 'plugins_loaded', array( $this, 'init' ) );
 	}
 
@@ -144,9 +145,12 @@ final class WCF_ADDONS_Plugin {
 	 * @since 1.2.0
 	 * @access public
 	 */
+	public function domain_text_init() {
+		load_plugin_textdomain( 'animation-addons-for-elementor', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+	}
 	public function init() {
 
-		load_plugin_textdomain( 'animation-addons-for-elementor', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+		
 
 		// Check if Elementor installed and activated
 		if ( ! did_action( 'elementor/loaded' ) ) {

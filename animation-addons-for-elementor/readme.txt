@@ -5,7 +5,7 @@ Tags: Animation, Elementor Addon, Elementor, elementor widget, GSAP Animation
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.1.5
+Stable tag: 1.1.6
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -162,6 +162,10 @@ It's totally free now. But we're going to launch the premium version soon that y
 
 
 == Changelog ==
+
+1.1.6 – 2711/2024
+fixed: fix text domain issue
+tested: Test compatibilty
 
 1.1.5 – 22/10/2024
 Tweak: Optimize social share widget
