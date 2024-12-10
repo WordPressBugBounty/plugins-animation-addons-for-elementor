@@ -3,9 +3,9 @@ Contributors: wealcoder
 Donate link: https://wealcoder.com/donate
 Tags: Animation, Elementor Addon, Elementor, elementor widget, GSAP Animation
 Requires at least: 6.0
-Tested up to: 6.7
+Tested up to: 6.7.1
 Requires PHP: 7.4
-Stable tag: 1.1.6
+Stable tag: 1.1.7
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -163,7 +163,12 @@ It's totally free now. But we're going to launch the premium version soon that y
 
 == Changelog ==
 
-1.1.6 – 2711/2024
+1.1.7 – 10/12/2024
+security: fix tab widgets security issue
+security: fixed content slider security issue. 
+Added : role added to tab and content slider widget for template selection
+
+1.1.6 – 27/11/2024
 fixed: fix text domain issue
 tested: Test compatibilty
 
