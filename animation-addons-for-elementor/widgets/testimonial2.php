@@ -105,6 +105,7 @@ class Testimonial2 extends Widget_Base {
 	 */
 	public function get_style_depends() {
 		return array(
+			'swiper',
 			'wcf--testimonial2',
 		);
 	}

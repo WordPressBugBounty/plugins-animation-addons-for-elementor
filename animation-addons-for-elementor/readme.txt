@@ -5,7 +5,7 @@ Tags: Animation, Elementor Addon, Elementor, elementor widget, GSAP Animation
 Requires at least: 6.0
 Tested up to: 6.7.1
 Requires PHP: 7.4
-Stable tag: 1.1.7
+Stable tag: 1.1.8
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -162,6 +162,11 @@ It's totally free now. But we're going to launch the premium version soon that y
 
 
 == Changelog ==
+
+1.1.8 – 17/12/2024
+fixed: fix swiper slider style issue
+compatibly: Check compatibly with core elementor
+
 
 1.1.7 – 10/12/2024
 security: fix tab widgets security issue
