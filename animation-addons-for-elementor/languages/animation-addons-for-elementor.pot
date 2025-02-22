@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2024-09-05 16:41+0600\n"
+"POT-Creation-Date: 2025-02-20 15:10+0600\n"
 "PO-Revision-Date: 2024-09-05 16:31+0600\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -16,35 +16,67 @@ msgstr ""
 "X-Poedit-SearchPath-0: widgets\n"
 "X-Poedit-SearchPath-1: .\n"
 "X-Poedit-SearchPath-2: .\n"
+"X-Poedit-SearchPath-3: inc\n"
+"X-Poedit-SearchPath-4: templates\n"
+"X-Poedit-SearchPath-5: animation-addons-for-elementor.php\n"
+"X-Poedit-SearchPath-6: class-plugin.php\n"
+"X-Poedit-SearchPath-7: config.php\n"
+"X-Poedit-SearchPath-8: index.php\n"
 "X-Poedit-SearchPathExcluded-0: .git\n"
 "X-Poedit-SearchPathExcluded-1: node_modules\n"
 "X-Poedit-SearchPathExcluded-2: languages\n"
 "X-Poedit-SearchPathExcluded-3: vendor\n"
 "X-Poedit-SearchPathExcluded-4: assets\n"
 
-#: animation-addons-for-elementor.php:208
-#, php-format
-msgid "\"%1$s\" requires \"%2$s\" to be installed and activated."
+#: animation-addons-for-elementor.php:138
+msgid "Plugin is already active."
 msgstr ""
 
-#: animation-addons-for-elementor.php:209
-#: animation-addons-for-elementor.php:232
-#: animation-addons-for-elementor.php:256 inc/admin/views/settings-home.php:145
-msgid "Animation Addon for Elementor"
+#: animation-addons-for-elementor.php:141
+msgid "Plugin Activation Permission Required, Contact Admin"
 msgstr ""
 
-#: animation-addons-for-elementor.php:210
-#: animation-addons-for-elementor.php:233
-msgid "Elementor"
+#: animation-addons-for-elementor.php:152
+msgid "Failed to retrieve plugin information."
 msgstr ""
 
-#: animation-addons-for-elementor.php:231
-#: animation-addons-for-elementor.php:255
+#: animation-addons-for-elementor.php:159
+msgid "Failed to retrieve plugin download URL."
+msgstr ""
+
+#: animation-addons-for-elementor.php:178
+msgid "Elementor has been successfully installed and activated."
+msgstr ""
+
+#: animation-addons-for-elementor.php:182
+msgid "Plugin installation failed."
+msgstr ""
+
+#: animation-addons-for-elementor.php:308
+#: animation-addons-for-elementor.php:334
+#: animation-addons-for-elementor.php:357 inc/admin/views/settings-home.php:145
+msgid "Animation Addons for Elementor"
+msgstr ""
+
+#: animation-addons-for-elementor.php:309
+msgid "requires Elementor plugin to be installed and activated."
+msgstr ""
+
+#: animation-addons-for-elementor.php:313
+msgid "Install and Activate Elementor"
+msgstr ""
+
+#: animation-addons-for-elementor.php:333
+#: animation-addons-for-elementor.php:356
 #, php-format
 msgid "\"%1$s\" requires \"%2$s\" version %3$s or greater."
 msgstr ""
 
-#: animation-addons-for-elementor.php:257
+#: animation-addons-for-elementor.php:335
+msgid "Elementor"
+msgstr ""
+
+#: animation-addons-for-elementor.php:358
 msgid "PHP"
 msgstr ""
 
@@ -88,11 +120,11 @@ msgstr ""
 msgid "WCF Single"
 msgstr ""
 
-#: config.php:10 inc/admin/setup-wizard.php:198
+#: config.php:10 inc/admin/setup-wizard.php:206
 msgid "General Widgets"
 msgstr ""
 
-#: config.php:13 inc/admin/setup-wizard.php:201
+#: config.php:13 inc/admin/setup-wizard.php:209
 #: widgets/image-box-slider.php:468 widgets/image-box.php:328
 msgid "Image Box"
 msgstr ""
@@ -101,24 +133,24 @@ msgstr ""
 msgid "Image Box Slider"
 msgstr ""
 
-#: config.php:31 inc/admin/setup-wizard.php:204
+#: config.php:31 inc/admin/setup-wizard.php:212
 msgid "Typewriter"
 msgstr ""
 
-#: config.php:40 inc/admin/setup-wizard.php:207
+#: config.php:40 inc/admin/setup-wizard.php:215
 msgid "Animated Title"
 msgstr ""
 
-#: config.php:49 inc/admin/setup-wizard.php:210
+#: config.php:49 inc/admin/setup-wizard.php:218
 msgid "Animated Text"
 msgstr ""
 
-#: config.php:58 inc/admin/setup-wizard.php:213 widgets/social-icons.php:216
+#: config.php:58 inc/admin/setup-wizard.php:221 widgets/social-icons.php:216
 #: widgets/team.php:885
 msgid "Social Icons"
 msgstr ""
 
-#: config.php:67 inc/admin/setup-wizard.php:216 widgets/brand-slider.php:136
+#: config.php:67 inc/admin/setup-wizard.php:224 widgets/brand-slider.php:136
 #: widgets/brand-slider.php:541 widgets/event-slider.php:296
 #: widgets/image-box-slider.php:785 widgets/image-box-slider.php:898
 #: widgets/image-box.php:430 widgets/image-box.php:437
@@ -126,13 +158,13 @@ msgstr ""
 #: widgets/image.php:103 widgets/image.php:162
 #: widgets/post-feature-image.php:42 widgets/post-feature-image.php:89
 #: widgets/services-tab.php:335 widgets/team.php:164 widgets/team.php:172
-#: widgets/team.php:195 widgets/testimonial.php:293
-#: widgets/testimonial2.php:324 widgets/text-hover-image.php:363
+#: widgets/team.php:195 widgets/testimonial.php:294
+#: widgets/testimonial2.php:325 widgets/text-hover-image.php:363
 #: widgets/timeline.php:492
 msgid "Image"
 msgstr ""
 
-#: config.php:76 inc/admin/setup-wizard.php:219 widgets/image-gallery.php:119
+#: config.php:76 inc/admin/setup-wizard.php:227 widgets/image-gallery.php:119
 #: widgets/image-gallery.php:157 widgets/image-gallery.php:246
 msgid "Image Gallery"
 msgstr ""
@@ -145,15 +177,15 @@ msgstr ""
 msgid "Brand Slider"
 msgstr ""
 
-#: config.php:103 inc/admin/setup-wizard.php:222
+#: config.php:103 inc/admin/setup-wizard.php:230
 msgid "Counter"
 msgstr ""
 
-#: config.php:112 inc/admin/setup-wizard.php:225 widgets/icon-box.php:107
+#: config.php:112 inc/admin/setup-wizard.php:233 widgets/icon-box.php:107
 msgid "Icon Box"
 msgstr ""
 
-#: config.php:121 inc/admin/setup-wizard.php:228 widgets/testimonial.php:122
+#: config.php:121 inc/admin/setup-wizard.php:236 widgets/testimonial.php:123
 msgid "Testimonial"
 msgstr ""
 
@@ -165,7 +197,7 @@ msgstr ""
 msgid "Testimonial 3"
 msgstr ""
 
-#: config.php:148 inc/admin/setup-wizard.php:234 widgets/button.php:101
+#: config.php:148 inc/admin/setup-wizard.php:242 widgets/button.php:101
 #: widgets/button.php:139 widgets/contact-form-7.php:602
 #: widgets/event-slider.php:272 widgets/event-slider.php:517
 #: widgets/icon-box.php:193 widgets/icon-box.php:221 widgets/icon-box.php:563
@@ -183,11 +215,11 @@ msgstr ""
 msgid "Image Compare"
 msgstr ""
 
-#: config.php:166 inc/admin/setup-wizard.php:237 inc/trait-wcf-slider.php:287
+#: config.php:166 inc/admin/setup-wizard.php:245 inc/trait-wcf-slider.php:287
 msgid "Progressbar"
 msgstr ""
 
-#: config.php:175 inc/admin/setup-wizard.php:240
+#: config.php:175 inc/admin/setup-wizard.php:248
 msgid "Team"
 msgstr ""
 
@@ -195,12 +227,12 @@ msgstr ""
 msgid "One Page Nav"
 msgstr ""
 
-#: config.php:193 inc/admin/setup-wizard.php:243 widgets/timeline.php:227
+#: config.php:193 inc/admin/setup-wizard.php:251 widgets/timeline.php:227
 #: widgets/timeline.php:376
 msgid "Timeline"
 msgstr ""
 
-#: config.php:202 inc/admin/setup-wizard.php:246 widgets/services-tab.php:128
+#: config.php:202 inc/admin/setup-wizard.php:254 widgets/services-tab.php:128
 #: widgets/services-tab.php:303 widgets/tabs.php:122 widgets/tabs.php:400
 msgid "Tabs"
 msgstr ""
@@ -217,7 +249,7 @@ msgstr ""
 msgid "Event Slider"
 msgstr ""
 
-#: config.php:238 widgets/content-slider.php:112
+#: config.php:238 widgets/content-slider.php:116
 msgid "Content Slider"
 msgstr ""
 
@@ -278,7 +310,7 @@ msgstr ""
 msgid "Post Social Share"
 msgstr ""
 
-#: config.php:365 inc/admin/setup-wizard.php:231
+#: config.php:365 inc/admin/setup-wizard.php:239
 msgid "Posts"
 msgstr ""
 
@@ -338,12 +370,12 @@ msgstr ""
 msgid "General Extension"
 msgstr ""
 
-#: config.php:490 inc/admin/setup-wizard.php:253
+#: config.php:490 inc/admin/setup-wizard.php:261
 #: inc/class-wcf-custom-css.php:33
 msgid "Custom CSS"
 msgstr ""
 
-#: config.php:499 inc/admin/setup-wizard.php:259
+#: config.php:499 inc/admin/setup-wizard.php:267
 msgid "Popup"
 msgstr ""
 
@@ -367,85 +399,113 @@ msgstr ""
 msgid "Image Animation"
 msgstr ""
 
-#: inc/admin/dashboard.php:78 inc/admin/dashboard.php:79
+#: inc/admin/dashboard.php:81
+msgid "Install the Extension for Full Animation Features"
+msgstr ""
+
+#: inc/admin/dashboard.php:82
+msgid "To access the full features of our animation addons for Elementor, we recommend installing our extension"
+msgstr ""
+
+#: inc/admin/dashboard.php:84
+msgid "Download Extension"
+msgstr ""
+
+#: inc/admin/dashboard.php:106 inc/admin/dashboard.php:107
 #: inc/admin/setup-wizard.php:61 inc/admin/setup-wizard.php:62
 msgid "WCF Addons"
 msgstr ""
 
-#: inc/admin/dashboard.php:89 inc/admin/dashboard.php:90
+#: inc/admin/dashboard.php:117 inc/admin/dashboard.php:118
 #: widgets/one-page-nav.php:176 widgets/post-paginate.php:48
 #: widgets/services-tab.php:258 widgets/tabs.php:281
 msgid "Settings"
 msgstr ""
 
-#: inc/admin/dashboard.php:140 widgets/one-page-nav.php:107
+#: inc/admin/dashboard.php:172 widgets/one-page-nav.php:107
 #: widgets/one-page-nav.php:150
 msgid "Home"
 msgstr ""
 
-#: inc/admin/dashboard.php:144 inc/admin/setup-wizard.php:162
+#: inc/admin/dashboard.php:176 inc/admin/setup-wizard.php:170
 msgid "Widgets"
 msgstr ""
 
-#: inc/admin/dashboard.php:148 inc/admin/setup-wizard.php:172
+#: inc/admin/dashboard.php:180 inc/admin/setup-wizard.php:180
 msgid "Extensions"
 msgstr ""
 
-#: inc/admin/dashboard.php:234 inc/admin/dashboard.php:268
-#: inc/admin/setup-wizard.php:109
+#: inc/admin/dashboard.php:184
+msgid "Integrations"
+msgstr ""
+
+#: inc/admin/dashboard.php:271 inc/admin/dashboard.php:305
+#: inc/admin/setup-wizard.php:110
 msgid "you are not allowed to do this action"
 msgstr ""
 
-#: inc/admin/dashboard.php:252 inc/admin/dashboard.php:291
-#: inc/admin/setup-wizard.php:117
+#: inc/admin/dashboard.php:289 inc/admin/dashboard.php:328
+#: inc/admin/setup-wizard.php:118
 msgid "Option name not found!"
 msgstr ""
 
-#: inc/admin/setup-wizard.php:154
+#: inc/admin/plugin-installer.php:51 inc/admin/plugin-installer.php:92
+msgid "Argument should not be empty."
+msgstr ""
+
+#: inc/admin/setup-wizard.php:155
 msgid "Configure"
 msgstr ""
 
-#: inc/admin/setup-wizard.php:179
+#: inc/admin/setup-wizard.php:163
+msgid "Integration"
+msgstr ""
+
+#: inc/admin/setup-wizard.php:187
 msgid "Congrats"
 msgstr ""
 
-#: inc/admin/setup-wizard.php:256
+#: inc/admin/setup-wizard.php:264
 msgid "Wrapper Link"
 msgstr ""
 
-#: inc/admin/setup-wizard.php:264
+#: inc/admin/setup-wizard.php:272 inc/admin/views/settings-integrations.php:21
 msgid "Extension For Animation Addon"
 msgstr ""
 
-#: inc/admin/setup-wizard.php:265
+#: inc/admin/setup-wizard.php:273
 msgid "Unlock the power of GSAp animation. We highly recommend installing the plugin."
 msgstr ""
 
-#: inc/admin/setup-wizard.php:342 widgets/nav-menu/nav-menu.php:1482
+#: inc/admin/setup-wizard.php:351 widgets/nav-menu/nav-menu.php:1482
 msgid "Back"
 msgstr ""
 
-#: inc/admin/setup-wizard.php:345
+#: inc/admin/setup-wizard.php:354
 msgid "Next Step"
 msgstr ""
 
-#: inc/admin/setup-wizard.php:361
-msgid "Welcome to the Animation Addon for Elementor"
+#: inc/admin/setup-wizard.php:370
+msgid "Welcome to the Animation Addons for Elementor"
 msgstr ""
 
-#: inc/admin/setup-wizard.php:362
-msgid "Elevate your website's visual appeal with seamless animations that bring your content to life. With easy integration into Elementor, designing dynamic and engaging web experiences seems simpler, smarter, and quicker. Get ready to mesmerize your audience and stand out from the crowd with the Animation Addon for Elementor"
+#: inc/admin/setup-wizard.php:371
+msgid "Elevate your website's visual appeal with seamless animations that bring your content to life. With easy integration into Elementor, designing dynamic and engaging web experiences seems simpler, smarter, and quicker. Get ready to mesmerize your audience and stand out from the crowd with the Animation Addons for Elementor"
 msgstr ""
 
-#: inc/admin/setup-wizard.php:806
+#: inc/admin/setup-wizard.php:419
+msgid "Recommended"
+msgstr ""
+
+#: inc/admin/setup-wizard.php:867
 msgid "Congratulation"
 msgstr ""
 
-#: inc/admin/setup-wizard.php:807
-msgid "You have completed your setup for \"Animation Addon for Elementor\" add more creativity to your design with \"Animation Addon for Elementor\"."
+#: inc/admin/setup-wizard.php:868
+msgid "You have completed your setup for \"Animation Addons for Elementor\" add more creativity to your design with \"Animation Addons for Elementor\"."
 msgstr ""
 
-#: inc/admin/setup-wizard.php:809 inc/admin/views/settings-extensions.php:35
+#: inc/admin/setup-wizard.php:870 inc/admin/views/settings-extensions.php:35
 #: inc/admin/views/settings-widgets.php:35
 #: inc/theme-builder/theme-builder.php:1463
 msgid "Save Settings"
@@ -493,6 +553,7 @@ msgid "Demo"
 msgstr ""
 
 #: inc/admin/views/settings-extensions.php:104
+#: inc/admin/views/settings-integrations.php:87
 #: inc/admin/views/settings-widgets.php:74
 msgid "Pro"
 msgstr ""
@@ -563,6 +624,23 @@ msgstr ""
 
 #: inc/admin/views/settings-home.php:144
 msgid "Statistics"
+msgstr ""
+
+#: inc/admin/views/settings-integrations.php:12
+msgid "Premium Plugins"
+msgstr ""
+
+#: inc/admin/views/settings-integrations.php:18
+msgid "Free Plugins"
+msgstr ""
+
+#: inc/admin/views/settings-integrations.php:37
+msgid "Integrations Settings"
+msgstr ""
+
+#: inc/admin/views/settings-integrations.php:42
+#, php-format
+msgid "Total %s Integrations"
 msgstr ""
 
 #: inc/admin/views/settings-widgets.php:17
@@ -665,11 +743,11 @@ msgstr ""
 #: widgets/image-gallery.php:322 widgets/nav-menu/nav-menu.php:211
 #: widgets/nav-menu/nav-menu.php:259 widgets/post-comment.php:260
 #: widgets/post-comment.php:1601 widgets/post-comment.php:1627
-#: widgets/post-meta-info.php:549 widgets/post-social-share.php:81
+#: widgets/post-meta-info.php:549 widgets/post-social-share.php:68
 #: widgets/posts.php:1471 widgets/posts.php:1525 widgets/services-tab.php:262
 #: widgets/site-logo.php:98 widgets/site-logo.php:150 widgets/tabs.php:359
-#: widgets/testimonial.php:723 widgets/testimonial2.php:635
-#: widgets/testimonial3.php:618 widgets/timeline.php:963
+#: widgets/testimonial.php:724 widgets/testimonial2.php:636
+#: widgets/testimonial3.php:619 widgets/timeline.php:963
 msgid "None"
 msgstr ""
 
@@ -853,10 +931,10 @@ msgid "Template has been updated"
 msgstr ""
 
 #: inc/theme-builder/theme-builder.php:1450 widgets/event-slider.php:159
-#: widgets/team.php:472 widgets/team.php:573 widgets/testimonial.php:180
-#: widgets/testimonial.php:482 widgets/testimonial2.php:175
-#: widgets/testimonial2.php:374 widgets/testimonial3.php:179
-#: widgets/testimonial3.php:357
+#: widgets/team.php:472 widgets/team.php:573 widgets/testimonial.php:181
+#: widgets/testimonial.php:483 widgets/testimonial2.php:176
+#: widgets/testimonial2.php:375 widgets/testimonial3.php:180
+#: widgets/testimonial3.php:358
 msgid "Name"
 msgstr ""
 
@@ -902,10 +980,10 @@ msgstr ""
 #: widgets/image-box.php:521 widgets/image-compare.php:290
 #: widgets/image.php:268 widgets/post-comment.php:259
 #: widgets/post-feature-image.php:195 widgets/post-paginate.php:59
-#: widgets/post-social-share.php:80 widgets/post-social-share.php:371
-#: widgets/post-social-share.php:724 widgets/site-logo.php:134
-#: widgets/site-logo.php:294 widgets/team.php:301 widgets/testimonial.php:133
-#: widgets/testimonial.php:353 widgets/timeline.php:554
+#: widgets/post-social-share.php:67 widgets/post-social-share.php:338
+#: widgets/post-social-share.php:691 widgets/site-logo.php:134
+#: widgets/site-logo.php:294 widgets/team.php:301 widgets/testimonial.php:134
+#: widgets/testimonial.php:354 widgets/timeline.php:554
 #: widgets/timeline.php:962
 msgid "Default"
 msgstr ""
@@ -990,8 +1068,8 @@ msgstr ""
 #: widgets/post-comment.php:191 widgets/post-title.php:55
 #: widgets/services-tab.php:199 widgets/site-logo.php:94
 #: widgets/site-logo.php:109 widgets/social-icons.php:179 widgets/team.php:848
-#: widgets/testimonial.php:204 widgets/testimonial2.php:199
-#: widgets/testimonial3.php:203 widgets/text-hover-image.php:204
+#: widgets/testimonial.php:205 widgets/testimonial2.php:200
+#: widgets/testimonial3.php:204 widgets/text-hover-image.php:204
 #: widgets/timeline.php:343
 msgid "Link"
 msgstr ""
@@ -1005,7 +1083,7 @@ msgstr ""
 #: widgets/post-meta-info.php:1020 widgets/post-meta-info.php:1228
 #: widgets/post-meta-info.php:1467 widgets/post-meta-info.php:1651
 #: widgets/post-paginate.php:116 widgets/post-paginate.php:161
-#: widgets/post-social-share.php:183 widgets/posts.php:351
+#: widgets/post-social-share.php:150 widgets/posts.php:351
 #: widgets/posts.php:1746 widgets/search-form.php:234
 #: widgets/search-form.php:255 widgets/social-icons.php:103
 #: widgets/social-icons.php:291 widgets/tabs.php:131 widgets/team.php:772
@@ -1032,20 +1110,20 @@ msgstr ""
 #: widgets/countdown.php:212 widgets/counter.php:229
 #: widgets/image-box-slider.php:160 widgets/image-box-slider.php:369
 #: widgets/image-box.php:129 widgets/post-meta-info.php:1332
-#: widgets/post-social-share.php:218 widgets/post-social-share.php:571
+#: widgets/post-social-share.php:185 widgets/post-social-share.php:538
 #: widgets/social-icons.php:273 widgets/tabs.php:231
-#: widgets/testimonial.php:841 widgets/testimonial2.php:753
-#: widgets/testimonial3.php:736
+#: widgets/testimonial.php:842 widgets/testimonial2.php:754
+#: widgets/testimonial3.php:737
 msgid "Direction"
 msgstr ""
 
 #: inc/trait-wcf-button.php:130 widgets/countdown.php:216
-#: widgets/post-social-share.php:222 widgets/post-social-share.php:575
+#: widgets/post-social-share.php:189 widgets/post-social-share.php:542
 msgid "Row - horizontal"
 msgstr ""
 
 #: inc/trait-wcf-button.php:134 widgets/countdown.php:220
-#: widgets/post-social-share.php:226 widgets/post-social-share.php:579
+#: widgets/post-social-share.php:193 widgets/post-social-share.php:546
 msgid "Column - vertical"
 msgstr ""
 
@@ -1073,15 +1151,15 @@ msgstr ""
 #: widgets/post-comment.php:1202 widgets/post-comment.php:1437
 #: widgets/post-excerpt.php:136 widgets/post-meta-info.php:650
 #: widgets/post-meta-info.php:918 widgets/post-paginate.php:347
-#: widgets/post-paginate.php:473 widgets/post-social-share.php:405
+#: widgets/post-paginate.php:473 widgets/post-social-share.php:372
 #: widgets/post-title.php:166 widgets/posts.php:532 widgets/posts.php:681
 #: widgets/posts.php:811 widgets/posts.php:1026 widgets/posts.php:1796
 #: widgets/search-form.php:304 widgets/search-form.php:475
 #: widgets/search-form.php:653 widgets/search-form.php:761
 #: widgets/search-query.php:163 widgets/services-tab.php:448
 #: widgets/site-logo.php:345 widgets/tabs.php:526 widgets/team.php:364
-#: widgets/team.php:958 widgets/testimonial.php:935
-#: widgets/testimonial2.php:827 widgets/text-hover-image.php:309
+#: widgets/team.php:958 widgets/testimonial.php:936
+#: widgets/testimonial2.php:828 widgets/text-hover-image.php:309
 msgid "Normal"
 msgstr ""
 
@@ -1103,7 +1181,7 @@ msgstr ""
 #: widgets/post-comment.php:1383 widgets/post-comment.php:1452
 #: widgets/post-comment.php:1652 widgets/post-content.php:190
 #: widgets/post-excerpt.php:98 widgets/post-meta-info.php:208
-#: widgets/post-social-share.php:412 widgets/post-social-share.php:753
+#: widgets/post-social-share.php:379 widgets/post-social-share.php:720
 #: widgets/post-title.php:128 widgets/posts.php:1033 widgets/posts.php:1066
 #: widgets/posts.php:1346 widgets/search-form.php:311
 #: widgets/search-form.php:366 widgets/search-form.php:482
@@ -1111,11 +1189,11 @@ msgstr ""
 #: widgets/search-no-result.php:149 widgets/search-no-result.php:221
 #: widgets/search-query.php:125 widgets/search-query.php:197
 #: widgets/site-logo.php:518 widgets/tabs.php:533 widgets/tabs.php:564
-#: widgets/testimonial.php:426 widgets/testimonial.php:490
-#: widgets/testimonial.php:542 widgets/testimonial2.php:293
-#: widgets/testimonial2.php:382 widgets/testimonial2.php:421
-#: widgets/testimonial3.php:287 widgets/testimonial3.php:326
-#: widgets/testimonial3.php:365 widgets/testimonial3.php:404
+#: widgets/testimonial.php:427 widgets/testimonial.php:491
+#: widgets/testimonial.php:543 widgets/testimonial2.php:294
+#: widgets/testimonial2.php:383 widgets/testimonial2.php:422
+#: widgets/testimonial3.php:288 widgets/testimonial3.php:327
+#: widgets/testimonial3.php:366 widgets/testimonial3.php:405
 #: widgets/text-hover-image.php:260 widgets/text-hover-image.php:342
 #: widgets/typewriter.php:220
 msgid "Text Color"
@@ -1134,8 +1212,8 @@ msgstr ""
 #: widgets/posts.php:1089 widgets/posts.php:1375 widgets/search-form.php:333
 #: widgets/search-form.php:388 widgets/search-form.php:823
 #: widgets/services-tab.php:494 widgets/social-icons.php:442
-#: widgets/tabs.php:585 widgets/team.php:1019 widgets/testimonial.php:270
-#: widgets/testimonial.php:1001 widgets/testimonial2.php:268
+#: widgets/tabs.php:585 widgets/team.php:1019 widgets/testimonial.php:271
+#: widgets/testimonial.php:1002 widgets/testimonial2.php:269
 msgid "Border Color"
 msgstr ""
 
@@ -1148,19 +1226,19 @@ msgstr ""
 #: widgets/one-page-nav.php:443 widgets/post-comment.php:1646
 #: widgets/post-meta-info.php:694 widgets/post-meta-info.php:939
 #: widgets/post-paginate.php:376 widgets/post-paginate.php:493
-#: widgets/post-social-share.php:746 widgets/posts.php:552
+#: widgets/post-social-share.php:713 widgets/posts.php:552
 #: widgets/posts.php:709 widgets/posts.php:839 widgets/posts.php:1059
 #: widgets/posts.php:1188 widgets/posts.php:1816 widgets/search-form.php:506
 #: widgets/search-form.php:684 widgets/search-form.php:792
 #: widgets/site-logo.php:379 widgets/team.php:398 widgets/team.php:989
-#: widgets/testimonial.php:969 widgets/testimonial2.php:851
+#: widgets/testimonial.php:970 widgets/testimonial2.php:852
 msgid "Hover"
 msgstr ""
 
 #: inc/trait-wcf-button.php:317 inc/trait-wcf-slider.php:442
 #: widgets/brand-slider.php:560 widgets/contact-form-7.php:334
 #: widgets/contact-form-7.php:473 widgets/contact-form-7.php:561
-#: widgets/contact-form-7.php:836 widgets/content-slider.php:342
+#: widgets/contact-form-7.php:836 widgets/content-slider.php:346
 #: widgets/countdown.php:499 widgets/event-slider.php:331
 #: widgets/icon-box.php:263 widgets/icon-box.php:427
 #: widgets/image-box-slider.php:542 widgets/image-box.php:356
@@ -1171,15 +1249,15 @@ msgstr ""
 #: widgets/post-comment.php:837 widgets/post-comment.php:1071
 #: widgets/post-comment.php:1312 widgets/post-comment.php:1527
 #: widgets/post-feature-image.php:246 widgets/post-meta-info.php:605
-#: widgets/post-meta-info.php:1085 widgets/post-social-share.php:486
-#: widgets/post-social-share.php:809 widgets/posts.php:1116
+#: widgets/post-meta-info.php:1085 widgets/post-social-share.php:453
+#: widgets/post-social-share.php:776 widgets/posts.php:1116
 #: widgets/search-form.php:429 widgets/search-form.php:731
 #: widgets/search-form.php:873 widgets/search-form.php:995
 #: widgets/search-form.php:1102 widgets/site-logo.php:451
 #: widgets/social-icons.php:387 widgets/tabs.php:418 widgets/tabs.php:612
 #: widgets/tabs.php:663 widgets/team.php:351 widgets/team.php:1104
-#: widgets/testimonial.php:403 widgets/testimonial.php:919
-#: widgets/testimonial2.php:359 widgets/timeline.php:479
+#: widgets/testimonial.php:404 widgets/testimonial.php:920
+#: widgets/testimonial2.php:360 widgets/timeline.php:479
 #: widgets/timeline.php:604 widgets/timeline.php:905
 msgid "Border Radius"
 msgstr ""
@@ -1187,7 +1265,7 @@ msgstr ""
 #: inc/trait-wcf-button.php:334 widgets/contact-form-7.php:150
 #: widgets/contact-form-7.php:352 widgets/contact-form-7.php:485
 #: widgets/contact-form-7.php:573 widgets/contact-form-7.php:801
-#: widgets/content-slider.php:354 widgets/countdown.php:470
+#: widgets/content-slider.php:358 widgets/countdown.php:470
 #: widgets/event-slider.php:363 widgets/icon-box.php:283
 #: widgets/icon-box.php:402 widgets/image-box-slider.php:522
 #: widgets/image-box-slider.php:1021 widgets/image-box.php:336
@@ -1198,14 +1276,14 @@ msgstr ""
 #: widgets/post-comment.php:342 widgets/post-comment.php:571
 #: widgets/post-comment.php:857 widgets/post-comment.php:1091
 #: widgets/post-comment.php:1330 widgets/post-comment.php:1546
-#: widgets/post-meta-info.php:572 widgets/post-social-share.php:510
+#: widgets/post-meta-info.php:572 widgets/post-social-share.php:477
 #: widgets/posts.php:455 widgets/posts.php:510 widgets/posts.php:665
 #: widgets/posts.php:795 widgets/posts.php:1128 widgets/posts.php:1453
 #: widgets/search-form.php:1007 widgets/search-form.php:1066
 #: widgets/services-tab.php:521 widgets/services-tab.php:587
 #: widgets/social-icons.php:340 widgets/tabs.php:624 widgets/tabs.php:675
 #: widgets/team.php:561 widgets/team.php:940 widgets/team.php:1057
-#: widgets/testimonial.php:258 widgets/testimonial.php:454
+#: widgets/testimonial.php:259 widgets/testimonial.php:455
 #: widgets/timeline.php:878
 msgid "Padding"
 msgstr ""
@@ -1315,11 +1393,11 @@ msgstr ""
 #: widgets/image-box.php:574 widgets/image-box.php:663
 #: widgets/post-meta-info.php:109 widgets/post-paginate.php:105
 #: widgets/post-paginate.php:150 widgets/post-paginate.php:433
-#: widgets/post-social-share.php:133 widgets/posts.php:491
+#: widgets/post-social-share.php:120 widgets/posts.php:491
 #: widgets/posts.php:1197 widgets/search-no-result.php:141
 #: widgets/services-tab.php:164 widgets/services-tab.php:437
-#: widgets/tabs.php:145 widgets/testimonial2.php:187
-#: widgets/testimonial2.php:413 widgets/timeline.php:306
+#: widgets/tabs.php:145 widgets/testimonial2.php:188
+#: widgets/testimonial2.php:414 widgets/timeline.php:306
 #: widgets/timeline.php:687
 msgid "Title"
 msgstr ""
@@ -1361,18 +1439,18 @@ msgstr ""
 #: inc/trait-wcf-slider.php:130 widgets/archive-title.php:115
 #: widgets/brand-slider.php:300 widgets/brand-slider.php:325
 #: widgets/brand-slider.php:342 widgets/brand-slider.php:356
-#: widgets/content-slider.php:243 widgets/floating-elements.php:323
+#: widgets/content-slider.php:247 widgets/floating-elements.php:323
 #: widgets/image-box-slider.php:384 widgets/image-box-slider.php:694
 #: widgets/image-box-slider.php:738 widgets/image-box-slider.php:750
 #: widgets/image-gallery.php:213 widgets/post-meta-info.php:159
 #: widgets/post-paginate.php:85 widgets/post-paginate.php:130
-#: widgets/post-social-share.php:98 widgets/site-logo.php:135
-#: widgets/testimonial.php:627 widgets/testimonial.php:652
-#: widgets/testimonial.php:669 widgets/testimonial.php:683
-#: widgets/testimonial2.php:539 widgets/testimonial2.php:564
-#: widgets/testimonial2.php:581 widgets/testimonial2.php:595
-#: widgets/testimonial3.php:522 widgets/testimonial3.php:547
-#: widgets/testimonial3.php:564 widgets/testimonial3.php:578
+#: widgets/post-social-share.php:85 widgets/site-logo.php:135
+#: widgets/testimonial.php:628 widgets/testimonial.php:653
+#: widgets/testimonial.php:670 widgets/testimonial.php:684
+#: widgets/testimonial2.php:540 widgets/testimonial2.php:565
+#: widgets/testimonial2.php:582 widgets/testimonial2.php:596
+#: widgets/testimonial3.php:523 widgets/testimonial3.php:548
+#: widgets/testimonial3.php:565 widgets/testimonial3.php:579
 msgid "Yes"
 msgstr ""
 
@@ -1381,58 +1459,58 @@ msgstr ""
 #: inc/trait-wcf-slider.php:131 widgets/archive-title.php:116
 #: widgets/brand-slider.php:301 widgets/brand-slider.php:326
 #: widgets/brand-slider.php:343 widgets/brand-slider.php:357
-#: widgets/content-slider.php:244 widgets/floating-elements.php:324
+#: widgets/content-slider.php:248 widgets/floating-elements.php:324
 #: widgets/image-box-slider.php:385 widgets/image-box-slider.php:695
 #: widgets/image-box-slider.php:739 widgets/image-box-slider.php:751
 #: widgets/image-gallery.php:214 widgets/post-meta-info.php:160
 #: widgets/post-paginate.php:86 widgets/post-paginate.php:131
-#: widgets/post-social-share.php:99 widgets/site-logo.php:136
-#: widgets/testimonial.php:628 widgets/testimonial.php:653
-#: widgets/testimonial.php:670 widgets/testimonial.php:684
-#: widgets/testimonial2.php:540 widgets/testimonial2.php:565
-#: widgets/testimonial2.php:582 widgets/testimonial2.php:596
-#: widgets/testimonial3.php:523 widgets/testimonial3.php:548
-#: widgets/testimonial3.php:565 widgets/testimonial3.php:579
+#: widgets/post-social-share.php:86 widgets/site-logo.php:136
+#: widgets/testimonial.php:629 widgets/testimonial.php:654
+#: widgets/testimonial.php:671 widgets/testimonial.php:685
+#: widgets/testimonial2.php:541 widgets/testimonial2.php:566
+#: widgets/testimonial2.php:583 widgets/testimonial2.php:597
+#: widgets/testimonial3.php:524 widgets/testimonial3.php:549
+#: widgets/testimonial3.php:566 widgets/testimonial3.php:580
 msgid "No"
 msgstr ""
 
-#: inc/trait-wcf-slider.php:53 widgets/testimonial.php:606
-#: widgets/testimonial2.php:518 widgets/testimonial3.php:501
+#: inc/trait-wcf-slider.php:53 widgets/testimonial.php:607
+#: widgets/testimonial2.php:519 widgets/testimonial3.php:502
 msgid "Slides to Show"
 msgstr ""
 
-#: inc/trait-wcf-slider.php:58 widgets/testimonial.php:611
-#: widgets/testimonial2.php:523 widgets/testimonial3.php:506
+#: inc/trait-wcf-slider.php:58 widgets/testimonial.php:612
+#: widgets/testimonial2.php:524 widgets/testimonial3.php:507
 msgid "Auto"
 msgstr ""
 
 #: inc/trait-wcf-slider.php:70 widgets/brand-slider.php:296
-#: widgets/testimonial.php:623 widgets/testimonial2.php:535
-#: widgets/testimonial3.php:518
+#: widgets/testimonial.php:624 widgets/testimonial2.php:536
+#: widgets/testimonial3.php:519
 msgid "Autoplay"
 msgstr ""
 
 #: inc/trait-wcf-slider.php:83 widgets/brand-slider.php:309
-#: widgets/testimonial.php:636 widgets/testimonial2.php:548
-#: widgets/testimonial3.php:531
+#: widgets/testimonial.php:637 widgets/testimonial2.php:549
+#: widgets/testimonial3.php:532
 msgid "Autoplay delay"
 msgstr ""
 
 #: inc/trait-wcf-slider.php:95 widgets/brand-slider.php:321
-#: widgets/testimonial.php:648 widgets/testimonial2.php:560
-#: widgets/testimonial3.php:543
+#: widgets/testimonial.php:649 widgets/testimonial2.php:561
+#: widgets/testimonial3.php:544
 msgid "Autoplay Interaction"
 msgstr ""
 
 #: inc/trait-wcf-slider.php:111 widgets/brand-slider.php:337
-#: widgets/testimonial.php:664 widgets/testimonial2.php:576
-#: widgets/testimonial3.php:559
+#: widgets/testimonial.php:665 widgets/testimonial2.php:577
+#: widgets/testimonial3.php:560
 msgid "Allow Touch Move"
 msgstr ""
 
 #: inc/trait-wcf-slider.php:126 widgets/brand-slider.php:352
-#: widgets/testimonial.php:679 widgets/testimonial2.php:591
-#: widgets/testimonial3.php:574
+#: widgets/testimonial.php:680 widgets/testimonial2.php:592
+#: widgets/testimonial3.php:575
 msgid "Loop"
 msgstr ""
 
@@ -1469,43 +1547,43 @@ msgid "Hide"
 msgstr ""
 
 #: inc/trait-wcf-slider.php:151 widgets/brand-slider.php:365
-#: widgets/testimonial.php:692 widgets/testimonial2.php:604
-#: widgets/testimonial3.php:587
+#: widgets/testimonial.php:693 widgets/testimonial2.php:605
+#: widgets/testimonial3.php:588
 msgid "Animation Speed"
 msgstr ""
 
 #: inc/trait-wcf-slider.php:160 widgets/brand-slider.php:374
-#: widgets/nav-menu/nav-menu.php:193 widgets/post-social-share.php:265
-#: widgets/post-social-share.php:375 widgets/post-social-share.php:618
-#: widgets/post-social-share.php:728 widgets/posts.php:1852
-#: widgets/testimonial.php:701 widgets/testimonial2.php:613
-#: widgets/testimonial3.php:596
+#: widgets/nav-menu/nav-menu.php:193 widgets/post-social-share.php:232
+#: widgets/post-social-share.php:342 widgets/post-social-share.php:585
+#: widgets/post-social-share.php:695 widgets/posts.php:1852
+#: widgets/testimonial.php:702 widgets/testimonial2.php:614
+#: widgets/testimonial3.php:597
 msgid "Space Between"
 msgstr ""
 
 #: inc/trait-wcf-slider.php:174 widgets/brand-slider.php:388
-#: widgets/one-page-nav.php:96 widgets/testimonial.php:715
-#: widgets/testimonial.php:868 widgets/testimonial2.php:627
-#: widgets/testimonial2.php:780 widgets/testimonial3.php:610
-#: widgets/testimonial3.php:763
+#: widgets/one-page-nav.php:96 widgets/testimonial.php:716
+#: widgets/testimonial.php:869 widgets/testimonial2.php:628
+#: widgets/testimonial2.php:781 widgets/testimonial3.php:611
+#: widgets/testimonial3.php:764
 msgid "Navigation"
 msgstr ""
 
 #: inc/trait-wcf-slider.php:186 widgets/brand-slider.php:404
-#: widgets/posts.php:1573 widgets/testimonial.php:731
-#: widgets/testimonial2.php:643 widgets/testimonial3.php:626
+#: widgets/posts.php:1573 widgets/testimonial.php:732
+#: widgets/testimonial2.php:644 widgets/testimonial3.php:627
 msgid "Previous Arrow Icon"
 msgstr ""
 
 #: inc/trait-wcf-slider.php:227 widgets/brand-slider.php:459
-#: widgets/posts.php:1619 widgets/testimonial.php:786
-#: widgets/testimonial2.php:698 widgets/testimonial3.php:681
+#: widgets/posts.php:1619 widgets/testimonial.php:787
+#: widgets/testimonial2.php:699 widgets/testimonial3.php:682
 msgid "Next Arrow Icon"
 msgstr ""
 
 #: inc/trait-wcf-slider.php:269 widgets/posts.php:1514 widgets/posts.php:1521
-#: widgets/posts.php:1766 widgets/posts.php:2013 widgets/testimonial.php:1021
-#: widgets/testimonial2.php:877 widgets/testimonial3.php:825
+#: widgets/posts.php:1766 widgets/posts.php:2013 widgets/testimonial.php:1022
+#: widgets/testimonial2.php:878 widgets/testimonial3.php:826
 msgid "Pagination"
 msgstr ""
 
@@ -1529,7 +1607,7 @@ msgstr ""
 #: widgets/animated-text.php:109 widgets/animated-title.php:166
 #: widgets/archive-title.php:140 widgets/brand-slider.php:519
 #: widgets/button.php:114 widgets/contact-form-7.php:190
-#: widgets/content-slider.php:417 widgets/counter.php:304
+#: widgets/content-slider.php:421 widgets/counter.php:304
 #: widgets/floating-elements.php:158 widgets/icon-box.php:300
 #: widgets/icon-box.php:610 widgets/image-box-slider.php:268
 #: widgets/image-box.php:252 widgets/image-compare.php:158
@@ -1543,8 +1621,8 @@ msgstr ""
 #: widgets/search-form.php:1152 widgets/search-no-result.php:112
 #: widgets/search-query.php:88 widgets/site-logo.php:175
 #: widgets/site-logo.php:492 widgets/social-icons.php:250 widgets/tabs.php:291
-#: widgets/team.php:132 widgets/team.php:756 widgets/testimonial.php:846
-#: widgets/testimonial2.php:758 widgets/testimonial3.php:741
+#: widgets/team.php:132 widgets/team.php:756 widgets/testimonial.php:847
+#: widgets/testimonial2.php:759 widgets/testimonial3.php:742
 #: widgets/text-hover-image.php:223 widgets/timeline.php:189
 #: widgets/typewriter.php:183
 msgid "Left"
@@ -1554,7 +1632,7 @@ msgstr ""
 #: widgets/animated-text.php:117 widgets/animated-title.php:174
 #: widgets/archive-title.php:148 widgets/brand-slider.php:520
 #: widgets/button.php:122 widgets/contact-form-7.php:198
-#: widgets/content-slider.php:418 widgets/counter.php:312
+#: widgets/content-slider.php:422 widgets/counter.php:312
 #: widgets/floating-elements.php:162 widgets/icon-box.php:308
 #: widgets/icon-box.php:608 widgets/image-box-slider.php:276
 #: widgets/image-box.php:260 widgets/image-compare.php:166
@@ -1569,8 +1647,8 @@ msgstr ""
 #: widgets/search-form.php:1160 widgets/search-no-result.php:120
 #: widgets/search-query.php:96 widgets/site-logo.php:183
 #: widgets/site-logo.php:500 widgets/social-icons.php:258 widgets/tabs.php:299
-#: widgets/team.php:140 widgets/team.php:757 widgets/testimonial.php:847
-#: widgets/testimonial2.php:759 widgets/testimonial3.php:742
+#: widgets/team.php:140 widgets/team.php:757 widgets/testimonial.php:848
+#: widgets/testimonial2.php:760 widgets/testimonial3.php:743
 #: widgets/text-hover-image.php:231 widgets/timeline.php:197
 #: widgets/typewriter.php:191
 msgid "Right"
@@ -1585,9 +1663,9 @@ msgstr ""
 #: widgets/post-meta-info.php:1660 widgets/progressbar.php:260
 #: widgets/search-form.php:623 widgets/search-form.php:841
 #: widgets/social-icons.php:321 widgets/team.php:1037
-#: widgets/testimonial.php:891 widgets/testimonial.php:1033
-#: widgets/testimonial2.php:803 widgets/testimonial2.php:889
-#: widgets/testimonial3.php:786 widgets/testimonial3.php:837
+#: widgets/testimonial.php:892 widgets/testimonial.php:1034
+#: widgets/testimonial2.php:804 widgets/testimonial2.php:890
+#: widgets/testimonial3.php:787 widgets/testimonial3.php:838
 #: widgets/timeline.php:859
 msgid "Size"
 msgstr ""
@@ -1636,19 +1714,19 @@ msgstr ""
 #: widgets/services-tab.php:483 widgets/services-tab.php:568
 #: widgets/social-icons.php:194 widgets/social-icons.php:299
 #: widgets/social-icons.php:419 widgets/team.php:582 widgets/team.php:863
-#: widgets/team.php:965 widgets/team.php:996 widgets/testimonial.php:942
-#: widgets/testimonial.php:976 widgets/testimonial.php:1053
-#: widgets/testimonial2.php:834 widgets/testimonial2.php:858
-#: widgets/testimonial2.php:909 widgets/testimonial3.php:254
-#: widgets/testimonial3.php:810 widgets/testimonial3.php:857
+#: widgets/team.php:965 widgets/team.php:996 widgets/testimonial.php:943
+#: widgets/testimonial.php:977 widgets/testimonial.php:1054
+#: widgets/testimonial2.php:835 widgets/testimonial2.php:859
+#: widgets/testimonial2.php:910 widgets/testimonial3.php:255
+#: widgets/testimonial3.php:811 widgets/testimonial3.php:858
 #: widgets/timeline.php:646 widgets/timeline.php:696 widgets/timeline.php:746
 #: widgets/timeline.php:796 widgets/timeline.php:828 widgets/timeline.php:997
 #: widgets/timeline.php:1019
 msgid "Color"
 msgstr ""
 
-#: inc/trait-wcf-slider.php:518 widgets/testimonial.php:1068
-#: widgets/testimonial2.php:924 widgets/testimonial3.php:872
+#: inc/trait-wcf-slider.php:518 widgets/testimonial.php:1069
+#: widgets/testimonial2.php:925 widgets/testimonial3.php:873
 msgid "Active Color"
 msgstr ""
 
@@ -1684,7 +1762,7 @@ msgstr ""
 
 #: widgets/animated-heading.php:121 widgets/animated-title.php:142
 #: widgets/archive-title.php:46 widgets/post-title.php:70
-#: widgets/search-query.php:49 widgets/testimonial3.php:144
+#: widgets/search-query.php:49 widgets/testimonial3.php:145
 #: widgets/text-hover-image.php:185 widgets/typewriter.php:160
 msgid "HTML Tag"
 msgstr ""
@@ -1711,7 +1789,7 @@ msgstr ""
 #: widgets/animated-heading.php:161 widgets/animated-text.php:113
 #: widgets/animated-title.php:170 widgets/animated-title.php:426
 #: widgets/archive-title.php:144 widgets/button.php:118
-#: widgets/contact-form-7.php:194 widgets/content-slider.php:202
+#: widgets/contact-form-7.php:194 widgets/content-slider.php:206
 #: widgets/countdown.php:242 widgets/counter.php:308 widgets/icon-box.php:304
 #: widgets/image-box-slider.php:202 widgets/image-box-slider.php:272
 #: widgets/image-box-slider.php:301 widgets/image-box.php:171
@@ -1721,8 +1799,8 @@ msgstr ""
 #: widgets/post-excerpt.php:65 widgets/post-feature-image.php:68
 #: widgets/post-meta-info.php:78 widgets/post-meta-info.php:465
 #: widgets/post-meta-info.php:1128 widgets/post-meta-info.php:1311
-#: widgets/post-meta-info.php:1550 widgets/post-social-share.php:372
-#: widgets/post-social-share.php:725 widgets/post-title.php:95
+#: widgets/post-meta-info.php:1550 widgets/post-social-share.php:339
+#: widgets/post-social-share.php:692 widgets/post-title.php:95
 #: widgets/posts.php:1492 widgets/posts.php:1673 widgets/search-form.php:1156
 #: widgets/search-no-result.php:116 widgets/search-query.php:92
 #: widgets/site-logo.php:179 widgets/site-logo.php:496
@@ -1766,30 +1844,30 @@ msgstr ""
 
 #: widgets/animated-text.php:89 widgets/animated-title.php:93
 #: widgets/archive-title.php:38 widgets/archive-title.php:101
-#: widgets/brand-slider.php:188 widgets/content-slider.php:124
-#: widgets/content-slider.php:148 widgets/counter.php:118
+#: widgets/brand-slider.php:188 widgets/content-slider.php:128
+#: widgets/content-slider.php:152 widgets/counter.php:118
 #: widgets/event-slider.php:346 widgets/icon-box.php:442
 #: widgets/image-box-slider.php:1004 widgets/image-box.php:566
 #: widgets/image-box.php:654 widgets/image-compare.php:116
 #: widgets/post-excerpt.php:38 widgets/post-meta-info.php:100
-#: widgets/post-social-share.php:55 widgets/posts.php:436
+#: widgets/post-social-share.php:42 widgets/posts.php:436
 #: widgets/search-no-result.php:43 widgets/search-no-result.php:213
 #: widgets/search-query.php:42 widgets/services-tab.php:178
 #: widgets/services-tab.php:560 widgets/social-icons.php:94
 #: widgets/tabs.php:162 widgets/tabs.php:186 widgets/tabs.php:638
-#: widgets/team.php:464 widgets/team.php:544 widgets/testimonial.php:153
-#: widgets/testimonial.php:418 widgets/testimonial2.php:125
-#: widgets/testimonial2.php:148 widgets/testimonial2.php:285
-#: widgets/testimonial3.php:121 widgets/testimonial3.php:166
-#: widgets/testimonial3.php:318 widgets/text-hover-image.php:116
+#: widgets/team.php:464 widgets/team.php:544 widgets/testimonial.php:154
+#: widgets/testimonial.php:419 widgets/testimonial2.php:126
+#: widgets/testimonial2.php:149 widgets/testimonial2.php:286
+#: widgets/testimonial3.php:122 widgets/testimonial3.php:167
+#: widgets/testimonial3.php:319 widgets/text-hover-image.php:116
 #: widgets/timeline.php:330 widgets/timeline.php:437 widgets/typewriter.php:106
 msgid "Content"
 msgstr ""
 
-#: widgets/animated-text.php:98 widgets/content-slider.php:149
+#: widgets/animated-text.php:98 widgets/content-slider.php:153
 #: widgets/icon-box.php:180 widgets/services-tab.php:179 widgets/tabs.php:205
-#: widgets/tabs.php:209 widgets/tabs.php:213 widgets/testimonial.php:159
-#: widgets/testimonial2.php:154 widgets/testimonial3.php:172
+#: widgets/tabs.php:209 widgets/tabs.php:213 widgets/testimonial.php:160
+#: widgets/testimonial2.php:155 widgets/testimonial3.php:173
 #: widgets/timeline.php:336
 msgid "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo."
 msgstr ""
@@ -1812,7 +1890,7 @@ msgid "WCF Animated Title"
 msgstr ""
 
 #: widgets/animated-title.php:108 widgets/icon-box.php:150
-#: widgets/testimonial3.php:136
+#: widgets/testimonial3.php:137
 msgid "Enter your title"
 msgstr ""
 
@@ -1850,11 +1928,11 @@ msgstr ""
 #: widgets/post-comment.php:490 widgets/post-comment.php:801
 #: widgets/post-comment.php:1034 widgets/post-comment.php:1247
 #: widgets/post-comment.php:1472 widgets/post-feature-image.php:97
-#: widgets/post-paginate.php:259 widgets/post-social-share.php:522
-#: widgets/post-social-share.php:833 widgets/post-social-share.php:892
+#: widgets/post-paginate.php:259 widgets/post-social-share.php:489
+#: widgets/post-social-share.php:800 widgets/post-social-share.php:859
 #: widgets/search-form.php:172 widgets/search-form.php:562
 #: widgets/search-form.php:958 widgets/site-logo.php:196 widgets/team.php:203
-#: widgets/testimonial.php:301 widgets/text-hover-image.php:371
+#: widgets/testimonial.php:302 widgets/text-hover-image.php:371
 #: widgets/timeline.php:501 widgets/timeline.php:1031
 msgid "Width"
 msgstr ""
@@ -1869,18 +1947,18 @@ msgstr ""
 #: widgets/post-feature-image.php:167 widgets/post-meta-info.php:363
 #: widgets/post-paginate.php:282 widgets/posts.php:411
 #: widgets/search-form.php:193 widgets/search-form.php:938
-#: widgets/site-logo.php:266 widgets/team.php:273 widgets/testimonial.php:324
+#: widgets/site-logo.php:266 widgets/team.php:273 widgets/testimonial.php:325
 #: widgets/text-hover-image.php:393 widgets/timeline.php:526
 #: widgets/timeline.php:1050
 msgid "Height"
 msgstr ""
 
-#: widgets/animated-title.php:402 widgets/content-slider.php:394
+#: widgets/animated-title.php:402 widgets/content-slider.php:398
 #: widgets/counter.php:254 widgets/image-box-slider.php:223
 #: widgets/image-box.php:192 widgets/nav-menu/nav-menu.php:342
 #: widgets/post-meta-info.php:1365 widgets/post-paginate.php:183
-#: widgets/post-paginate.php:305 widgets/post-social-share.php:319
-#: widgets/post-social-share.php:672 widgets/timeline.php:1069
+#: widgets/post-paginate.php:305 widgets/post-social-share.php:286
+#: widgets/post-social-share.php:639 widgets/timeline.php:1069
 msgid "Gap"
 msgstr ""
 
@@ -1888,7 +1966,7 @@ msgstr ""
 msgid "Vertical Alignment"
 msgstr ""
 
-#: widgets/animated-title.php:422 widgets/content-slider.php:416
+#: widgets/animated-title.php:422 widgets/content-slider.php:420
 #: widgets/floating-elements.php:226 widgets/icon-box.php:607
 #: widgets/image-box-slider.php:198 widgets/image-box-slider.php:297
 #: widgets/image-box.php:167 widgets/image-box.php:281
@@ -1896,7 +1974,7 @@ msgstr ""
 msgid "Top"
 msgstr ""
 
-#: widgets/animated-title.php:430 widgets/content-slider.php:415
+#: widgets/animated-title.php:430 widgets/content-slider.php:419
 #: widgets/floating-elements.php:230 widgets/icon-box.php:609
 #: widgets/image-box-slider.php:206 widgets/image-box-slider.php:305
 #: widgets/image-box.php:175 widgets/image-box.php:289
@@ -2024,36 +2102,36 @@ msgid "Text Separator"
 msgstr ""
 
 #: widgets/brand-slider.php:228 widgets/brand-slider.php:289
-#: widgets/content-slider.php:228 widgets/event-slider.php:284
-#: widgets/image-box-slider.php:360 widgets/testimonial.php:596
-#: widgets/testimonial2.php:508 widgets/testimonial3.php:491
+#: widgets/content-slider.php:232 widgets/event-slider.php:284
+#: widgets/image-box-slider.php:360 widgets/testimonial.php:597
+#: widgets/testimonial2.php:509 widgets/testimonial3.php:492
 msgid "Slider Options"
 msgstr ""
 
-#: widgets/brand-slider.php:251 widgets/content-slider.php:369
+#: widgets/brand-slider.php:251 widgets/content-slider.php:373
 #: widgets/event-slider.php:530 widgets/image-box-slider.php:608
 msgid "Slider Navigation"
 msgstr ""
 
-#: widgets/brand-slider.php:265 widgets/content-slider.php:383
+#: widgets/brand-slider.php:265 widgets/content-slider.php:387
 #: widgets/event-slider.php:544 widgets/image-box-slider.php:622
 msgid "Slider Pagination"
 msgstr ""
 
-#: widgets/brand-slider.php:393 widgets/testimonial.php:720
-#: widgets/testimonial2.php:632 widgets/testimonial3.php:615
+#: widgets/brand-slider.php:393 widgets/testimonial.php:721
+#: widgets/testimonial2.php:633 widgets/testimonial3.php:616
 msgid "Arrows and Dots"
 msgstr ""
 
-#: widgets/brand-slider.php:394 widgets/testimonial.php:721
-#: widgets/testimonial.php:879 widgets/testimonial2.php:633
-#: widgets/testimonial2.php:791 widgets/testimonial3.php:616
-#: widgets/testimonial3.php:774
+#: widgets/brand-slider.php:394 widgets/testimonial.php:722
+#: widgets/testimonial.php:880 widgets/testimonial2.php:634
+#: widgets/testimonial2.php:792 widgets/testimonial3.php:617
+#: widgets/testimonial3.php:775
 msgid "Arrows"
 msgstr ""
 
-#: widgets/brand-slider.php:395 widgets/testimonial.php:722
-#: widgets/testimonial2.php:634 widgets/testimonial3.php:617
+#: widgets/brand-slider.php:395 widgets/testimonial.php:723
+#: widgets/testimonial2.php:635 widgets/testimonial3.php:618
 msgid "Dots"
 msgstr ""
 
@@ -2098,8 +2176,8 @@ msgstr ""
 #: widgets/post-comment.php:1558 widgets/post-paginate.php:202
 #: widgets/search-form.php:1020 widgets/search-form.php:1080
 #: widgets/services-tab.php:343 widgets/services-tab.php:539
-#: widgets/services-tab.php:609 widgets/testimonial.php:467
-#: widgets/testimonial.php:518 widgets/testimonial.php:570
+#: widgets/services-tab.php:609 widgets/testimonial.php:468
+#: widgets/testimonial.php:519 widgets/testimonial.php:571
 msgid "Margin"
 msgstr ""
 
@@ -2165,99 +2243,99 @@ msgstr ""
 msgid "WCF Content Slider"
 msgstr ""
 
-#: widgets/content-slider.php:121 widgets/tabs.php:159
+#: widgets/content-slider.php:125 widgets/tabs.php:159
 msgid "Content Type"
 msgstr ""
 
-#: widgets/content-slider.php:125 widgets/tabs.php:163
+#: widgets/content-slider.php:129 widgets/tabs.php:163
 msgid "Saved Templates"
 msgstr ""
 
-#: widgets/content-slider.php:134 widgets/tabs.php:172
+#: widgets/content-slider.php:138 widgets/tabs.php:172
 msgid "Save Template"
 msgstr ""
 
-#: widgets/content-slider.php:160
+#: widgets/content-slider.php:164
 msgid "Content Slides"
 msgstr ""
 
-#: widgets/content-slider.php:171 widgets/event-slider.php:247
+#: widgets/content-slider.php:175 widgets/event-slider.php:247
 #: widgets/image-box-slider.php:499 widgets/image-compare.php:227
 #: widgets/image.php:205 widgets/post-feature-image.php:132
 #: widgets/site-logo.php:231 widgets/team.php:238
 msgid "Max Width"
 msgstr ""
 
-#: widgets/content-slider.php:193 widgets/countdown.php:234
+#: widgets/content-slider.php:197 widgets/countdown.php:234
 msgid "Align Items"
 msgstr ""
 
-#: widgets/content-slider.php:198 widgets/countdown.php:238
-#: widgets/nav-menu/nav-menu.php:181 widgets/post-social-share.php:373
-#: widgets/post-social-share.php:726 widgets/tabs.php:265
+#: widgets/content-slider.php:202 widgets/countdown.php:238
+#: widgets/nav-menu/nav-menu.php:181 widgets/post-social-share.php:340
+#: widgets/post-social-share.php:693 widgets/tabs.php:265
 msgid "Start"
 msgstr ""
 
-#: widgets/content-slider.php:206 widgets/countdown.php:246
-#: widgets/nav-menu/nav-menu.php:189 widgets/post-social-share.php:374
-#: widgets/post-social-share.php:727 widgets/tabs.php:267
+#: widgets/content-slider.php:210 widgets/countdown.php:246
+#: widgets/nav-menu/nav-menu.php:189 widgets/post-social-share.php:341
+#: widgets/post-social-share.php:694 widgets/tabs.php:267
 msgid "End"
 msgstr ""
 
-#: widgets/content-slider.php:210 widgets/image-box-slider.php:704
-#: widgets/post-social-share.php:304 widgets/post-social-share.php:657
+#: widgets/content-slider.php:214 widgets/image-box-slider.php:704
+#: widgets/post-social-share.php:271 widgets/post-social-share.php:624
 #: widgets/tabs.php:268
 msgid "Stretch"
 msgstr ""
 
-#: widgets/content-slider.php:241 widgets/image-box-slider.php:382
+#: widgets/content-slider.php:245 widgets/image-box-slider.php:382
 msgid "Center Slide"
 msgstr ""
 
-#: widgets/content-slider.php:253 widgets/image-box-slider.php:394
+#: widgets/content-slider.php:257 widgets/image-box-slider.php:394
 msgid "Effect"
 msgstr ""
 
-#: widgets/content-slider.php:257 widgets/content-slider.php:317
-#: widgets/image-box-slider.php:398 widgets/testimonial.php:241
-#: widgets/testimonial2.php:251
+#: widgets/content-slider.php:261 widgets/content-slider.php:321
+#: widgets/image-box-slider.php:398 widgets/testimonial.php:242
+#: widgets/testimonial2.php:252
 msgid "Slide"
 msgstr ""
 
-#: widgets/content-slider.php:258 widgets/image-box-slider.php:399
+#: widgets/content-slider.php:262 widgets/image-box-slider.php:399
 msgid "Fade"
 msgstr ""
 
-#: widgets/content-slider.php:259 widgets/image-box-slider.php:400
+#: widgets/content-slider.php:263 widgets/image-box-slider.php:400
 msgid "Coverflow"
 msgstr ""
 
-#: widgets/content-slider.php:260 widgets/image-box-slider.php:401
+#: widgets/content-slider.php:264 widgets/image-box-slider.php:401
 #: widgets/nav-menu/nav-menu.php:216
 msgid "Flip"
 msgstr ""
 
-#: widgets/content-slider.php:261 widgets/image-box-slider.php:402
+#: widgets/content-slider.php:265 widgets/image-box-slider.php:402
 msgid "Cube"
 msgstr ""
 
-#: widgets/content-slider.php:269 widgets/image-box-slider.php:410
+#: widgets/content-slider.php:273 widgets/image-box-slider.php:410
 msgid "slide Scale"
 msgstr ""
 
-#: widgets/content-slider.php:280 widgets/image-box-slider.php:424
+#: widgets/content-slider.php:284 widgets/image-box-slider.php:424
 msgid "Slide Scale X"
 msgstr ""
 
-#: widgets/content-slider.php:297 widgets/image-box-slider.php:441
+#: widgets/content-slider.php:301 widgets/image-box-slider.php:441
 msgid "Slide Scale Y"
 msgstr ""
 
-#: widgets/content-slider.php:410
+#: widgets/content-slider.php:414
 msgid "Pagination Position"
 msgstr ""
 
-#: widgets/content-slider.php:428
+#: widgets/content-slider.php:432
 msgid "Pagination Offset"
 msgstr ""
 
@@ -2269,7 +2347,7 @@ msgstr ""
 #: widgets/image-box-slider.php:125 widgets/image-box.php:106
 #: widgets/image-gallery.php:97 widgets/image-gallery.php:104
 #: widgets/nav-menu/nav-menu.php:161 widgets/post-meta-info.php:50
-#: widgets/post-social-share.php:207 widgets/posts.php:131
+#: widgets/post-social-share.php:174 widgets/posts.php:131
 #: widgets/posts.php:1394 widgets/progressbar.php:111 widgets/team.php:107
 #: widgets/timeline.php:101
 msgid "Layout"
@@ -2449,8 +2527,8 @@ msgstr ""
 
 #: widgets/event-slider.php:145 widgets/floating-elements.php:104
 #: widgets/image-gallery.php:128 widgets/image.php:110
-#: widgets/services-tab.php:188 widgets/testimonial.php:166
-#: widgets/testimonial2.php:161 widgets/timeline.php:279
+#: widgets/services-tab.php:188 widgets/testimonial.php:167
+#: widgets/testimonial2.php:162 widgets/timeline.php:279
 msgid "Choose Image"
 msgstr ""
 
@@ -2470,8 +2548,8 @@ msgstr ""
 #: widgets/image-box-slider.php:878 widgets/image-box.php:238
 #: widgets/image-gallery.php:150 widgets/services-tab.php:204
 #: widgets/social-icons.php:187 widgets/team.php:856
-#: widgets/testimonial.php:209 widgets/testimonial2.php:204
-#: widgets/testimonial3.php:208 widgets/timeline.php:348
+#: widgets/testimonial.php:210 widgets/testimonial2.php:205
+#: widgets/testimonial3.php:209 widgets/timeline.php:348
 msgid "https://your-link.com"
 msgstr ""
 
@@ -2587,33 +2665,33 @@ msgid "Icon Box Style"
 msgstr ""
 
 #: widgets/icon-box.php:119 widgets/post-meta-info.php:61
-#: widgets/post-social-share.php:66 widgets/posts.php:143
+#: widgets/post-social-share.php:53 widgets/posts.php:143
 #: widgets/posts.php:1538 widgets/progressbar.php:123
 #: widgets/services-tab.php:139 widgets/team.php:119
-#: widgets/testimonial.php:134 widgets/testimonial2.php:136
+#: widgets/testimonial.php:135 widgets/testimonial2.php:137
 #: widgets/timeline.php:113
 msgid "One"
 msgstr ""
 
 #: widgets/icon-box.php:120 widgets/post-meta-info.php:62
-#: widgets/post-social-share.php:67 widgets/posts.php:144
+#: widgets/post-social-share.php:54 widgets/posts.php:144
 #: widgets/posts.php:1539 widgets/progressbar.php:124
 #: widgets/services-tab.php:140 widgets/team.php:120
-#: widgets/testimonial.php:135 widgets/testimonial2.php:137
+#: widgets/testimonial.php:136 widgets/testimonial2.php:138
 #: widgets/timeline.php:114
 msgid "Two"
 msgstr ""
 
 #: widgets/icon-box.php:121 widgets/posts.php:145 widgets/progressbar.php:125
-#: widgets/testimonial.php:136 widgets/testimonial2.php:138
+#: widgets/testimonial.php:137 widgets/testimonial2.php:139
 msgid "Three"
 msgstr ""
 
-#: widgets/icon-box.php:122 widgets/posts.php:146 widgets/testimonial.php:137
+#: widgets/icon-box.php:122 widgets/posts.php:146 widgets/testimonial.php:138
 msgid "Four"
 msgstr ""
 
-#: widgets/icon-box.php:123 widgets/posts.php:147 widgets/testimonial.php:138
+#: widgets/icon-box.php:123 widgets/posts.php:147 widgets/testimonial.php:139
 msgid "Five"
 msgstr ""
 
@@ -2642,7 +2720,7 @@ msgid "Box"
 msgstr ""
 
 #: widgets/icon-box.php:338 widgets/icon-box.php:667
-#: widgets/post-social-share.php:448
+#: widgets/post-social-share.php:415
 msgid "Icon Color"
 msgstr ""
 
@@ -2828,98 +2906,98 @@ msgstr ""
 #: widgets/image-box-slider.php:952 widgets/image-box.php:515
 #: widgets/image-compare.php:284 widgets/image.php:262
 #: widgets/post-feature-image.php:189 widgets/site-logo.php:288
-#: widgets/team.php:295 widgets/testimonial.php:347 widgets/timeline.php:548
+#: widgets/team.php:295 widgets/testimonial.php:348 widgets/timeline.php:548
 msgid "Object Fit"
 msgstr ""
 
 #: widgets/image-box-slider.php:959 widgets/image-box.php:522
 #: widgets/image-compare.php:291 widgets/image.php:269
 #: widgets/post-feature-image.php:196 widgets/site-logo.php:295
-#: widgets/team.php:302 widgets/testimonial.php:354 widgets/timeline.php:555
+#: widgets/team.php:302 widgets/testimonial.php:355 widgets/timeline.php:555
 msgid "Fill"
 msgstr ""
 
 #: widgets/image-box-slider.php:960 widgets/image-box.php:523
 #: widgets/image-compare.php:292 widgets/image.php:270
 #: widgets/post-feature-image.php:197 widgets/site-logo.php:296
-#: widgets/team.php:303 widgets/testimonial.php:355 widgets/timeline.php:556
+#: widgets/team.php:303 widgets/testimonial.php:356 widgets/timeline.php:556
 msgid "Cover"
 msgstr ""
 
 #: widgets/image-box-slider.php:961 widgets/image-box.php:524
 #: widgets/image-compare.php:293 widgets/image.php:271
 #: widgets/post-feature-image.php:198 widgets/site-logo.php:297
-#: widgets/team.php:304 widgets/testimonial.php:356 widgets/timeline.php:557
+#: widgets/team.php:304 widgets/testimonial.php:357 widgets/timeline.php:557
 msgid "Contain"
 msgstr ""
 
 #: widgets/image-box-slider.php:973 widgets/image-box.php:536
 #: widgets/image-compare.php:305 widgets/image.php:283
 #: widgets/post-feature-image.php:210 widgets/site-logo.php:309
-#: widgets/team.php:316 widgets/testimonial.php:368 widgets/timeline.php:569
+#: widgets/team.php:316 widgets/testimonial.php:369 widgets/timeline.php:569
 msgid "Object Position"
 msgstr ""
 
 #: widgets/image-box-slider.php:976 widgets/image-box.php:539
 #: widgets/image-compare.php:308 widgets/image.php:286
 #: widgets/post-feature-image.php:213 widgets/site-logo.php:312
-#: widgets/team.php:319 widgets/testimonial.php:371 widgets/timeline.php:572
+#: widgets/team.php:319 widgets/testimonial.php:372 widgets/timeline.php:572
 msgid "Center Center"
 msgstr ""
 
 #: widgets/image-box-slider.php:977 widgets/image-box.php:540
 #: widgets/image-compare.php:309 widgets/image.php:287
 #: widgets/post-feature-image.php:214 widgets/site-logo.php:313
-#: widgets/team.php:320 widgets/testimonial.php:372 widgets/timeline.php:573
+#: widgets/team.php:320 widgets/testimonial.php:373 widgets/timeline.php:573
 msgid "Center Left"
 msgstr ""
 
 #: widgets/image-box-slider.php:978 widgets/image-box.php:541
 #: widgets/image-compare.php:310 widgets/image.php:288
 #: widgets/post-feature-image.php:215 widgets/site-logo.php:314
-#: widgets/team.php:321 widgets/testimonial.php:373 widgets/timeline.php:574
+#: widgets/team.php:321 widgets/testimonial.php:374 widgets/timeline.php:574
 msgid "Center Right"
 msgstr ""
 
 #: widgets/image-box-slider.php:979 widgets/image-box.php:542
 #: widgets/image-compare.php:311 widgets/image.php:289
 #: widgets/post-feature-image.php:216 widgets/site-logo.php:315
-#: widgets/team.php:322 widgets/testimonial.php:374 widgets/timeline.php:575
+#: widgets/team.php:322 widgets/testimonial.php:375 widgets/timeline.php:575
 msgid "Top Center"
 msgstr ""
 
 #: widgets/image-box-slider.php:980 widgets/image-box.php:543
 #: widgets/image-compare.php:312 widgets/image.php:290
 #: widgets/post-feature-image.php:217 widgets/site-logo.php:316
-#: widgets/team.php:323 widgets/testimonial.php:375 widgets/timeline.php:576
+#: widgets/team.php:323 widgets/testimonial.php:376 widgets/timeline.php:576
 msgid "Top Left"
 msgstr ""
 
 #: widgets/image-box-slider.php:981 widgets/image-box.php:544
 #: widgets/image-compare.php:313 widgets/image.php:291
 #: widgets/post-feature-image.php:218 widgets/site-logo.php:317
-#: widgets/team.php:324 widgets/testimonial.php:376 widgets/timeline.php:577
+#: widgets/team.php:324 widgets/testimonial.php:377 widgets/timeline.php:577
 msgid "Top Right"
 msgstr ""
 
 #: widgets/image-box-slider.php:982 widgets/image-box.php:545
 #: widgets/image-compare.php:314 widgets/image.php:292
 #: widgets/post-feature-image.php:219 widgets/site-logo.php:318
-#: widgets/team.php:325 widgets/testimonial.php:377 widgets/timeline.php:578
+#: widgets/team.php:325 widgets/testimonial.php:378 widgets/timeline.php:578
 msgid "Bottom Center"
 msgstr ""
 
 #: widgets/image-box-slider.php:983 widgets/image-box.php:546
 #: widgets/image-compare.php:315 widgets/image.php:293
 #: widgets/post-feature-image.php:220 widgets/site-logo.php:319
-#: widgets/team.php:326 widgets/testimonial.php:378 widgets/timeline.php:579
+#: widgets/team.php:326 widgets/testimonial.php:379 widgets/timeline.php:579
 msgid "Bottom Left"
 msgstr ""
 
 #: widgets/image-box-slider.php:984 widgets/image-box.php:547
 #: widgets/image-compare.php:316 widgets/image.php:294
 #: widgets/post-feature-image.php:221 widgets/site-logo.php:320
-#: widgets/team.php:327 widgets/testimonial.php:379 widgets/timeline.php:580
+#: widgets/team.php:327 widgets/testimonial.php:380 widgets/timeline.php:580
 msgid "Bottom Right"
 msgstr ""
 
@@ -3454,210 +3532,130 @@ msgstr ""
 msgid "WCF Post Social Share"
 msgstr ""
 
-#: widgets/post-social-share.php:62
+#: widgets/post-social-share.php:49
 msgid "Social Icon Style"
 msgstr ""
 
-#: widgets/post-social-share.php:76 widgets/posts.php:197
+#: widgets/post-social-share.php:63 widgets/posts.php:197
 msgid "Show Title"
 msgstr ""
 
-#: widgets/post-social-share.php:94 widgets/post-social-share.php:119
+#: widgets/post-social-share.php:81 widgets/post-social-share.php:106
 msgid "Share Icon"
 msgstr ""
 
-#: widgets/post-social-share.php:108
+#: widgets/post-social-share.php:95
 msgid "Share Text"
 msgstr ""
 
-#: widgets/post-social-share.php:110
+#: widgets/post-social-share.php:97
 msgid "Share"
 msgstr ""
 
-#: widgets/post-social-share.php:111
+#: widgets/post-social-share.php:98
 msgid "Type your title here"
 msgstr ""
 
-#: widgets/post-social-share.php:135
+#: widgets/post-social-share.php:122
 msgid "Vendor Title"
 msgstr ""
 
-#: widgets/post-social-share.php:143
+#: widgets/post-social-share.php:130
 msgid "Vendor"
 msgstr ""
 
-#: widgets/post-social-share.php:148
+#: widgets/post-social-share.php:135
 msgid "Facebook"
 msgstr ""
 
-#: widgets/post-social-share.php:149
-msgid "twitter"
+#: widgets/post-social-share.php:136
+msgid "Twitter"
 msgstr ""
 
-#: widgets/post-social-share.php:150
-msgid "linkedin"
+#: widgets/post-social-share.php:137
+msgid "Linkedin"
 msgstr ""
 
-#: widgets/post-social-share.php:151
-msgid "pinterest "
+#: widgets/post-social-share.php:138
+msgid "Pinterest "
 msgstr ""
 
-#: widgets/post-social-share.php:152
-msgid "digg"
+#: widgets/post-social-share.php:139
+msgid "Tumblr "
 msgstr ""
 
-#: widgets/post-social-share.php:153
-msgid "tumblr"
+#: widgets/post-social-share.php:140
+msgid "Blogger "
 msgstr ""
 
-#: widgets/post-social-share.php:154
-msgid "blogger"
-msgstr ""
-
-#: widgets/post-social-share.php:155
-msgid "reddit"
-msgstr ""
-
-#: widgets/post-social-share.php:156
-msgid "delicious"
-msgstr ""
-
-#: widgets/post-social-share.php:157
-msgid "flipboard"
-msgstr ""
-
-#: widgets/post-social-share.php:158
-msgid "vkontakte"
-msgstr ""
-
-#: widgets/post-social-share.php:159
-msgid "odnoklassniki"
-msgstr ""
-
-#: widgets/post-social-share.php:160
-msgid "moimir"
-msgstr ""
-
-#: widgets/post-social-share.php:161
-msgid "livejournal"
+#: widgets/post-social-share.php:141
+msgid "Reddit "
 msgstr ""
 
 #: widgets/post-social-share.php:162
-msgid "evernote"
-msgstr ""
-
-#: widgets/post-social-share.php:163
-msgid "mix"
-msgstr ""
-
-#: widgets/post-social-share.php:164
-msgid "meneame "
-msgstr ""
-
-#: widgets/post-social-share.php:165
-msgid "pocket "
-msgstr ""
-
-#: widgets/post-social-share.php:166
-msgid "surfingbird "
-msgstr ""
-
-#: widgets/post-social-share.php:167
-msgid "liveinternet "
-msgstr ""
-
-#: widgets/post-social-share.php:168
-msgid "buffer "
-msgstr ""
-
-#: widgets/post-social-share.php:169
-msgid "instapaper "
-msgstr ""
-
-#: widgets/post-social-share.php:170
-msgid "xing "
-msgstr ""
-
-#: widgets/post-social-share.php:171
-msgid "wordpres "
-msgstr ""
-
-#: widgets/post-social-share.php:172
-msgid "baidu "
-msgstr ""
-
-#: widgets/post-social-share.php:173
-msgid "renren "
-msgstr ""
-
-#: widgets/post-social-share.php:174
-msgid "weibo "
-msgstr ""
-
-#: widgets/post-social-share.php:195
 msgid "Social Share"
 msgstr ""
 
-#: widgets/post-social-share.php:230 widgets/post-social-share.php:583
+#: widgets/post-social-share.php:197 widgets/post-social-share.php:550
 msgid "Row - reversed"
 msgstr ""
 
-#: widgets/post-social-share.php:234 widgets/post-social-share.php:587
+#: widgets/post-social-share.php:201 widgets/post-social-share.php:554
 msgid "Column - reversed"
 msgstr ""
 
-#: widgets/post-social-share.php:249 widgets/post-social-share.php:602
+#: widgets/post-social-share.php:216 widgets/post-social-share.php:569
 msgid "Justify Content"
 msgstr ""
 
-#: widgets/post-social-share.php:269 widgets/post-social-share.php:376
-#: widgets/post-social-share.php:622 widgets/post-social-share.php:729
+#: widgets/post-social-share.php:236 widgets/post-social-share.php:343
+#: widgets/post-social-share.php:589 widgets/post-social-share.php:696
 msgid "Space Around"
 msgstr ""
 
-#: widgets/post-social-share.php:273 widgets/post-social-share.php:377
-#: widgets/post-social-share.php:626 widgets/post-social-share.php:730
+#: widgets/post-social-share.php:240 widgets/post-social-share.php:344
+#: widgets/post-social-share.php:593 widgets/post-social-share.php:697
 msgid "Space Evenly"
 msgstr ""
 
-#: widgets/post-social-share.php:288 widgets/post-social-share.php:641
+#: widgets/post-social-share.php:255 widgets/post-social-share.php:608
 msgid "Align Item"
 msgstr ""
 
-#: widgets/post-social-share.php:343 widgets/post-social-share.php:696
+#: widgets/post-social-share.php:310 widgets/post-social-share.php:663
 msgid "Wrap"
 msgstr ""
 
-#: widgets/post-social-share.php:367 widgets/post-social-share.php:720
+#: widgets/post-social-share.php:334 widgets/post-social-share.php:687
 msgid "Align Content"
 msgstr ""
 
-#: widgets/post-social-share.php:393
+#: widgets/post-social-share.php:360
 msgid "Item"
 msgstr ""
 
-#: widgets/post-social-share.php:461
+#: widgets/post-social-share.php:428
 msgid "Icon Typography"
 msgstr ""
 
-#: widgets/post-social-share.php:542 widgets/post-social-share.php:853
-#: widgets/post-social-share.php:915
+#: widgets/post-social-share.php:509 widgets/post-social-share.php:820
+#: widgets/post-social-share.php:882
 msgid "height"
 msgstr ""
 
-#: widgets/post-social-share.php:562
+#: widgets/post-social-share.php:529
 msgid "Additional Layout Options"
 msgstr ""
 
-#: widgets/post-social-share.php:764
+#: widgets/post-social-share.php:731
 msgid "Hover Icon Color"
 msgstr ""
 
-#: widgets/post-social-share.php:791
+#: widgets/post-social-share.php:758
 msgid "Icon Style"
 msgstr ""
 
-#: widgets/post-social-share.php:884
+#: widgets/post-social-share.php:851
 msgid "Svg"
 msgstr ""
 
@@ -4074,9 +4072,9 @@ msgstr ""
 msgid "Name HTML Tag"
 msgstr ""
 
-#: widgets/team.php:504 widgets/team.php:624 widgets/testimonial.php:192
-#: widgets/testimonial.php:534 widgets/testimonial3.php:191
-#: widgets/testimonial3.php:396
+#: widgets/team.php:504 widgets/team.php:624 widgets/testimonial.php:193
+#: widgets/testimonial.php:535 widgets/testimonial3.php:192
+#: widgets/testimonial3.php:397
 msgid "Designation"
 msgstr ""
 
@@ -4124,32 +4122,32 @@ msgstr ""
 msgid "WCF Testimonial"
 msgstr ""
 
-#: widgets/testimonial.php:129 widgets/testimonial2.php:132
+#: widgets/testimonial.php:130 widgets/testimonial2.php:133
 msgid "Testimonial Style"
 msgstr ""
 
-#: widgets/testimonial.php:139
+#: widgets/testimonial.php:140
 msgid "Six"
 msgstr ""
 
-#: widgets/testimonial.php:140
+#: widgets/testimonial.php:141
 msgid "Seven"
 msgstr ""
 
-#: widgets/testimonial.php:141
+#: widgets/testimonial.php:142
 msgid "Eight"
 msgstr ""
 
-#: widgets/testimonial.php:142
+#: widgets/testimonial.php:143
 msgid "Nine"
 msgstr ""
 
-#: widgets/testimonial.php:143
+#: widgets/testimonial.php:144
 msgid "Ten"
 msgstr ""
 
-#: widgets/testimonial.php:216 widgets/testimonial2.php:211
-#: widgets/testimonial3.php:215
+#: widgets/testimonial.php:217 widgets/testimonial2.php:212
+#: widgets/testimonial3.php:216
 msgid "Testimonials"
 msgstr ""
 
@@ -4157,20 +4155,20 @@ msgstr ""
 msgid "WCF Testimonial 2"
 msgstr ""
 
-#: widgets/testimonial2.php:221 widgets/testimonial2.php:452
-#: widgets/testimonial3.php:225 widgets/testimonial3.php:435
+#: widgets/testimonial2.php:222 widgets/testimonial2.php:453
+#: widgets/testimonial3.php:226 widgets/testimonial3.php:436
 msgid "Quote"
 msgstr ""
 
-#: widgets/testimonial2.php:332
+#: widgets/testimonial2.php:333
 msgid "Image Size"
 msgstr ""
 
-#: widgets/testimonial2.php:463 widgets/testimonial3.php:446
+#: widgets/testimonial2.php:464 widgets/testimonial3.php:447
 msgid "Quote Color"
 msgstr ""
 
-#: widgets/testimonial2.php:476 widgets/testimonial3.php:459
+#: widgets/testimonial2.php:477 widgets/testimonial3.php:460
 msgid "Quote Size"
 msgstr ""
 
@@ -4178,15 +4176,15 @@ msgstr ""
 msgid "WCF Testimonial 3"
 msgstr ""
 
-#: widgets/testimonial3.php:128 widgets/testimonial3.php:279
+#: widgets/testimonial3.php:129 widgets/testimonial3.php:280
 msgid "Section Title"
 msgstr ""
 
-#: widgets/testimonial3.php:137
+#: widgets/testimonial3.php:138
 msgid "MY CLIENTS SAY ME BEST ONE"
 msgstr ""
 
-#: widgets/testimonial3.php:246
+#: widgets/testimonial3.php:247
 msgid "Section Border"
 msgstr ""
 

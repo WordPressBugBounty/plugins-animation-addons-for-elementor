@@ -134,8 +134,9 @@ class WCF_Admin_Init {
 	 * @return [void]
 	 */
 	public function enqueue_scripts( $hook ) {
-		if ( isset( $_GET['page'] ) && $_GET['page'] == 'wcf_addons_settings' ) {
-
+		
+		if ( $hook === 'wcf-addons_page_wcf_addons_settings' ) {
+			
 			// CSS
 			wp_enqueue_style( 'wcf-admin', WCF_ADDONS_URL . '/assets/css/wcf-admin.min.css' );
 
@@ -246,7 +247,8 @@ class WCF_Admin_Init {
 	 */
 	public function remove_all_notices() {
 		add_action( 'in_admin_header', function () {
-			if ( isset( $_GET['page'] ) && $_GET['page'] == 'wcf_addons_settings' ) {
+			$screen = get_current_screen();
+			if ( $screen && 'toplevel_page_wcf_addons_settings' === $screen->id  ) {
 				remove_all_actions( 'admin_notices' );
 				remove_all_actions( 'all_admin_notices' );
 			}

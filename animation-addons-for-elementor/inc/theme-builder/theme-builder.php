@@ -344,7 +344,7 @@ class WCF_Theme_Builder {
 		$query_args         = [
 			'post_type'      => self::CPTTYPE,
 			'fields'         => 'ids',
-			'posts_per_page' => - 1,
+			'posts_per_page' => -1,
 			'order'          => 'ASC',
 			'orderby'        => 'date',
 			'meta_query'     => array(
@@ -1422,8 +1422,8 @@ class WCF_Theme_Builder {
 	 * @return void
 	 */
 	public function enqueue_scripts( $hook ) {
-
-		if ( isset( $_GET['post_type'] ) && $_GET['post_type'] == self::CPTTYPE ) {
+	
+		if ( 'edit.php' === $hook && isset( $_GET['post_type'] ) && $_GET['post_type'] == self::CPTTYPE ) {
 
 			// CSS
 			wp_enqueue_style( 'select2', WCF_ADDONS_URL . '/assets/css/select2.min.css' );

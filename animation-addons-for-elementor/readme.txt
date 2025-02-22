@@ -1,11 +1,10 @@
 === Animation Addons for Elementor ===
 Contributors: wealcoder
-Donate link: https://wealcoder.com/donate
 Tags: Animation, Elementor Addon, Elementor, elementor widget, GSAP Animation
-Requires at least: 6.0
-Tested up to: 6.7.1
+Requires at least: 6.3
+Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.1.8
+Stable tag: 1.1.9
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -162,6 +161,12 @@ It's totally free now. But we're going to launch the premium version soon that y
 
 
 == Changelog ==
+
+1.1.9 – 20/02/2025
+Updated: sweetaletjs, Typedjs 
+compatibly: Check compatibly with core elementor
+Removed: Donation link
+Fixed : Nonce Security issues 
 
 1.1.8 – 17/12/2024
 fixed: fix swiper slider style issue

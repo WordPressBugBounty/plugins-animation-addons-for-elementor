@@ -75,7 +75,8 @@ class WCF_Setup_Wizard_Init {
 	 * @return [void]
 	 */
 	public function enqueue_scripts( $hook ) {
-		if ( isset( $_GET['page'] ) && $_GET['page'] == 'wcf_addons_setup_page' ) {
+       
+		if ( $hook ==='admin_page_wcf_addons_setup_page' ) {
 
 			// CSS
 			wp_enqueue_style( 'wcf-admin', WCF_ADDONS_URL . '/assets/css/wcf-admin.css' );
@@ -366,8 +367,8 @@ class WCF_Setup_Wizard_Init {
 		?>
         <div class="wizard-content" data-form-tab>
             <div class="wizard-welcome">
-                <h2><?php echo esc_html__( 'Welcome to the Animation Addon for Elementor', 'animation-addons-for-elementor' ); ?></h2>
-                <div class="desc"> <?php echo esc_html__( "Elevate your website's visual appeal with seamless animations that bring your content to life. With easy integration into Elementor, designing dynamic and engaging web experiences seems simpler, smarter, and quicker. Get ready to mesmerize your audience and stand out from the crowd with the Animation Addon for Elementor", 'animation-addons-for-elementor' ); ?></div>
+                <h2><?php echo esc_html__( 'Welcome to the Animation Addons for Elementor', 'animation-addons-for-elementor' ); ?></h2>
+                <div class="desc"> <?php echo esc_html__( "Elevate your website's visual appeal with seamless animations that bring your content to life. With easy integration into Elementor, designing dynamic and engaging web experiences seems simpler, smarter, and quicker. Get ready to mesmerize your audience and stand out from the crowd with the Animation Addons for Elementor", 'animation-addons-for-elementor' ); ?></div>
             </div>
         </div>
 		<?php
@@ -864,7 +865,7 @@ class WCF_Setup_Wizard_Init {
                     </svg>
                 </div>
                 <h2><?php echo esc_html__( 'Congratulation', 'animation-addons-for-elementor' ); ?></h2>
-                <div class="desc"> <?php echo esc_html__( 'You have completed your setup for "Animation Addon for Elementor" add more creativity to your design with "Animation Addon for Elementor".', 'animation-addons-for-elementor' ); ?></div>
+                <div class="desc"> <?php echo esc_html__( 'You have completed your setup for "Animation Addons for Elementor" add more creativity to your design with "Animation Addons for Elementor".', 'animation-addons-for-elementor' ); ?></div>
                 <button type="button"
                         class="wcf-admin-btn wcf-settings-save"><?php esc_html_e( 'Save Settings', 'animation-addons-for-elementor' ); ?></button>
             </div>
@@ -878,7 +879,8 @@ class WCF_Setup_Wizard_Init {
 	 */
 	public function remove_all_notices() {
 		add_action( 'in_admin_header', function () {
-			if ( isset( $_GET['page'] ) && $_GET['page'] == 'wcf_addons_setup_page' ) {
+            $screen = get_current_screen();          
+            if ( $screen && 'admin_page_wcf_addons_setup_page' === $screen->id ) {
 				remove_all_actions( 'admin_notices' );
 				remove_all_actions( 'all_admin_notices' );
 			}

@@ -135,8 +135,8 @@ class WCF_Plugin_Installer {
 			wp_send_json_error( __( 'you are not allowed to do this action', 'animation-addons-for-elementor' ) );
 		}
 
-		$slug   = isset( $_POST['action_base'] ) ? sanitize_text_field( $_POST['action_base'] ) : '';
-		$source = isset( $_POST['plugin_source'] ) ? sanitize_text_field( $_POST['plugin_source'] ) : '';
+		$slug   = isset( $_POST['action_base'] ) ? sanitize_text_field( wp_unslash( $_POST['action_base'] ) ) : '';
+		$source = isset( $_POST['plugin_source'] ) ? sanitize_text_field( wp_unslash($_POST['plugin_source']) ) : '';
 
 		$result = $this->install_plugin( $slug, $source );
 
@@ -159,7 +159,7 @@ class WCF_Plugin_Installer {
 			wp_send_json_error( __( 'you are not allowed to do this action', 'animation-addons-for-elementor' ) );
 		}
 
-		$basename = isset( $_POST['action_base'] ) ? sanitize_text_field( $_POST['action_base'] ) : '';
+		$basename = isset( $_POST['action_base'] ) ? sanitize_text_field( wp_unslash($_POST['action_base']) ) : '';
 		$result   = activate_plugin( $basename, '', false, true );
 
 		if ( is_wp_error( $result ) ) {
