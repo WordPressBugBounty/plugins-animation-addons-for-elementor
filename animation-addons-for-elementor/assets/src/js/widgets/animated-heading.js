@@ -29,7 +29,27 @@
         });
         let mySplitText = new SplitText(animated_heading, {type: "words,chars"});
         let chars = mySplitText.chars;
-        let endGradient = chroma.scale(animated_heading.data('colors'));
+
+        // Define start and end colors in hex format
+        const startColor = animated_heading.attr('data-color-start') || '#ff0000'; // Default start color
+        const endColor = animated_heading.attr('data-color-end') || '#0000ff';   // Default end color
+
+        // Function to calculate intermediate colors
+        function calculateGradientColor(startColor, endColor, ratio) {
+            const hexToRgb = hex => {
+                const bigint = parseInt(hex.slice(1), 16);
+                return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255];
+            };
+            const rgbToHex = rgb => `#${rgb.map(x => x.toString(16).padStart(2, '0')).join('')}`;
+
+            const startRGB = hexToRgb(startColor);
+            const endRGB = hexToRgb(endColor);
+
+            const resultRGB = startRGB.map((start, i) => Math.round(start + ratio * (endRGB[i] - start)));
+            return rgbToHex(resultRGB);
+        }
+
+        // Define animations without Chroma
         endTl.to(chars, {
             duration: 0.5,
             scaleY: 0.6,
@@ -50,9 +70,7 @@
             duration: 1.5
         }, 0.5);
         endTl.to(chars, {
-            color: (i, el, arr) => {
-                return endGradient(i / arr.length).hex();
-            },
+            color: (i, el, arr) => calculateGradientColor(startColor, endColor, i / arr.length),
             ease: "power2.out",
             stagger: 0.03,
             duration: 0.3
@@ -64,7 +82,7 @@
             duration: 0.8
         }, 0.7);
         endTl.to(chars, {
-            color: animated_heading.attr('data-color-end'),
+            color: endColor,
             duration: 1.4,
             stagger: 0.05
         });

@@ -50,7 +50,7 @@ class Testimonial2 extends Widget_Base {
 	 * @return string Widget title.
 	 */
 	public function get_title() {
-		return esc_html__( 'WCF Testimonial 2', 'animation-addons-for-elementor' );
+		return esc_html__( 'Classic Testimonial', 'animation-addons-for-elementor' );
 	}
 
 	/**
@@ -1006,12 +1006,10 @@ class Testimonial2 extends Widget_Base {
 			]
 		);
 
-		$swiper_class = Plugin::$instance->experiments->is_feature_active( 'e_swiper_latest' ) ? 'swiper' : 'swiper-container';
-
 		$this->add_render_attribute(
 			'carousel-wrapper',
 			[
-				'class' => 'wcf__slider ' . $swiper_class,
+				'class' => 'wcf__slider swiper',
 				'dir'   => $settings['direction'],
 				'style' => 'position: static',
 			]

@@ -42,7 +42,7 @@ class Animated_Heading extends Widget_Base {
 	 * @access public
 	 */
 	public function get_title() {
-		return esc_html__( 'WCF Animated Heading', 'animation-addons-for-elementor' );
+		return esc_html__( 'Animated Heading', 'animation-addons-for-elementor' );
 	}
 
 	/**
@@ -112,6 +112,9 @@ class Animated_Heading extends Widget_Base {
 				'type'        => Controls_Manager::TEXTAREA,
 				'default'     => esc_html__( 'Heading', 'animation-addons-for-elementor' ),
 				'placeholder' => esc_html__( 'Heading', 'animation-addons-for-elementor' ),
+				'dynamic'     => [
+					'active' => true,
+				],
 			]
 		);
 
@@ -191,6 +194,7 @@ class Animated_Heading extends Widget_Base {
 			[
 				'label'     => esc_html__( 'Start Color', 'animation-addons-for-elementor' ),
 				'type'      => Controls_Manager::COLOR,
+				'render_type' => 'template',
 				'selectors' => [
 					'{{WRAPPER}} .animated--heading' => 'color: {{VALUE}}',
 				],

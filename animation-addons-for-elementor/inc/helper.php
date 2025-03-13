@@ -234,7 +234,9 @@ if ( ! function_exists( 'wcf_set_postview' ) ) {
 	 *
 	 */
 	function wcf_set_postview( $template ) {
-	
+		if(!is_singular()){
+			return;
+		}
 		$postID     = get_the_ID();
 		$count_key  = 'wcf_post_views_count';
 		$count      = get_post_meta( $postID, $count_key, true );
@@ -245,6 +247,7 @@ if ( ! function_exists( 'wcf_set_postview' ) ) {
 			add_post_meta( $postID, $count_key, '0' );
 		} else {
 			$count ++;
+			delete_post_meta( $postID, $count_key );
 			update_post_meta( $postID, $count_key, $count );
 		}
 
@@ -318,13 +321,12 @@ if( !function_exists('wcf_get_search_active_keys') ) {
 			// Check if the current key is one we're looking for
 			if (in_array($key, $keysToFind) && is_array($value) && array_key_exists('is_extension', $value)) {
 				// Add to found keys list
-				$foundKeys[] = $key;
+				$foundKeys[] = sanitize_text_field($key);
 				// Store the entire element in $active
 				$value['is_active'] = 1;
 				$active[$key] = $value;
-			}
-	
-			// If value is an array, recurse into it
+			}		
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			if (is_array($value)) {
 				wcf_get_search_active_keys($value, $keysToFind, $foundKeys, $active);
 			}
@@ -337,14 +339,12 @@ if(!function_exists('wcf_get_addon_active_extension_by_key')) {
 	function wcf_get_addon_active_extension_by_key($search){
 	
 		$ext = get_option( 'wcf_save_extensions' );
-		if(is_array($ext)){
-		
+		if(is_array($ext)){		
 			$saved_ext  = array_keys( $ext );	
 			$found_key = array_search($search, $saved_ext);			
 			if($found_key !==false){
 				return true;
-			}
-			
+			}			
 		}else{
 			return true;
 		}	
@@ -354,6 +354,60 @@ if(!function_exists('wcf_get_addon_active_extension_by_key')) {
 
 }
 
+if(!function_exists('wcfaddon_get_current_user_roles')) {
+	function wcfaddon_get_current_user_roles() {
+	
+		if( is_user_logged_in() ) {
+	  
+		  $user = wp_get_current_user();
+	  
+		  $roles = ( array ) $user->roles;
+	  
+		  return $roles; // This will returns an array
+	  
+		} else {
+	  
+		  return [];
+	  
+		}
+	  
+	}
+	
+}
 
+if(!function_exists('wcfaddon_get_pronotice_html')){
+	function wcfaddon_get_pronotice_html() {
+		$img_src = esc_url(WCF_ADDONS_URL.'assets/images/get-pro.png'); // Replace '#' with the actual URL or dynamic value
+		$upgrade_url = esc_url('https://animation-addons.com/'); // Replace '#' with the actual upgrade URL
+		
+		return sprintf(
+			'<div class="wcfaddon-pro-notice">
+				<img src="%s" alt="%s" />
+				<div class="wcfaddon-pro-notice-content">
+					<h4>%s</h4>
+					<p>%s</p>
+					<a target="__blank" rel="nofollow" class="elementor-button elementor-button-default" href="%s">%s</a>
+				</div>
+			</div>',
+			$img_src,
+			esc_attr(__('Upgrade Notice', 'animation-addons-for-elementor')),
+			__('Upgrade to premium plan and unlock every feature!', 'animation-addons-for-elementor'),
+			__('Upgrade and get access to every feature.', 'animation-addons-for-elementor'),
+			$upgrade_url,
+			__('Upgrade Animation Addon', 'animation-addons-for-elementor')
+		);
+	}
+}
 
-
+if(!function_exists('aaeaddon_format_number_count')) {
+	function aaeaddon_format_number_count($count) {
+		if ($count >= 1000000000) {
+			return number_format($count / 1000000000, 1) . esc_html__('b','animation-addons-for-elementor'); // Billion
+		} elseif ($count >= 1000000) {
+			return number_format($count / 1000000, 1) . esc_html__('m','animation-addons-for-elementor'); // Million
+		} elseif ($count >= 1000) {
+			return number_format($count / 1000, 1) . esc_html__('k','animation-addons-for-elementor'); // Thousand
+		}
+		return $count; // Less than 1000, return the count as is
+	}
+}

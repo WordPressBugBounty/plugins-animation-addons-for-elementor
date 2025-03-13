@@ -47,7 +47,7 @@ class Image_Box extends Widget_Base {
 	 * @access public
 	 */
 	public function get_title() {
-		return esc_html__( 'WCF Image Box', 'animation-addons-for-elementor' );
+		return esc_html__( 'Image Box', 'animation-addons-for-elementor' );
 	}
 
 	/**
@@ -367,7 +367,7 @@ class Image_Box extends Widget_Base {
 			'el_hover_effects',
 			[
 				'label'        => esc_html__( 'Hover Effect', 'animation-addons-for-elementor' ),
-				'description'  => esc_html__( 'This effect will work only image tag.', 'animation-addons-for-elementor' ),
+				'description'  => esc_html__( 'This effect will work only on image tags.', 'animation-addons-for-elementor' ),
 				'type'         => Controls_Manager::SELECT,
 				'default'      => 'effect-zoom-in',
 				'options'      => [
@@ -438,6 +438,9 @@ class Image_Box extends Widget_Base {
 				'type'    => Controls_Manager::MEDIA,
 				'default' => [
 					'url' => Utils::get_placeholder_image_src(),
+				],
+				'dynamic' => [
+					'active' => true,
 				],
 			]
 		);
@@ -552,6 +555,18 @@ class Image_Box extends Widget_Base {
 				],
 				'condition' => [
 					'object_fit' => 'cover',
+				],
+			]
+		);
+
+		$this->add_responsive_control(
+			'img_b_radius',
+			[
+				'label'      => esc_html__( 'Border Radius', 'animation-addons-for-elementor' ),
+				'type'       => Controls_Manager::DIMENSIONS,
+				'size_units' => [ 'px', '%', 'em', 'rem' ],
+				'selectors'  => [
+					'{{WRAPPER}} .thumb img' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
 				],
 			]
 		);
@@ -925,9 +940,8 @@ class Image_Box extends Widget_Base {
 
 		<<?php Utils::print_validated_html_tag($link_tag); ?> <?php $this->print_render_attribute_string( 'wrapper' ); ?>>
 			<div class="thumb">
-				<?php
+				<?php				
                 Group_Control_Image_Size::print_attachment_image_html($settings, 'image_size', 'image');
-
 				if ( '2' === $settings['image_box_style'] && 'button' === $settings['link_type'] ) {
 					$this->render_button( $settings );
 				}

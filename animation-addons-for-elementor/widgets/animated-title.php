@@ -45,7 +45,7 @@ class Animated_Title extends Widget_Base {
 	 * @access public
 	 */
 	public function get_title() {
-		return esc_html__( 'WCF Animated Title', 'animation-addons-for-elementor' );
+		return esc_html__( 'Animated Title', 'animation-addons-for-elementor' );
 	}
 
 	/**
@@ -283,7 +283,7 @@ class Animated_Title extends Widget_Base {
 		$this->add_group_control(
 			Group_Control_Background::get_type(),
 			[
-				'name'     => 'background',
+				'name'     => 'aaebackground',
 				'types'    => [ 'classic', 'gradient' ],
 				'selector' => '{{WRAPPER}} .wcf--title .highlight',
 			]

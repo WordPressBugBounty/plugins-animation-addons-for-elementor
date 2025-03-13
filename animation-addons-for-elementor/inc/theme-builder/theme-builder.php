@@ -23,7 +23,7 @@ class WCF_Theme_Builder {
 
 	/**
 	 * [instance] Initializes a singleton instance
-	 * @return [Woolentor_Admin_Init]
+	 * @return [_Admin_Init]
 	 */
 	public static function instance() {
 		if ( is_null( self::$_instance ) ) {
@@ -65,7 +65,7 @@ class WCF_Theme_Builder {
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
 
 		// Change Template
-		add_filter( 'template_include', [ $this, 'template_loader' ] );
+		add_filter( 'template_include', [ $this, 'template_loader' ] , 30 );
 
 		// Archive Page
 		add_action( 'wcf_archive_builder_content', [ $this, 'archive_page_builder_content' ] );
@@ -272,6 +272,10 @@ class WCF_Theme_Builder {
 		if ( is_embed() ) {
 			return $template;
 		}
+		
+		if(isset($_REQUEST['aaeid']) && !isset($_REQUEST['preview_id'])){
+			return $template;
+		}
 
 		$default_file = self::get_template_loader_default_file();
 
@@ -344,7 +348,7 @@ class WCF_Theme_Builder {
 		$query_args         = [
 			'post_type'      => self::CPTTYPE,
 			'fields'         => 'ids',
-			'posts_per_page' => -1,
+			'posts_per_page' => - 1,
 			'order'          => 'ASC',
 			'orderby'        => 'date',
 			'meta_query'     => array(
@@ -417,7 +421,7 @@ class WCF_Theme_Builder {
 
 		//check for archive
 		if ( is_archive() ) {
-
+		
 			//check for all date archive
 			if ( is_date() && array_key_exists( 'date', $templates ) ) {
 				return $templates['date'];
@@ -435,6 +439,24 @@ class WCF_Theme_Builder {
 
 			//check for custom post type archive
 			$custom_archive = get_post_type() . '-archive';
+			
+			if(is_tax()){
+			
+				$get_queried_object = get_queried_object();		
+				$taxonomy = $get_queried_object->taxonomy; // Get the taxonomy slug.
+				$post_types = get_taxonomy($taxonomy)->object_type; // Get all post types for this taxonomy.
+				
+				if(is_array($post_types)){					
+					foreach($post_types as $ptype){
+						$custom_archive = $ptype . '-archive';
+						if ( array_key_exists( $custom_archive, $templates ) ) {
+							return $templates[ $custom_archive ];
+						}
+					}					
+				}				
+				
+			}
+			
 			if ( array_key_exists( $custom_archive, $templates ) ) {
 				return $templates[ $custom_archive ];
 			}
@@ -509,7 +531,7 @@ class WCF_Theme_Builder {
 		} else {
 			$current_id = get_the_id();
 		}
-
+		
 		return $page_type;
 	}
 
@@ -898,10 +920,10 @@ class WCF_Theme_Builder {
 	public function register_custom_post_type() {
 
 		$labels = array(
-			'name'                  => esc_html_x( 'WCF Builder', 'Post Type General Name', 'animation-addons-for-elementor' ),
-			'singular_name'         => esc_html_x( 'WCF Builder', 'Post Type Singular Name', 'animation-addons-for-elementor' ),
-			'menu_name'             => esc_html__( 'WCF Builder', 'animation-addons-for-elementor' ),
-			'name_admin_bar'        => esc_html__( 'WCF Builder', 'animation-addons-for-elementor' ),
+			'name'                  => esc_html_x( 'AAE Builder', 'Post Type General Name', 'animation-addons-for-elementor' ),
+			'singular_name'         => esc_html_x( 'AAE Builder', 'Post Type Singular Name', 'animation-addons-for-elementor' ),
+			'menu_name'             => esc_html__( 'AAE Builder', 'animation-addons-for-elementor' ),
+			'name_admin_bar'        => esc_html__( 'AAE Builder', 'animation-addons-for-elementor' ),
 			'archives'              => esc_html__( 'Template Archives', 'animation-addons-for-elementor' ),
 			'attributes'            => esc_html__( 'Template Attributes', 'animation-addons-for-elementor' ),
 			'parent_item_colon'     => esc_html__( 'Parent Item:', 'animation-addons-for-elementor' ),
@@ -937,7 +959,7 @@ class WCF_Theme_Builder {
 			'show_ui'             => true,
 			'show_in_menu'        => false,
 			'show_in_admin_bar'   => false,
-			'show_in_nav_menus'   => true,
+			'show_in_nav_menus'   => false,
 			'can_export'          => true,
 			'has_archive'         => false,
 			'rewrite'             => array(
@@ -1422,8 +1444,8 @@ class WCF_Theme_Builder {
 	 * @return void
 	 */
 	public function enqueue_scripts( $hook ) {
-	
-		if ( 'edit.php' === $hook && isset( $_GET['post_type'] ) && $_GET['post_type'] == self::CPTTYPE ) {
+
+		if ( isset( $_GET['post_type'] ) && $_GET['post_type'] == self::CPTTYPE ) {
 
 			// CSS
 			wp_enqueue_style( 'select2', WCF_ADDONS_URL . '/assets/css/select2.min.css' );

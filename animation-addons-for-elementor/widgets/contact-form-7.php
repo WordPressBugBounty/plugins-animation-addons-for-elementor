@@ -44,7 +44,7 @@ class Contact_Form_7 extends Widget_Base {
 	 * @access public
 	 */
 	public function get_title() {
-		return esc_html__( 'WCF Contact Form 7', 'animation-addons-for-elementor' );
+		return esc_html__( 'Contact Form 7', 'animation-addons-for-elementor' );
 	}
 
 	/**
@@ -868,6 +868,11 @@ class Contact_Form_7 extends Widget_Base {
 		$this->add_render_attribute( 'shortcode', 'id', $settings['contact_form_id'] );
 		$shortcode = sprintf( '[contact-form-7 %s]', $this->get_render_attribute_string( 'shortcode' ) );
 		?>
+            <style>
+               .wcf--form-wrapper form label {
+                   display: block;
+               }
+            </style>
 		<div <?php $this->print_render_attribute_string( 'wrapper' ); ?> >
 			<?php
 			if ( ! empty( $settings['contact_form_id'] ) ) {

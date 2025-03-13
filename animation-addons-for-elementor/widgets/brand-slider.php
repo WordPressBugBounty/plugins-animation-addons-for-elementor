@@ -48,7 +48,7 @@ class Brand_Slider extends Widget_Base {
 	 * @access public
 	 */
 	public function get_title() {
-		return esc_html__( 'WCF Brand Slider', 'animation-addons-for-elementor' );
+		return esc_html__( 'Brand Slider', 'animation-addons-for-elementor' );
 	}
 
 	/**
@@ -105,7 +105,7 @@ class Brand_Slider extends Widget_Base {
 	 * @access public
 	 */
 	public function get_style_depends() {
-		return ['swiper' ,'wcf--brand-slider' ];
+		return [ 'swiper', 'wcf--brand-slider' ];
 	}
 
 	/**

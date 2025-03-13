@@ -52,7 +52,7 @@ class Image_Box_Slider extends Widget_Base {
 	 * @access public
 	 */
 	public function get_title() {
-		return esc_html__( 'WCF Image Box Slider', 'animation-addons-for-elementor' );
+		return esc_html__( 'Image Box Slider', 'animation-addons-for-elementor' );
 	}
 
 	/**
@@ -104,7 +104,7 @@ class Image_Box_Slider extends Widget_Base {
 	 * @return array
 	 */
 	public function get_style_depends() {
-		return ['swiper' ,'wcf--image-box', 'wcf--button', ];
+		return ['swiper', 'wcf--image-box', 'wcf--button', ];
 	}
 
 	/**
@@ -553,7 +553,7 @@ class Image_Box_Slider extends Widget_Base {
 			'el_hover_effects',
 			[
 				'label'        => esc_html__( 'Hover Effect', 'animation-addons-for-elementor' ),
-				'description'  => esc_html__( 'This effect will work only image tag.', 'animation-addons-for-elementor' ),
+				'description'  => esc_html__( 'This effect will work only on image tags.', 'animation-addons-for-elementor' ),
 				'type'         => Controls_Manager::SELECT,
 				'default'      => 'effect-zoom-in',
 				'options'      => [

@@ -45,7 +45,7 @@ class Image_Gallery extends Widget_Base {
 	 * @access public
 	 */
 	public function get_title() {
-		return esc_html__( 'WCF Image Gallery', 'animation-addons-for-elementor' );
+		return esc_html__( 'Image Gallery', 'animation-addons-for-elementor' );
 	}
 
 	/**
@@ -261,6 +261,8 @@ class Image_Gallery extends Widget_Base {
 					'4' => '4',
 					'5' => '5',
 					'6' => '6',
+                    '7' => '7',
+                    '8' => '8',
 				],
 				'selectors' => [
 					'{{WRAPPER}} .wcf--image-gallery' => 'display:grid; grid-template-columns: repeat({{VALUE}}, 1fr);',
@@ -310,12 +312,24 @@ class Image_Gallery extends Widget_Base {
 			]
 		);
 
+		$this->add_control(
+			'img_b_radius',
+			[
+				'label' => esc_html__( 'Border Radius', 'animation-addons-for-elementor' ),
+				'type' => Controls_Manager::DIMENSIONS,
+				'size_units' => [ 'px', '%', 'em', 'rem', 'custom' ],
+				'selectors' => [
+					'{{WRAPPER}} .wcf--gallery-item' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+				],
+			]
+		);
+
 		//hover effect
 		$this->add_control(
 			'el_hover_effects',
 			[
 				'label'        => esc_html__( 'Hover Effect', 'animation-addons-for-elementor' ),
-				'description'  => esc_html__( 'This effect will work only image tag.', 'animation-addons-for-elementor' ),
+				'description'  => esc_html__( 'This effect will work only on image tags.', 'animation-addons-for-elementor' ),
 				'type'         => Controls_Manager::SELECT,
 				'default'      => 'effect-zoom-in',
 				'options'      => [
@@ -413,7 +427,8 @@ class Image_Gallery extends Widget_Base {
 
 			$html .= wp_get_attachment_image( $image['id'], $size, false, $image_attr );
 		} else {
-			$image_src = Group_Control_Image_Size::get_attachment_image_src( $image['id'], $image_size_key, $settings );
+	
+			$image_src = Group_Control_Image_Size::get_attachment_image_src( $image, $image_size_key, $settings );
 
 			if ( ! $image_src && isset( $image['url'] ) ) {
 				$image_src = $image['url'];

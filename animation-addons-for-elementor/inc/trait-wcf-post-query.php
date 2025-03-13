@@ -36,6 +36,25 @@ trait WCF_Post_Query_Trait {
 		return $post_types;
 	}
 
+	/**
+	 * Get taxonomy terms for dropdown
+	 */
+	protected function get_taxonomy_terms( $taxonomy ) {
+		$terms = get_terms( [
+			'taxonomy'   => $taxonomy,
+			'hide_empty' => false,
+		] );
+
+		$options = [];
+		if ( ! is_wp_error( $terms ) ) {
+			foreach ( $terms as $term ) {
+				$options[ $term->name ] = $term->name;
+			}
+		}
+
+		return $options;
+	}
+
 	protected function register_query_controls() {
 		$this->start_controls_section(
 			'section_query',
@@ -51,11 +70,11 @@ trait WCF_Post_Query_Trait {
 				'label'   => esc_html__( 'Query Type', 'animation-addons-for-elementor' ),
 				'type'    => Controls_Manager::SELECT,
 				'default' => 'custom',
-				'options' => [
+				'options' => apply_filters( 'aae_widget_wp_query_type', [
 					'custom'  => esc_html__( 'Custom', 'animation-addons-for-elementor' ),
 					'archive' => esc_html__( 'Archive', 'animation-addons-for-elementor' ),
-					'related' => esc_html__( 'related', 'animation-addons-for-elementor' ),
-				],
+					'related' => esc_html__( 'related', 'animation-addons-for-elementor' )
+				] ),
 			]
 		);
 
@@ -66,7 +85,19 @@ trait WCF_Post_Query_Trait {
 				'type'      => Controls_Manager::SELECT,
 				'default'   => 'post',
 				'options'   => $this->get_public_post_types(),
-				'condition' => [ 'query_type' => 'custom' ],
+				'condition' => [
+					'query_type' =>
+						[
+							'custom',
+							'archive',
+							'recent_visited',
+							'most_views',
+							'top_post_week',
+							'most_popular',
+							'trending_score',
+							'most_share_count'
+						]
+				],
 			]
 		);
 
@@ -77,7 +108,7 @@ trait WCF_Post_Query_Trait {
 		$this->start_controls_tab(
 			'query_include',
 			[
-				'label' => esc_html__( 'Include', 'animation-addons-for-elementor' ),
+				'label'     => esc_html__( 'Include', 'animation-addons-for-elementor' ),
 				'condition' => [ 'query_type' => 'custom' ],
 			]
 		);
@@ -93,7 +124,7 @@ trait WCF_Post_Query_Trait {
 					'terms'   => esc_html__( 'Term', 'animation-addons-for-elementor' ),
 					'authors' => esc_html__( 'Author', 'animation-addons-for-elementor' ),
 				],
-				'condition' => [ 'query_type' => 'custom' ],
+				'condition'   => [ 'query_type' => 'custom' ],
 			]
 		);
 
@@ -136,7 +167,7 @@ trait WCF_Post_Query_Trait {
 		$this->start_controls_tab(
 			'query_exclude',
 			[
-				'label' => esc_html__( 'Exclude', 'animation-addons-for-elementor' ),
+				'label'     => esc_html__( 'Exclude', 'animation-addons-for-elementor' ),
 				'condition' => [ 'query_type' => 'custom' ],
 			]
 		);
@@ -152,7 +183,7 @@ trait WCF_Post_Query_Trait {
 					'terms'   => esc_html__( 'Term', 'animation-addons-for-elementor' ),
 					'authors' => esc_html__( 'Author', 'animation-addons-for-elementor' ),
 				],
-				'condition' => [ 'query_type' => 'custom' ],
+				'condition'   => [ 'query_type' => 'custom' ],
 			]
 		);
 
@@ -194,6 +225,46 @@ trait WCF_Post_Query_Trait {
 
 		$this->end_controls_tabs();
 
+		$this->add_control(
+			'post_format',
+			[
+				'label'     => esc_html__( 'Post Format', 'animation-addons-for-elementor' ),
+				'type'      => Controls_Manager::SELECT2,
+				'default'   => [],
+				'multiple'  => true,
+				'options'   => [
+					'post-format-image'   => esc_html__( 'Image', 'animation-addons-for-elementor' ),
+					'post-format-video'   => esc_html__( 'Video', 'animation-addons-for-elementor' ),
+					'post-format-audio'   => esc_html__( 'Audio', 'animation-addons-for-elementor' ),
+					'post-format-gallery' => esc_html__( 'Gallery', 'animation-addons-for-elementor' ),
+				],
+				'condition' => [ 'query_type' => [ 'custom' ] ],
+			]
+		);
+
+		$this->add_control(
+			'post_categories',
+			[
+				'label'     => esc_html__( 'Post Categories', 'animation-addons-for-elementor' ),
+				'type'      => Controls_Manager::SELECT2,
+				'default'   => [],
+				'multiple'  => true,
+				'options'   => $this->get_taxonomy_terms('category'), // Fetch categories dynamically
+				'condition' => [ 'post_type' => [ 'post' ], 'include' => 'terms' ],
+			]
+		);
+		
+		$this->add_control(
+			'post_tags',
+			[
+				'label'     => esc_html__( 'Post Tags', 'animation-addons-for-elementor' ),
+				'type'      => Controls_Manager::SELECT2,
+				'default'   => [],
+				'multiple'  => true,
+				'options'   => $this->get_taxonomy_terms('post_tag'), // Fetch tags dynamically
+				'condition' => [ 'post_type' => [ 'post' ], 'include' => 'terms' ],
+			]
+		);
 
 		$this->add_control(
 			'post_date',
@@ -204,12 +275,22 @@ trait WCF_Post_Query_Trait {
 				'options'   => [
 					'anytime'  => esc_html__( 'All', 'animation-addons-for-elementor' ),
 					'-1 day'   => esc_html__( 'Past Day', 'animation-addons-for-elementor' ),
+					'-3 day'   => esc_html__( 'Past 3 Day', 'animation-addons-for-elementor' ),
 					'-1 week'  => esc_html__( 'Past Week', 'animation-addons-for-elementor' ),
+					'-2 week'  => esc_html__( 'Past Two Weeks', 'animation-addons-for-elementor' ),
 					'-1 month' => esc_html__( 'Past Month', 'animation-addons-for-elementor' ),
 					'-3 month' => esc_html__( 'Past Quarter', 'animation-addons-for-elementor' ),
 					'-1 year'  => esc_html__( 'Past Year', 'animation-addons-for-elementor' ),
 				],
-				'condition' => [ 'query_type' => 'custom' ],
+				'condition' => [
+					'query_type' => [
+						'custom',
+						'most_share_count',
+						'trending_score',
+						'most_views',
+						'most_popular'
+					]
+				],
 			]
 		);
 
@@ -331,7 +412,7 @@ trait WCF_Post_Query_Trait {
 		if ( ! empty( $this->get_settings( 'include' ) ) ) {
 			if ( in_array( 'terms', $this->get_settings( 'include' ) ) ) {
 				$query_args['tax_query'] = [];
-
+				
 				if ( ! empty( $this->get_settings( 'include_term_ids' ) ) ) {
 					$terms = [];
 
@@ -355,6 +436,24 @@ trait WCF_Post_Query_Trait {
 						$query_args['tax_query'][] = $query;
 					}
 				}
+				//post_categories
+				if ( ! empty( $this->get_settings( 'post_categories' ) ) ) {					
+					// Add category filter using term names
+					$query_args['tax_query'][] = [
+						'taxonomy' => 'category',
+						'field'    => 'name', // Use 'name' instead of 'term_id'
+						'terms'    => $this->get_settings( 'post_categories' )
+					];
+				}
+				if ( ! empty( $this->get_settings( 'post_tags' ) ) ) {	
+					// Add tag filter using term names
+					$query_args['tax_query'][] = [
+						'taxonomy' => 'post_tag',
+						'field'    => 'name', // Use 'name' instead of 'term_id'
+						'terms'    => $this->get_settings( 'post_tags' )
+					];
+				}
+				
 			}
 
 			if ( ! empty( $this->get_settings( 'include_authors' ) ) ) {
@@ -396,17 +495,214 @@ trait WCF_Post_Query_Trait {
 			}
 		}
 
+		if ( 'top_post_week' === $this->get_settings( 'query_type' ) ) {
+			$query_args['meta_key']   = 'wcf_post_views_count';
+			$query_args['orderby']    = 'meta_value_num';
+			$query_args['order']      = 'DESC';
+			$query_args['date_query'] = [
+				[
+					'after'     => '1 week ago', // Filter posts from the last 7 days
+					'inclusive' => true, // Include posts exactly 7 days old
+				],
+			];
+			$query_args['meta_query'] = [
+				[
+					'key'     => 'wcf_post_views_count',
+					'value'   => 0, // Optional: Only include posts with at least 1 view
+					'compare' => '>',
+					'type'    => 'NUMERIC',
+				],
+			];
+
+			if ( isset( $query_args['ignore_sticky_posts'] ) ) {
+				unset( $query_args['ignore_sticky_posts'] );
+			}
+		}
+
+		if ( 'most_popular' === $this->get_settings( 'query_type' ) ) {
+
+			$query_args['orderby']    = array(
+				'meta_value_num' => 'DESC',
+				'comment_count'  => 'DESC',
+			);
+			$query_args['order']      = 'DESC';
+			$query_args['meta_query'] = [
+				'relation' => 'OR',
+				[
+					'key'  => 'wcf_post_views_count',
+					'type' => 'NUMERIC',
+				],
+				[
+					'key'  => 'aae_post_shares_count',
+					'type' => 'NUMERIC',
+				],
+			];
+
+			if ( isset( $query_args['ignore_sticky_posts'] ) ) {
+				unset( $query_args['ignore_sticky_posts'] );
+			}
+		}
+
+		if ( 'trending_score' === $this->get_settings( 'query_type' ) ) {
+
+			$query_args['meta_key'] = 'aae_trending_score';
+			$query_args['orderby']  = 'meta_value_num';
+			$query_args['order']    = 'DESC';
+
+			if ( isset( $query_args['ignore_sticky_posts'] ) ) {
+				unset( $query_args['ignore_sticky_posts'] );
+			}
+		}
+
+		if ( 'most_share_count' === $this->get_settings( 'query_type' ) ) {
+
+			$query_args['meta_key'] = 'aae_post_shares_count';
+			$query_args['orderby']  = 'meta_value_num';
+			$query_args['order']    = 'DESC';
+
+			if ( isset( $query_args['ignore_sticky_posts'] ) ) {
+				unset( $query_args['ignore_sticky_posts'] );
+
+			}
+
+		}
+
+		if ( 'most_reactions' === $this->get_settings( 'query_type' ) ) {
+
+			$query_args['meta_key'] = 'aaeaddon_post_total_reactions';
+			$query_args['orderby']  = 'meta_value_num';
+			$query_args['order']    = 'DESC';
+
+			if ( isset( $query_args['ignore_sticky_posts'] ) ) {
+				unset( $query_args['ignore_sticky_posts'] );
+
+			}
+
+		}
+
+		if ( 'most_reactions_love' === $this->get_settings( 'query_type' ) ) {
+
+			$query_args['meta_key'] = 'aaeaddon_post_reactions_love';
+			$query_args['orderby']  = 'meta_value_num';
+			$query_args['order']    = 'DESC';
+
+			if ( isset( $query_args['ignore_sticky_posts'] ) ) {
+				unset( $query_args['ignore_sticky_posts'] );
+
+			}
+
+		}
+
+		if ( 'most_reactions_like' === $this->get_settings( 'query_type' ) ) {
+
+			$query_args['meta_key'] = 'aaeaddon_post_reactions_like';
+			$query_args['orderby']  = 'meta_value_num';
+			$query_args['order']    = 'DESC';
+
+			if ( isset( $query_args['ignore_sticky_posts'] ) ) {
+				unset( $query_args['ignore_sticky_posts'] );
+
+			}
+
+		}
+
+		if ( 'most_views' === $this->get_settings( 'query_type' ) ) {
+			$query_args['meta_key']   = 'wcf_post_views_count';
+			$query_args['orderby']    = 'meta_value_num';
+			$query_args['order']      = 'DESC';
+			$query_args['meta_query'] = [
+				[
+					'key'     => 'wcf_post_views_count',
+					'value'   => 0, // Optional: Only include posts with at least 1 view
+					'compare' => '>',
+					'type'    => 'NUMERIC',
+				],
+			];
+		}
+
+		if ( 'recent_visited' === $this->get_settings( 'query_type' ) ) {
+			// Retrieve and decode the cookie data
+			$visited_posts = isset( $_COOKIE['aae_visited_posts'] ) ? json_decode( sanitize_text_field( wp_unslash( $_COOKIE['aae_visited_posts'] ) ), true ) : [];
+		
+			// Check if the decoded data is an array
+			if ( is_array( $visited_posts ) ) {
+				$post_type = $this->get_settings( 'post_type' );
+		
+				// Check if the post type exists in the visited posts array and is an array
+				if ( isset( $visited_posts[ $post_type ] ) && is_array( $visited_posts[ $post_type ] ) ) {
+					// Sanitize each post ID to ensure they are positive integers
+					$post_ids = array_map( 'absint', $visited_posts[ $post_type ] );
+		
+					// If there are valid post IDs, assign them to the query arguments
+					if ( ! empty( $post_ids ) ) {
+						$query_args['post__in'] = $post_ids;
+					}
+				}
+			}
+		}
+		
+		if ( $this->get_settings( 'post_layout' ) && ( $this->get_settings( 'post_layout' ) == 'layout-gallery' || $this->get_settings( 'post_layout' ) == 'layout-gallery-2' ) ) {
+			$query_args['tax_query'][] = [
+				'taxonomy' => 'post_format',
+				'field'    => 'slug',
+				'terms'    => array( 'post-format-video' ),
+			];
+		}
+
+		if ( $this->get_settings( 'post_layout' ) && ( $this->get_settings( 'post_layout' ) == 'layout-audio' ) ) {
+			$query_args['tax_query'][] = [
+				'taxonomy' => 'post_format',
+				'field'    => 'slug',
+				'terms'    => array( 'post-format-audio' ),
+			];
+		}
+
+		if ( $this->get_settings( 'post_format' ) && is_array( $this->get_settings( 'post_format' ) ) ) {
+
+			$query_args['tax_query'][] = [
+				'taxonomy' => 'post_format',
+				'field'    => 'slug',
+				'terms'    => $this->get_settings( 'post_format' ),
+			];
+		}
+
+		
 		return $query_args;
 	}
 
 	public function get_query() {
 		global $wp_query;
 
-		if ( 'archive' === $this->get_settings( 'query_type' ) && ! \Elementor\Plugin::$instance->editor->is_edit_mode() && ( $wp_query->is_archive || $wp_query->is_search ) ) {
+		// Check custom post type archive
+		if ( 'archive' === $this->get_settings( 'query_type' ) && ! \Elementor\Plugin::$instance->editor->is_edit_mode() && is_tax() ) {
 
+			if ( $this->get_settings( 'post_type' ) != 'post' ) {
+				$query_object = get_queried_object();
+				$tax_query    = [];
+				if ( isset( $query_object->taxonomy ) && isset( $query_object->term_id ) ) {
+					$tax_query = [
+						[
+							'taxonomy' => $query_object->taxonomy,
+							'field'    => 'term_id',
+							'terms'    => $query_object->term_id,
+						],
+					];
+				}
+				// Create a new WP_Query instance
+				$GLOBALS['wp_query'] = new \WP_Query( [
+					'post_type' => $this->get_settings( 'post_type' ),
+					'tax_query' => $tax_query,
+				] );
+
+				return $GLOBALS['wp_query'];
+			}
+
+		}
+
+		if ( 'archive' === $this->get_settings( 'query_type' ) && ! \Elementor\Plugin::$instance->editor->is_edit_mode() && ( $wp_query->is_archive || $wp_query->is_search ) ) {
 			return $this->query = $wp_query;
 		} else {
-			return $this->query = new WP_Query( $this->query_arg() );
+			return $this->query = new \WP_Query( $this->query_arg() );
 		}
 	}
 
