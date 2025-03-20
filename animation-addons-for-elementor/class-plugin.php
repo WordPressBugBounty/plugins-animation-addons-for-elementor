@@ -30,7 +30,7 @@ class Plugin {
 	 *
 	 * @var string API URL.
 	 */
-	public $api_url = 'https://crowdytheme.com/elementor/info-templates/wp-json/api/v2/list';
+	public $api_url = 'https://themecrowdy.com/wp-json/api/v2/list';
 
 	/**
 	 * Instance
@@ -94,7 +94,8 @@ class Plugin {
 				'success' => esc_html__( 'Success', 'animation-addons-for-elementor' ),
 				'warning' => esc_html__( 'Warning', 'animation-addons-for-elementor' ),
 			],
-			'smoothScroller' => json_decode( get_option( 'wcf_smooth_scroller' ) )
+			'smoothScroller' => json_decode( get_option( 'wcf_smooth_scroller' ) ),
+			'mode'								=> \Elementor\Plugin::$instance->editor->is_edit_mode(),
 		] );
 
 		wp_localize_script( 'wcf--addons', 'WCF_ADDONS_JS', $data );
