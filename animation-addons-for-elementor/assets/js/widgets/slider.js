@@ -10,7 +10,6 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
   var getSliderOptions = function getSliderOptions($scope) {
     var slider = $($('.wcf__slider', $scope)[0]);
     var slexist = $scope.find('.wcf__slider').length;
-    // const sliderSettings = $('.wcf__slider-wrapper, .wcf__t_slider-wrapper', $scope).data('settings') || {}; double slider not working
     var sliderSettings = $($('.wcf__slider-wrapper, .wcf__t_slider-wrapper', $scope)[0]).data('settings') || {};
     sliderSettings.handleElementorBreakpoints = true;
 
@@ -95,6 +94,7 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
       'testimonial': [],
       'testimonial2': [],
       'testimonial3': [],
+      'a-testimonial': [],
       'event-slider': [],
       'image-box-slider': [],
       'video-box-slider': [],
