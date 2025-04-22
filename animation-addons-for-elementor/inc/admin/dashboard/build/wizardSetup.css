@@ -512,6 +512,9 @@
 .wcf-anim2024 .flex {
   display: flex;
 }
+.wcf-anim2024 .\!inline-flex {
+  display: inline-flex !important;
+}
 .wcf-anim2024 .inline-flex {
   display: inline-flex;
 }
