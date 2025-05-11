@@ -9,6 +9,7 @@ use Elementor\Widget_Base;
 use Elementor\Controls_Manager;
 use Elementor\Group_Control_Typography;
 use Elementor\Group_Control_Border;
+use Elementor\Plugin;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -58,8 +59,8 @@ class One_page_Nav extends Widget_Base {
 			[
 				'label' => esc_html__( 'Navigation', 'animation-addons-for-elementor' ),
 			]
-		);
-
+		);		
+		
 		$repeater = new Repeater();
 
 		$repeater->add_control(
@@ -128,6 +129,21 @@ class One_page_Nav extends Widget_Base {
 					],
 				],
 				'title_field' => '{{{ nav_text }}}',
+			]
+		);
+
+		$this->add_responsive_control(
+			'aae_hide_title',
+			[
+				'label'        => esc_html__( 'Hide Title', 'animation-addons-for-elementor' ),
+				'type'         => \Elementor\Controls_Manager::SWITCHER,
+				'label_on'     => esc_html__( 'Show', 'animation-addons-for-elementor' ),
+				'label_off'    => esc_html__( 'Hide', 'animation-addons-for-elementor' ),
+				'return_value' => 'display: none !important;',
+				'default'      => 'no',
+				'selectors'    => [
+					'{{WRAPPER}} .wcf-onepage-nav-item a span' => '{{VALUE}}',
+				],
 			]
 		);
 
@@ -511,7 +527,8 @@ class One_page_Nav extends Widget_Base {
 				'label'     => esc_html__( 'Color', 'animation-addons-for-elementor' ),
 				'type'      => Controls_Manager::COLOR,
 				'selectors' => [
-					'{{WRAPPER}} .wcf-onepage-nav-item.active a' => 'color: {{VALUE}}; fill: {{VALUE}};',
+					'{{WRAPPER}} .wcf--onepage-nav .active a span' => 'color: {{VALUE}};',
+					'{{WRAPPER}} .wcf--onepage-nav .active a svg' => 'fill: {{VALUE}};',
 				],
 			]
 		);
@@ -554,8 +571,8 @@ class One_page_Nav extends Widget_Base {
 			]
 		);
 		
-
 		$this->end_controls_section();
+
 	}
 
 	/**

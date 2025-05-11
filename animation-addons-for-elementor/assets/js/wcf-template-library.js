@@ -13,14 +13,10 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
 /* global jQuery, WCF_Template_library_Editor*/
 
 (function ($, window, document, config) {
-  // const Template_Library_data = WCF_TEMPLATE_LIBRARY.data;
   var Template_Library_data = {};
   var Template_Library_Chunk_data = [];
-  var aaeadddon_tpl_lazy_load = false;
-
   // API for get requests
-  // let fetchRes = fetch("https://crowdytheme.com/elementor/info-templates/wp-json/api/v1/list");
-  var fetchRes = fetch(WCF_TEMPLATE_LIBRARY.template_file);
+  var fetchRes = fetch("https://themecrowdy.com/wp-json/api/v1/list");
   var activePlugin = /*#__PURE__*/function () {
     var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
       return _regeneratorRuntime().wrap(function _callee$(_context) {
@@ -55,14 +51,13 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       return _ref.apply(this, arguments);
     };
   }();
-
   // FetchRes is the promise to resolve
-  // it by using.then() method
   fetchRes.then(function (res) {
     return res.json();
   }).then(function (d) {
-    Template_Library_data = d;
+    Template_Library_data = d.library;
     Template_Library_data['template_types'] = WCF_TEMPLATE_LIBRARY.template_types;
+    localStorage.setItem("aae_template_lib_data", Template_Library_data);
   });
 
   //get type specific templates
@@ -284,7 +279,6 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
               template_link: template_url
             });
             t.html(content_single);
-
             //iframe is loaded
             var is_loading = true;
             loading(is_loading);
@@ -301,7 +295,6 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
             loading(false);
             //active menu
             active_menu(t);
-
             //category select
             selected_category(t);
             render_single_template(t);
@@ -401,7 +394,6 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
                 template_id: template_id
               },
               success: function success(e) {
-                console.log(e);
                 $e.run("document/elements/import", {
                   model: window.elementor.elementsModel,
                   data: e
