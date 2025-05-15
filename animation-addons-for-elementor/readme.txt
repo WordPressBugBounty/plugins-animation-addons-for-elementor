@@ -1,11 +1,11 @@
 === Animation Addons for Elementor - GSAP Powered Elementor Addons & Website Templates ===
 Contributors: wealcoder, wcrayhan, jhshakil, devmizan, ahsanriad
 Donate link: https://buy.stripe.com/3cs3dI7DQauI0py9AC
-Tags: Elementor, Elementor Addons, Elementor Templates, Animation, Motion Effects
+Tags: Elementor, Elementor Addons, Elementor Templates, Animation, website template
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.3
+Stable tag: 2.3.1
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -118,48 +118,48 @@ Take your website design to the next level with 86+ Elementor widgets. Whether y
 **Post Pagination**: Break down content into manageable pages, allowing users to browse multiple posts.
 **Post Social Share**: Enable social media sharing of individual posts or articles to expand reach and visibility.
 
-**Post**: Showcase a list of blog posts or custom post types in multiple unique styles.
+**[Posts](https://animation-addons.com/widgets/aae-posts/)**: Showcase a list of blog posts or custom post types in multiple unique styles.
 
 **Archive Title**: Dynamically display the title of an archive page based on specific criteria such as date, category, tag, or author.
 
-**Portfolio**: Display pages, posts, and custom post types in a filterable grid.
+**[Portfolio](https://animation-addons.com/widgets/aae-portfolio/)**: Display pages, posts, and custom post types in a filterable grid.
 
-**Search Form**: Provide users with a simple and intuitive interface to input search queries and retrieve relevant results.
+**[Search Form](https://animation-addons.com/wcf-template/search-form/)**: Provide users with a simple and intuitive interface to input search queries and retrieve relevant results.
 
-**Search Query**: Display search results in real-time as users type their queries.
+**[Search Query](https://animation-addons.com/widgets/aae-search-query/)**: Display search results in real-time as users type their queries.
 
 **Search No Result**: Offer helpful guidance and options when no relevant search results are found.
 
 ### Form Widgets
-**Contact Form 7**: Customize Contact Form 7 forms to match specific needs.
+**[Contact Form 7](https://animation-addons.com/widgets/aae-contact-form-7/)**: Customize Contact Form 7 forms to match specific needs.
 
-**Mailchimp**: Enable users to add opt-in forms to collect emails.
+**[Mailchimp](https://animation-addons.com/widgets/aae-mailchimp)**: Enable users to add opt-in forms to collect emails.
 
 ### Video Widgets
-**Video Popup**: Display a video in a popup to enhance engagement.
+**[Video Popup](https://animation-addons.com/widgets/aae-video-popup/)**: Display a video in a popup to enhance engagement.
 
-**Video Box**: Showcase external and self-hosted videos from various sources.
+**[Video Box](https://animation-addons.com/widgets/aae-video-box)**: Showcase external and self-hosted videos from various sources.
 
-**Video Box Slider**: Create a slider with videos from multiple sources.
+**[Video Box Slider](https://animation-addons.com/widgets/aae-video-box-slider/)**: Create a slider with videos from multiple sources.
 
-**Video Mask**: Apply transitions, visual effects, and isolate video elements.
+**[Video Mask](https://animation-addons.com/widgets/aae-video-mask/)**: Apply transitions, visual effects, and isolate video elements.
 
 ### Advanced Widgets
-**Toggle Switcher**: Allow users to toggle between two mutually exclusive states (on/off).
+**[Toggle Switcher](https://animation-addons.com/widgets/aae-toggle-switch/)**: Allow users to toggle between two mutually exclusive states (on/off).
 
-**Advanced Portfolio**: Add a responsive portfolio slider or grid to showcase images, videos, or projects.
+**[Advanced Portfolio](https://animation-addons.com/widgets/aae-advanced-portfolio)**: Add a responsive portfolio slider or grid to showcase images, videos, or projects.
 
-**Table of Contents**: Generate a list of navigation links to different sections of a page.
+**[Table of Contents](https://animation-addons.com/widgets/aae-table-of-content)**: Generate a list of navigation links to different sections of a page.
 
-**Flip Box**: Provide interactive design effects such as flip, slide, fade, zoom-in, and zoom-out.
+**[Flip Box](https://animation-addons.com/widgets/aae-flip-box/)**: Provide interactive design effects such as flip, slide, fade, zoom-in, and zoom-out.
 
-**Advanced Accordion**: Enable collapsible content sections for better organization.
+**[Advanced Accordion](https://animation-addons.com/widgets/aae-advanced-accordion/)**: Enable collapsible content sections for better organization.
 
-**Advanced Pricing Table**: Display structured pricing information effectively.
+**[Advanced Pricing Table](https://animation-addons.com/widgets/aae-advanced-pricing-table/)**: Display structured pricing information effectively.
 
-**Filterable Gallery**: Create an attractive, well-organized image gallery.
+**[Filterable Gallery](https://animation-addons.com/widgets/aae-filterable-gallery/)**: Create an attractive, well-organized image gallery.
 
-**Image Accordion**: Display a series of images interactively and compactly.
+**[Image Accordion](https://animation-addons.com/widgets/aae-image-accordion/)**: Display a series of images interactively and compactly.
 
 **Advanced Slider**: Customize and create advanced-level sliders.
 
@@ -408,130 +408,107 @@ You don’t need to know the code to use the widgets and modules of Animation Ad
 7. **Section Import (Live Copy)* One-click live copy & import of pre-designed animation sections directly into your projects.
 
 == External Services ==
-
-This plugin connects to the following external services to provide enhanced template and widget functionality. These integrations are optional and designed to improve the user experience. No personal data is collected or shared without explicit user action.
-
--  ***Elementor Template Library API***
-
- - The plugin fetches template data in JSON format from the Elementor Template Library to display a popup inside the Elementor editor. This enables users to preview and import section or page templates with a single click.
-
- - This feature is fully optional and can be disabled anytime from the plugin settings.
- ***Note***: No user data is sent or collected during this process.
-
-- ***Themecrowdy.com API***
-
- - In the "Starter Templates" section of the plugin dashboard, users can browse pre-built website templates powered by Themecrowdy.com. Upon selection, the plugin automatically imports the template's XML file and any required plugins.
-
- - No user data is shared with Themecrowdy or any third-party services.
-
--  ***Live Copy Integration with AnimationAddons.com***
-
- - The plugin connects to animation-addons.com to support the Live Copy feature. This allows users to copy and paste templates directly from the official site into their Elementor editor.
-
- - To facilitate this, the user’s IP address may be temporarily stored on our server during the import process.
-
- - This data is used only during the session and is not stored permanently or used for any other purpose.
- 
-- ***Mailchimp API***
-
- - When using the Elementor Mailchimp widget, users may enter their Mailchimp API key to sync form fields with their Mailchimp audience.
-
- - This connection is only established when the API key is provided, and no data is shared beyond the intended integration.
+We use the Themecrowdy API for one-click import of Elementor sites and section templates.
+Our Mailchimp widget connects to Mailchimp’s API.
+Subscribing is optional—no data is collected unless you opt in.
 
 == Source Code ==
 
-The unminified source code for the minified JavaScript and CSS files included in this plugin can be found in our public repository: [GitHub Repository](https://github.com/Wealcoder/animation-addons-for-elementor/tree/dashboard/assets/src).
-You can find the original, human-readable versions of all compressed assets there.
+See the unminified JS and CSS in our public repo: [GitHub Repository](https://github.com/Wealcoder/animation-addons-for-elementor/tree/dashboard/assets/src). 
 
 == Changelog ==
 
- = v2.3 – 07 may 2025 =
+= Animation Addons for Elementor v2.3 – 15 may 2025 =
+  - 🆕 **Added:** 5 animated business templates
+  - 🆕 **Added:** optin popup
+  - 🎨 **Fixed:** animation library dependancy
+
+ = Animation Addons for Elementor v2.3 – 07 may 2025 =
   - ❌ **Removed:** remote request of chnagelog
   - 🎨 **Fixed:** template library store process
 
-
- = v2.2 – 06 may 2025 =
+ = Animation Addons for Elementor v2.2 – 06 may 2025 =
   - ❌ **Removed:** Draggable js
   - 🎨 **Fixed:** user data security issue
   - 🆕 **Added:** Added 5 website templates
 
- = v2.1.9 – 05 may 2025 =
+ = Animation Addons for Elementor v2.1.9 – 05 may 2025 =
   - 🆕 **Added:** Added notice for pro element
   - 🆕 **Added:** Responsive control to hide onepage nav title
  
- = v2.1.8 – 22 April 2025 =
+ = Animation Addons for Elementor v2.1.8 – 22 April 2025 =
   - 🆕 **Added:** Scroll Smother option
   - 🎨 **Fixed:** Table of content icon in dashboard
   - 🆕 **Added:** One Page Nav svg size 
 
- = v2.1.7 – 16 April 2025 =
+ = Animation Addons for Elementor v2.1.7 – 16 April 2025 =
   - 🎨 **Fixed:** Text Domain Translation Issue
   - 🎨 **Fixed:** Fix  Pre Built Template Dashboard
 
- = v2.1.5 – 08 April 2025 =
+ = Animation Addons for Elementor v2.1.5 – 08 April 2025 =
   - 🎨 **Fixed:** Pre Built Template SSL issue 
   - 🎨 **Fixed:** Fix Toast Color Issue
   - ✅ **Compatibility:** Optimized Markup compatibility with **Elementor core** for Animation.
 
- = v2.1.4 – 06 April 2025 =
+ = Animation Addons for Elementor v2.1.4 – 06 April 2025 =
   - 🎨 **Fixed:** Slider animation issue
   - 🎨 **Fixed:** Gallery Issue
 
- = v2.1.2 – 25 March 2025 =
+ = Animation Addons for Elementor v2.1.2 – 25 March 2025 =
   - 🔄 **Updated:** Banner and dashboard updated
   - 🔄 **Updated:** Live Copy Support current container index
 
-= v2.1.1 – 20 March 2025 =
+= Animation Addons for Elementor v2.1.1 – 20 March 2025 =
   - 🔄 **Updated:** intro video and price tab
   - 🔄 **Updated:** Update template Library vps path
 
- = v2.0 – 13 March 2025 =
+ =  Animation Addons for Elementorv2.0 – 13 March 2025 =
   - ❌ **Removed:** GoodShare Library from social share widget
   - 🔄 **Updated:** Updated Dashboard UI
   - 🆕 **New Feature:** Added **Template Library**
   - 🆕 **New Feature:** Added **Live Copy Paste**
   - 🆕 **New Feature:** Added **Dynamic Tags**
 
- = v1.1.9 – 20 February 2025 =
+ = Animation Addons for Elementor v1.1.9 – 20 February 2025 =
   - 🔄 **Updated:** Upgraded `SweetAlert.js` and `Typed.js` to the latest versions for improved performance and security.
   - ✅ **Compatibility:** Verified full compatibility with **Elementor core**.
   - ❌ **Removed:** Deprecated donation link for a cleaner user experience.
   - 🔒 **Fixed:** Resolved **nonce security vulnerabilities** to enhance website security.
 
- = v1.1.8 – 17 December 2024 =
+ = Animation Addons for Elementor v1.1.8 – 17 December 2024 =
   - 🎨 **Fixed:** Resolved **Swiper slider styling issues** for better mobile and desktop responsiveness.
   - ✅ **Compatibility:** Ensured smooth integration with **Elementor core**.
 
- = v1.1.7 – 10 December 2024 =
+ = Animation Addons for Elementor v1.1.7 – 10 December 2024 =
   - 🔒 **Security Fixes:**
     - Patched security vulnerabilities in **Tab Widget** and **Content Slider Widget**.
     - Implemented additional security layers for safer user interaction.
   - 🆕 **New Feature:** Added **role-based access control** for **template selection** in Tab and Content Slider Widgets.
 
- = v1.1.6 – 27 November 2024 =
+ = Animation Addons for Elementor v1.1.6 – 27 November 2024 =
   - 🛠️ **Fixed:** Corrected **text domain issues** for better multilingual support.
   - ✅ **Tested:** Conducted compatibility tests with WordPress and Elementor updates.
 
-= v1.1.5 – 22 October 2024 =
+= Animation Addons for Elementor v1.1.5 – 22 October 2024 =
   - 🚀 **Performance Boost:** Optimized **Social Share Widget** for **faster loading speed** and **improved SEO performance**.
 
-=v1.1.4 – 22 October 2024 =
+= Animation Addons for Elementor v1.1.4 – 22 October 2024 =
   - 🆕 **New Addition:** Added a **download link** for the **"Extension for Animation Addons" plugin**, enabling **GSAP animation features**.
 
-= v1.1.3 – 21 October 2024 =
+= Animation Addons for Elementor v1.1.3 – 21 October 2024 =
   - 🎨 **UI Enhancements:**
     - Introduced **responsive title margin controls** in the **Counter Widget** for improved layout customization.
   - 🔄 **Bug Fixes:**
     - Resolved **meta description duplication** issue for better SEO indexing.
     - Fixed **GoodShare console errors** to prevent script conflicts.
 
-= v1.1.2 – 22 September 2024 =
+= Animation Addons for Elementor v1.1.2 – 22 September 2024 =
   - 🎨 **UI Enhancement:** Added **responsive input field height controls** in the **Contact Form 7 Widget** for better mobile optimization.
 
-= v1.1.1 – 14 September 2024 =
+= Animation Addons for Elementor v1.1.1 – 14 September 2024 =
   - ⚡ **Performance Upgrade:**
     - Replaced the outdated `Waypoints.js` library with the **native Intersection Observer API** for **faster and more efficient animations**.
   - 🛠️ **Fixed:** **Progress Bar Widget** issue where progress was not displaying correctly.
 
-= v1.0.0 – 1 April 2024 =
+= Animation Addons for Elementor v1.0.0 – 1 April 2024 =
 - 🚀 **Initial Release**

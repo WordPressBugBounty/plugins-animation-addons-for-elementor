@@ -168,6 +168,30 @@ trait WCF_Slider_Trait {
 			]
 		);
 
+		$this->add_control(
+			'enable_grid',
+			[
+				'label'        => esc_html__( 'Enable Grid', 'animation-addons-for-elementor' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'label_on'     => esc_html__( 'Show', 'animation-addons-for-elementor' ),
+				'label_off'    => esc_html__( 'Hide', 'animation-addons-for-elementor' ),
+				'return_value' => 'yes',
+				'default'      => 'no',
+			]
+		);
+
+		$this->add_control(
+			'grid_rows',
+			[
+				'label'     => esc_html__( 'Grid Rows', 'animation-addons-for-elementor' ),
+				'type'      => Controls_Manager::NUMBER,
+				'min'       => 1,
+				'max'       => 10,
+				'default'   => 1,
+				'condition' => [ 'enable_grid' => 'yes' ],
+			]
+		);
+
 		//slider navigation
 		$this->add_control(
 			'navigation',
@@ -566,6 +590,7 @@ trait WCF_Slider_Trait {
 						'icon'  => 'eicon-h-align-right',
 					],
 				],
+				'default'      => 'left',
 				'condition'    => [ 'navigation_position' => 'absolute' ],
 			]
 		);
@@ -609,6 +634,7 @@ trait WCF_Slider_Trait {
 						'icon'  => 'eicon-v-align-bottom',
 					],
 				],
+				'default'      => 'bottom',
 				'condition'    => [ 'navigation_position' => 'absolute' ],
 			]
 		);
@@ -941,7 +967,7 @@ trait WCF_Slider_Trait {
 				'selectors'  => [
 					'{{WRAPPER}} .swiper-pagination-progressbar' => 'transform: rotate({{SIZE}}deg);',
 				],
-				'condition' => [ 'pagination_type' => 'progressbar' ],
+				'condition'  => [ 'pagination_type' => 'progressbar' ],
 			]
 		);
 
@@ -1108,6 +1134,13 @@ trait WCF_Slider_Trait {
 		if ( ! empty( $settings['mousewheel'] ) ) {
 			$slider_settings['mousewheel'] = [
 				'releaseOnEdges' => true,
+			];
+		}
+
+		if ( ! empty( $settings['enable_grid'] ) ) {
+			$slider_settings['grid'] = [
+				'rows' => $settings['grid_rows'],
+				'fill' => 'row',
 			];
 		}
 
