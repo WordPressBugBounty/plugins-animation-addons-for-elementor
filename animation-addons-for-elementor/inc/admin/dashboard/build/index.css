@@ -902,6 +902,9 @@
   max-width: -moz-max-content;
   max-width: max-content;
 }
+.wcf-anim2024 .max-w-sm {
+  max-width: 24rem;
+}
 .wcf-anim2024 .flex-1 {
   flex: 1 1 0%;
 }
