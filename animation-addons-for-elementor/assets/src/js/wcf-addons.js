@@ -12,6 +12,7 @@
 
         const contact_form_7 = function ($scope) {
             const submit_btn = $('.wpcf7-submit', $scope);
+           
             let classes = submit_btn.attr('class');
             classes += ' wcf-btn-default ' + $('.wcf--form-wrapper', $scope).attr('btn-hover');
 
@@ -110,30 +111,6 @@
                 $element: $scope
             });
         });
-
-        const Search = function ($scope) {
-            const searchWrapper = $('.search--wrapper', $scope);
-            const toggle_open = $('.toggle--open', $scope);
-            const toggle_close = $('.toggle--close', $scope);
-
-            toggle_open.on('click', function (e) {
-                searchWrapper.addClass('search-visible');
-            });
-
-            toggle_close.on('click', function (e) {
-                searchWrapper.removeClass('search-visible');
-            });
-
-            $("input", $scope).focus(function () {
-                $(".wcf-search-form", $scope).addClass('wcf-search-form--focus');
-            });
-
-            $("input", $scope).focusout(function () {
-                $(".wcf-search-form", $scope).removeClass('wcf-search-form--focus');
-            });
-
-        };
-        elementorFrontend.hooks.addAction('frontend/element_ready/wcf--blog--search--form.default', Search);
 
     });
 
