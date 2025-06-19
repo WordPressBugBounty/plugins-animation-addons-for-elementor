@@ -40,7 +40,7 @@ class Plugin {
 	 *
 	 * @var string API URL.
 	 */
-	public $api_url = 'https://themecrowdy.com/wp-json/api/v2/list';
+	public $api_url = 'https://www.themecrowdy.com/wp-json/api/v2/list';
 
 	/**
 	 * Instance
@@ -317,6 +317,13 @@ class Plugin {
 				'version' => false,
 				'arg'     => true,
 			],
+			'image-hotspot' => [
+				'handler' => 'aae-image-hotspot',
+				'src'     => 'widgets/image-hotspot.min.js',
+				'dep'     => [ 'jquery' ],
+				'version' => false,
+				'arg'     => true,
+			],
 		]);
 	}
 
@@ -488,6 +495,13 @@ class Plugin {
 			'search'        => [
 				'handler' => 'aae--search',
 				'src'     => 'widgets/search.min.css',
+				'dep'     => [],
+				'version' => false,
+				'media'   => 'all',
+			],
+			'image-hotspot' => [
+				'handler' => 'aae-image-hotspot',
+				'src'     => 'widgets/image-hotspot.min.css',
 				'dep'     => [],
 				'version' => false,
 				'media'   => 'all',
@@ -862,7 +876,7 @@ class Plugin {
 	 */
 	private static function get_templates_data( $force_update = false ) {
 
-		$cache_key      = 'aae_templates_data_' . 3.0;
+		$cache_key      = 'aae_templates_data_' . 3.1;
 		$templates_data = get_transient( $cache_key );
 
 		if ( $force_update || false === $templates_data ) {
@@ -897,7 +911,7 @@ class Plugin {
 				update_option( self::LIBRARY_OPTION_KEY, $templates_data['library'], 'no' );
 				unset( $templates_data['library'] );
 			}
-			set_transient( $cache_key, $templates_data, 6 * HOUR_IN_SECONDS );
+			set_transient( $cache_key, $templates_data, 1 * HOUR_IN_SECONDS );
 		}
 
 		return $templates_data;
