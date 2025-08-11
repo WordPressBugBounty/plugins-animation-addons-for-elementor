@@ -21,30 +21,32 @@
         const $btnExpandRight = $('.btn-expand-right', $scope);
 
         // GSAP Timeline
-        const tl = gsap.timeline({delay: 1});
+        if (typeof(gsap) === "object") {
+            const tl = gsap.timeline({delay: 1});
 
-        // Set initial positioning and animations
-        tl.set($caption, {autoAlpha: 0, yPercent: -100});
-        tl.to($sliderLeft, {duration: 0.7, width: $startPosition, ease: "back.out(1.7)"});
-        tl.to($handle, {duration: 0.7, x: $startPosition, ease: "back.out(1.7)"});
-        tl.to($caption, {duration: 0.7, autoAlpha: 1, yPercent: 0, ease: "back.inOut(3)", stagger: -0.3});
+            // Set initial positioning and animations
+            tl.set($caption, {autoAlpha: 0, yPercent: -100});
+            tl.to($sliderLeft, {duration: 0.7, width: $startPosition, ease: "back.out(1.7)"});
+            tl.to($handle, {duration: 0.7, x: $startPosition, ease: "back.out(1.7)"});
+            tl.to($caption, {duration: 0.7, autoAlpha: 1, yPercent: 0, ease: "back.inOut(3)", stagger: -0.3});
 
-        // Draggable
-        Draggable.create($handle, {
-            type: "x",
-            bounds: {
-                minX: 0,
-                minY: 0,
-                maxX: $comparisonSliderWidth,
-                maxY: $comparisonSliderHeight,
-            },
-            edgeResistance: 1,
-            throwProps: true,
-            onDrag: onHandleDrag,
-            onLockAxis() {
-                console.log("onLockAxis");
-            }
-        });
+            // Draggable
+            Draggable.create($handle, {
+                type: "x",
+                bounds: {
+                    minX: 0,
+                    minY: 0,
+                    maxX: $comparisonSliderWidth,
+                    maxY: $comparisonSliderHeight,
+                },
+                edgeResistance: 1,
+                throwProps: true,
+                onDrag: onHandleDrag,
+                onLockAxis() {
+                    console.log("onLockAxis");
+                }
+            });
+        }
 
         // Drag Function
         function onHandleDrag() {

@@ -42,7 +42,7 @@ class Plugin
 	 * @var string API URL.
 	 */
 	//public $api_url = 'https://block.animation-addons.com/wp-json/api/v2/list';
-	public $api_url = 'https://crowdytheme.com/elementor/info-templates/wp-json/api/v2/list';
+	public $api_url = 'https://block.animation-addons.com/wp-json/api/v2/list';
 
 	/**
 	 * Instance
@@ -232,7 +232,7 @@ class Plugin
 				'dep'     => [],
 				'version' => false,
 				'arg'     => true,
-			],
+			],		
 			'ProgressBar'      => [
 				'handler' => 'progressbar',
 				'src'     => 'progressbar.min.js',
@@ -332,6 +332,83 @@ class Plugin
 				'version' => false,
 				'arg'     => true,
 			],
+			'wcf-posts'           => [
+				'handler' => 'wcf--posts',
+				'src'     => 'widgets/post-pro.min.js',
+				'dep'     => [],
+				'version' => false,
+				'arg'     => true,
+			],
+			'button-pro'           => [
+				'handler' => 'aae--button-pro',
+				'src'     => 'widgets/button-pro.min.js',
+				'dep'     => [],
+				'version' => false,
+				'arg'     => true,
+			],
+			'category-slider'     => [
+				'handler' => 'wcf--category-slider',
+				'src'     => 'widgets/category-slider.min.js',
+				'dep'     => [],
+				'version' => false,
+				'arg'     => true,
+			],
+			'feature-posts'           => [
+				'handler' => 'wcf--posts',
+				'src'     => 'widgets/post.min.js',
+				'dep'     => [],
+				'version' => false,
+				'arg'     => true,
+			],
+			'wcf--a-accordion'           => [
+				'handler' => 'wcf--a-accordion',
+				'src'     => 'widgets/advance-accordion.min.js',
+				'dep'     => [],
+				'version' => false,
+				'arg'     => true,
+			],
+			'filterable-slider'   => [
+				'handler' => 'wcf--filterable-slider',
+				'src'     => 'widgets/filterable-slider.min.js',
+				'dep'     => [],
+				'version' => false,
+				'arg'     => true,
+			],
+			'notification'         => [
+				'handler' => 'aae-notification',
+				'src'     => 'widgets/notification.min.js',
+				'dep'     => [],
+				'version' => false,
+				'arg'     => true,
+			],
+			'post-rating'          => [
+				'handler' => 'aae-post-rating',
+				'src'     => 'widgets/post-rating.js',
+				'dep'     => [],
+				'version' => false,
+				'arg'     => true,
+			],
+			'post-reactions-js'          => [
+				'handler' => 'wcf--post-reactions',
+				'src'     => 'widgets/post-reactions.min.js',
+				'dep'     => [],
+				'version' => false,
+				'arg'     => true,
+			],
+			'team-slider'          => [
+				'handler' => 'wcf--team-slider',
+				'src'     => 'widgets/team-slider.min.js',
+				'dep'     => [],
+				'version' => false,
+				'arg'     => true,
+			],
+			'image-compare'          => [
+				'handler' => 'wcf--image-compare',
+				'src'     => 'widgets/image-compare.min.js',
+				'dep'     => [],
+				'version' => false,
+				'arg'     => true,
+			]
 		]);
 	}
 
@@ -402,7 +479,6 @@ class Plugin
 				'version' => false,
 				'media'   => 'all',
 			],
-
 			'brand-slider'     => [
 				'handler' => 'wcf--brand-slider',
 				'src'     => 'widgets/brand-slider.min.css',
@@ -476,7 +552,7 @@ class Plugin
 			'countdown'        => [
 				'handler' => 'wcf--countdown',
 				'src'     => 'widgets/countdown.min.css',
-				'dep'     => ['wcf-addons-core'],
+				'dep'     => [],
 				'version' => false,
 				'media'   => 'all',
 			],
@@ -494,13 +570,7 @@ class Plugin
 				'version' => false,
 				'media'   => 'all',
 			],
-			'company-profile'        => [
-				'handler' => 'company-profile',
-				'src'     => 'widgets/company-profile.min.css',
-				'dep'     => [],
-				'version' => false,
-				'media'   => 'all',
-			],
+
 			'search'        => [
 				'handler' => 'aae--search',
 				'src'     => 'widgets/search.min.css',
@@ -518,6 +588,139 @@ class Plugin
 			'clickdrop' => [
 				'handler' => 'aae-clickdrop',
 				'src'     => 'widgets/clickdrop.min.css',
+				'dep'     => [],
+				'version' => false,
+				'media'   => 'all',
+			],
+			'author-box' => [
+				'handler' => 'wcf--author-box',
+				'src'     => 'widgets/author-box.css',
+				'dep'     => [],
+				'version' => false,
+				'media'   => 'all',
+			],
+			'posts-pro'                          => [
+				'handler' => 'wcf--post-pro',
+				'src'     => 'widgets/posts-pro.min.css',
+				'dep'     => [],
+				'version' => false,
+				'media'   => 'all',
+			],
+			'button-pro'                          => [
+				'handler' => 'aae--button-pro',
+				'src'     => 'widgets/button-pro.min.css',
+				'dep'     => [],
+				'version' => false,
+				'media'   => 'all',
+			],
+			'category-showcase'                  => [
+				'handler' => 'wcf--category-showcase',
+				'src'     => 'widgets/category-showcase.min.css',
+				'dep'     => [],
+				'version' => false,
+				'media'   => 'all',
+			],
+			'feature-posts' => [
+				'handler' => 'wcf--post-pro',
+				'src'     => 'widgets/posts.min.css',
+				'dep'     => [],
+				'version' => false,
+				'media'   => 'all',
+			],
+			'grid-hover-posts' => [
+				'handler' => 'grid-hover-posts',
+				'src'     => 'widgets/grid-hover-posts.css',
+				'dep'     => [],
+				'version' => false,
+				'media'   => 'all',
+			],
+			'wcf--a-accordion' => [
+				'handler' => 'wcf--a-accordion',
+				'src'     => 'widgets/advance-accordion.min.css',
+				'dep'     => [],
+				'version' => false,
+				'media'   => 'all',
+			],
+			'aae-a-testimonial' => [
+				'handler' => 'aae-a-testimonial',
+				'src'     => 'widgets/advanced-testimonial.min.css',
+				'dep'     => [],
+				'version' => false,
+				'media'   => 'all',
+			],
+			'filterable-slider'   => [
+				'handler' => 'wcf--filterable-slider',
+				'src'     => 'widgets/filterable-slider.min.css',
+				'dep'     => [],
+				'version' => false,
+				'media'     => 'all',
+			],
+			'filterable-gallery'   => [
+				'handler' => 'wcf--filterable-gallery',
+				'src'     => 'widgets/filterable-gallery.min.css',
+				'dep'     => [],
+				'version' => false,
+				'media'     => 'all',
+			],
+			'image-accordion'                    => [
+				'handler' => 'wcf--image-accordion',
+				'src'     => 'widgets/image-accordion.css',
+				'dep'     => [],
+				'version' => false,
+				'media'   => 'all',
+			],
+			'notification'                       => [
+				'handler' => 'aae-notification',
+				'src'     => 'widgets/notification.min.css',
+				'dep'     => [],
+				'version' => false,
+				'media'   => 'all',
+			],
+			'post-rating'                        => [
+				'handler' => 'aae-post-rating',
+				'src'     => 'widgets/post-rating.min.css',
+				'dep'     => [],
+				'version' => false,
+				'media'   => 'all',
+			],
+			'post-reactions-css' => [
+				'handler' => 'wcf--post-reactions',
+				'src'     => 'widgets/post-reaction.min.css',
+				'dep'     => [],
+				'version' => false,
+				'media'   => 'all',
+			],
+			'post-timeline' => [
+				'handler' => 'aae-post-timeline',
+				'src'     => 'widgets/post-timeline.min.css',
+				'dep'     => [],
+				'version' => false,
+				'media'   => 'all',
+			],
+			'table-of-content' => [
+				'handler' => 'wcf--table-of-content',
+				'src'     => 'widgets/table-of-content.min.css',
+				'dep'     => [],
+				'version' => false,
+				'media'   => 'all',
+			],
+			'team-slider' => [
+				'handler' => 'wcf--team-slider',
+				'src'     => 'widgets/team-slider.min.css',
+				'dep'     => [],
+				'version' => false,
+				'media'   => 'all',
+			],
+			'toggle-switch' => [
+				'handler' => 'wcf--toggle-switch',
+				'src'     => 'widgets/toggle-switch.min.css',
+				'dep'     => [],
+				'version' => false,
+				'media'   => 'all',
+			],
+			'image-compare' => [
+				'handler' => 'wcf--image-compare',
+				'src'     => 'widgets/image-compare.min.css',
 				'dep'     => [],
 				'version' => false,
 				'media'   => 'all',
@@ -548,6 +751,7 @@ class Plugin
 			}
 
 			if (file_exists(__DIR__ . '/widgets/' . $slug . '/' . $slug . '.php') || file_exists(__DIR__ . '/widgets/' . $slug . '.php')) {
+
 				if (! $data['is_pro'] && ! $data['is_extension']) {
 					if (is_dir(__DIR__ . '/widgets/' . $slug)) {
 						require_once(__DIR__ . '/widgets/' . $slug . '/' . $slug . '.php');
@@ -645,11 +849,11 @@ class Plugin
 	{
 
 		require_once WCF_ADDONS_PATH . 'config.php';
-		
-		if (is_admin()) {		
-			if(get_option( 'wcf_addons_setup_wizard' ) !== 'complete' ){
+
+		if (is_admin()) {
+			if (get_option('wcf_addons_setup_wizard') !== 'complete') {
 				require_once WCF_ADDONS_PATH . 'inc/admin/setup-wizard.php';
-			}	
+			}
 			require_once WCF_ADDONS_PATH . 'inc/admin/dashboard.php';
 		}
 
@@ -662,6 +866,9 @@ class Plugin
 		include_once WCF_ADDONS_PATH . 'inc/trait-wcf-post-query.php';
 		include_once WCF_ADDONS_PATH . 'inc/trait-wcf-button.php';
 		include_once WCF_ADDONS_PATH . 'inc/trait-wcf-slider.php';
+		include_once WCF_ADDONS_PATH . 'inc/post-rating-handler.php';
+		include_once WCF_ADDONS_PATH . 'inc/category-fields.php';
+		include_once WCF_ADDONS_PATH . 'inc/admin/image-cache.php';
 
 		//extensions
 		$this->register_extensions();
