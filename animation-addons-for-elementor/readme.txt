@@ -5,7 +5,7 @@ Tags: Elementor, Elementor Addons, Elementor Templates, Animation, Templates
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.3.10
+Stable tag: 2.3.11
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -13,15 +13,15 @@ Top Elementor addons & GSAP animation plugin for WordPress with motion effects, 
 
 == Description ==
 
-**Animation Addons for Elementor is the ultimate GSAP-powered animation plugin, featuring 96+ exclusive widgets, 25+ advanced Elementor extensions, 2,000+ professionally designed page templates, 150+ fully built websites (including all inner pages), and 10,000+ modern, ready-to-use section templates.**
+**Animation Addons for Elementor is the ultimate GSAP-powered animation plugin, featuring 100+ exclusive widgets, 25+ advanced Elementor extensions, 2,000+ professionally designed page templates, 200+ fully built websites (including all inner pages), and 10,000+ modern, ready-to-use section templates.**
 
 As the **No.1 animation plugin for Elementor**, it enables you to create fully animated websites with advanced **GSAP functionality** —no coding required. Bring your designs to life with smooth animations, interactive effects, and seamless motion.
 [Check the Pro Version ](https://animation-addons.com/)
 [Explore 10,000+ Section Templates ](https://animation-addons.com/section-templates/)
-[Browse 150+ Pre-Built Websites](https://animation-addons.com/templates-list/)
+[Browse 200+ Pre-Built Websites](https://animation-addons.com/templates-list/)
 [Buy Pro Now – Get 50% Off!](https://animation-addons.com/pricing/)
 
-https://youtu.be/NS0TGy8A_tU
+https://youtu.be/tRbvgq2gJF4
 
 **Animation Addons for Elementor** includes all essential website-building tools, such as the **Custom Header & Footer Builder, CPT Builder, Animation Builder, Single Page and Single Post Builder, Mega Menu Builder, Archive Page Builder, and 404 Builder**. Designed to be lightweight, it ensures fast page loading times for a seamless user experience.
 
@@ -63,11 +63,13 @@ https://youtu.be/NS0TGy8A_tU
 🎨 Preloader
 🗂️ Mega Menus
 ↔️ Horizontal Scrolling
+↔️ Motion Scroll Card
 🔁 Preset Animation
 🛠️ CPT Builder
 🖼️ Icon Generator
 🔠 Custom Font Uploader
 ⚡ One-Click Demo Imports
+✒️ Code Snippet
 
 Animation Addons for Elementor is a game-changer in animation-focused web design. The blend of its advanced animations, customizable features, and unique functionality set it apart from competitors. Whether you’re a web developer, designer, agency owner, or website owner, the plugin caters to your holistic professional needs.
 
@@ -102,7 +104,7 @@ Once your website is designed with all the essential elements, enhance its funct
 
 
 ## Animation Addons For Elementor Widget List
-Take your website design to the next level with 96+ Elementor widgets. Whether you need dynamic sliders, service boxes, headers, portfolios, progress bars, breadcrumbs, accordions, post-feature images, or excerpts, Animation Addons got you covered.
+Take your website design to the next level with 100+ Elementor widgets. Whether you need dynamic sliders, service boxes, headers, portfolios, progress bars, breadcrumbs, accordions, post-feature images, or excerpts, Animation Addons got you covered.
 
 ### Header and Footer Widgets;
 **Site Logo**: Display the website’s logo prominently to establish brand identity and recognition.
@@ -265,7 +267,7 @@ This template library is specifically crafted for developers, designers, and age
 
 💡 Unlock next-level animations with **Animation Addons for Elementor!**
 
-### 97+ Elementor Widgets:
+### 100+ Elementor Widgets:
 Unlock endless design possibilities with 96+ advanced Elementor widgets. From dynamic sliders, service boxes, and portfolio grids to progress bars, accordions, and featured post images, these widgets enhance user engagement and optimize website functionality without the need for coding.
 
 ### Custom Animation Builder:
@@ -419,6 +421,12 @@ Subscribing is optional—no data is collected unless you opt in.
 See the unminified JS and CSS in our public repo: [GitHub Repository](https://github.com/Wealcoder/animation-addons-for-elementor/tree/dashboard/assets/src). 
 
 == Changelog ==
+
+= Animation Addons for Elementor v2.3.11 – 19 august 2025 = 
+  - 🆕 **Added:** Starter Template Menu
+  - 🎨 **Fixed:** Mobile navigation overlay issue for smoother user experience
+  - 🆕 **Added:** Code Snippet extension, 
+  - ✏️ **Improved** Dashboard widget docs
 
 = Animation Addons for Elementor v2.3.10 – 11 august 2025 = 
   - 🆕 **Added:** 20+ premium widgets — now completely free for all users!

@@ -140,3 +140,7 @@ if (!function_exists('aaeaddon_post_lite_reaction_ajax')) {
     add_action('wp_ajax_nopriv_aaeaddon_post_reaction', 'aaeaddon_post_lite_reaction_ajax');
     add_action('wp_ajax_aaeaddon_post_reaction', 'aaeaddon_post_lite_reaction_ajax');
 }
+
+
+
+
