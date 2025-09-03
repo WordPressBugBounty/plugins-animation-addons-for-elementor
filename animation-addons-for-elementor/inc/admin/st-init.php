@@ -381,6 +381,7 @@ class OneClickImport
 
 		// Get info of import data files and filter it.
 		$this->import_files = array();
+		// phpcs:disable WordPress.Security.NonceVerification.Missing
 		$attachment_status =  array_key_exists('attachment', $_POST) ? sanitize_text_field(wp_unslash($_POST['attachment'])) : true; // Remove slashes if added by WP	
 		// Importer options array.
 		$importer_options = array(
@@ -493,7 +494,7 @@ class OneClickImport
 			/*
 			 * Save the post ID that has navigation block in transient.
 			 */
-			if (strpos($postdata['post_content'], '<!-- wp:navigation') !== false) {
+			if (! empty($postdata['post_content']) && strpos($postdata['post_content'], '<!-- wp:navigation') !== false) {
 				// Keep track of POST ID that has navigation block.
 				$wcfio_post_nav_block = get_transient('aaeaddon_import_posts_with_nav_block');
 
