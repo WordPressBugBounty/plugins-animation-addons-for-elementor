@@ -221,10 +221,17 @@ class AAEAddon_Importer {
 				$template_data['next_step'] = 'check-template-status';
 				$progress                   = '30';
 				$msg                        =  esc_html__('Downloading Template', 'animation-addons-for-elementor');
+
 				if(isset($template_data['wp_options']) && is_array($template_data['wp_options'])){
 					$this->install_options($template_data['wp_options']);
+				}
+
+				$import_type = isset($_POST['import_type']) ? sanitize_text_field(wp_unslash($_POST['import_type'])) : 'full-demo'; // Remove slashes if added by WP
+				
+				if( $import_type !='page' ){
+					do_action('aaeaddon/starter-template/import/step/wp_options');	
 				}	
-				do_action('aaeaddon/starter-template/import/step/wp_options');					
+								
 				update_option('aaeaddon_template_import_state', $msg);			
 			}elseif(isset($template_data['next_step']) && $template_data['next_step'] == 'fail'){
 				$msg = esc_html__('Template Demo Import fail', 'animation-addons-for-elementor');
@@ -242,7 +249,7 @@ class AAEAddon_Importer {
 
 	public function update_blog_and_homepage_options($template_data){
 	
-		 if($template_data['home_page'] && $template_data['home_page'] !=''){
+		 if(isset($template_data['home_page']) && $template_data['home_page'] !=''){
 			// Get the front page.
 			$front_page = get_posts(
 				[
@@ -260,7 +267,7 @@ class AAEAddon_Importer {
 			}
 		 }
 
-		 if($template_data['blog_page'] && $template_data['blog_page'] !=''){
+		 if(isset($template_data['blog_page']) && $template_data['blog_page'] !=''){
 			// Get the blog page.
 			$blog_page = get_posts(
 				[
@@ -352,6 +359,11 @@ class AAEAddon_Importer {
 		}
 		
 	    $remote_url = WCF_TEMPLATE_STARTER_BASE_URL . 'wp-json/starter-templates/download';	
+		
+		if(isset($template['base_path']) && $template['base_path'] !=''){
+			$remote_url = $template['base_path'] . 'wp-json/starter-templates/download';
+		}
+
 		$args = [
 			'timeout'   => 90,
 			'body' => [

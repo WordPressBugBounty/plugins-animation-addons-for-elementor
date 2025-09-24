@@ -1,6 +1,14 @@
 
 == Changelog ==
 
+= Animation Addons for Elementor v2.3.13 – 24 September 2025 =
+
+  - 🆕 Added: 660+ Pages in Page importer 
+  - ✏️ Improved: Code Snippet design and functionality 
+  - ✏️ Improved: Section Import Library,
+  - 🎨 Fixed: Native Sticky Header using smoother options
+  - 🎨 Fixed: ThemeBuilder post-singulars condition
+
 = Animation Addons for Elementor v2.3.10 – 11 august 2025 = 
   - 🆕 **Added:** 20+ premium widgets — now completely free for all users!
   - 🎨 **Fixed:** Mobile navigation overlay issue for smoother user experience

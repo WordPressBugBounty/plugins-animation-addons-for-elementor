@@ -13,12 +13,33 @@ if ( ! defined( 'ABSPATH' ) ) {
 <head>
 	<meta charset="<?php bloginfo( 'charset' ); ?>" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
-	<link rel="profile" href="http://gmpg.org/xfn/11" />
-	<link rel="pingback" href="<?php bloginfo( 'pingback_url' ); ?>" />
 	<?php wp_head(); ?>
 </head>
-
 <body <?php body_class(); ?>>
-<?php do_action( 'wp_body_open' ); ?>
+<?php
+	global $aae_header_smoother, $aae_header_smoother_offsetY;
+	if($aae_header_smoother != 'no'){
+		do_action( 'wp_body_open' ); 
+	}
+	
+?>
 <div id="page" class="hfeed site">
     <?php do_action( 'wcf_header_builder_content' ); ?>
+	<?php
+		if( $aae_header_smoother == 'no' ){
+			do_action( 'wp_body_open' ); 
+			if($aae_header_smoother_offsetY){
+				?>
+					<style id="aae-elementor-pro-compatibility-smoother">
+						html .admin-bar #smooth-wrapper
+						{
+							top: <?php echo esc_attr($aae_header_smoother_offsetY) + 32; ?>px !important;
+						}
+					 	body #smooth-wrapper {
+							top: <?php echo esc_attr( $aae_header_smoother_offsetY); ?>px !important;
+						}
+					</style>	
+				<?php
+			}
+		}
+	?>

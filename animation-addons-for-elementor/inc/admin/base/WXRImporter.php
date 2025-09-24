@@ -334,7 +334,7 @@ class WXRImporter extends \WP_Importer
 	 */
 	public function import($file)
 	{
-		add_filter('import_post_meta_key', array($this, 'is_valid_meta_key'));
+		add_filter('aae_import_post_meta_key', array($this, 'is_valid_meta_key'));
 		add_filter('http_request_timeout', array(&$this, 'bump_request_timeout'));
 
 		/*
@@ -414,8 +414,8 @@ class WXRImporter extends \WP_Importer
 					update_option('aaeaddon_template_import_progress', [
 						'type' => 'single',
 						'total_items' => $total_init,
-						 'title' => $temp_title,
-						'progress' => $aae_counter_progress,
+						'title' => $temp_title,
+						'progress' => $aae_counter_progress,						
 						'data' => [						
 							'📝 Posts: ' . $aae_counter_progress,		
 						]
@@ -928,6 +928,7 @@ class WXRImporter extends \WP_Importer
 		} else {
 			$post_id = wp_insert_post($postdata, true);
 			do_action('wp_import_insert_post', $post_id, $original_id, $postdata, $data);
+			
 		}
 
 		if (is_wp_error($post_id)) {
@@ -1229,7 +1230,7 @@ class WXRImporter extends \WP_Importer
 				return false;
 			}
 
-			$key = apply_filters('import_post_meta_key', $meta_item['key'], $post_id, $post);
+			$key = apply_filters('aae_import_post_meta_key', $meta_item['key'], $post_id, $post);
 			$value = false;
 
 			if ('_edit_last' === $key) {
@@ -1249,7 +1250,7 @@ class WXRImporter extends \WP_Importer
 				}
 
 				add_post_meta($post_id, wp_slash($key), wp_slash($value));
-				do_action('import_post_meta', $post_id, $key, $value);
+				do_action('aae_import_post_meta', $post_id, $key, $value);
 
 				// if the post has a featured image, take note of this in case of remap
 				if ('_thumbnail_id' === $key) {

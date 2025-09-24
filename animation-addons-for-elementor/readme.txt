@@ -1,11 +1,11 @@
 === Animation Addons for Elementor - GSAP Powered Elementor Addons & Website Templates ===
-Contributors: wealcoder, wcrayhan, jhshakil, ahsanriad
+Contributors: wealcoder, wcrayhan, jhshakil, ahsanriad, hamimbepari
 Donate link: https://buy.stripe.com/3cs3dI7DQauI0py9AC
 Tags: Elementor, Elementor Addons, Elementor Templates, Animation, Templates
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.3.12
+Stable tag: 2.3.13
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -69,7 +69,8 @@ https://youtu.be/tRbvgq2gJF4
 🖼️ Icon Generator
 🔠 [Custom Font Uploader](https://animation-addons.com/docs/general-extensions/custom-fonts/)
 ⚡ [One-Click Demo Imports](https://animation-addons.com/docs/getting-started/how-to-import-starter-templates-from-animation-addons/)
-✒️ Code Snippet
+⚡ [One-Click Page Imports](https://animation-addons.com/page-templates/)
+✒️ CodeSnippet
 
 Animation Addons for Elementor is a game-changer in animation-focused web design. The blend of its advanced animations, customizable features, and unique functionality set it apart from competitors. Whether you’re a web developer, designer, agency owner, or website owner, the plugin caters to your holistic professional needs.
 
@@ -428,6 +429,14 @@ Subscribing is optional—no data is collected unless you opt in.
 See the unminified JS and CSS in our public repo: [GitHub Repository](https://github.com/Wealcoder/animation-addons-for-elementor/tree/dashboard/assets/src). 
 
 == Changelog ==
+
+= Animation Addons for Elementor v2.3.13 – 24 September 2025 =
+
+  - 🆕 Added: 660+ Pages in Page importer 
+  - ✏️ Improved: Code Snippet design and functionality 
+  - ✏️ Improved: Section Import Library,
+  - 🎨 Fixed: Native Sticky Header using smoother options
+  - 🎨 Fixed: ThemeBuilder post-singulars condition
 
 = Animation Addons for Elementor v2.3.12 – 02 September 2025 =
 

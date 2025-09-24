@@ -7,25 +7,27 @@
   line-height: 0;
 }
 
-
 .wcfci2025-style {
   display: flex;
   flex-direction: column;
   gap: 5rem;
 }
 
-
 .wcfci2025-style p {
     padding: 0;
-    margin: 0
+    margin: 0;
   }
 
-.notice{
+.notice {
   display: none;
   height: 0;
 }
 
-.post-type-wcf-custom-icons #side-sortables {
+/* .post-type-wcf-custom-icons #side-sortables {
+  display: none;
+} */
+.misc-pub-section.misc-pub-visibility,
+.misc-pub-section.curtime.misc-pub-curtime {
   display: none;
 }
 
@@ -153,6 +155,5 @@
   border: 1px solid #d1d5db;
   padding: 10px;
   border-radius: 8px;
-
-
 }
+
