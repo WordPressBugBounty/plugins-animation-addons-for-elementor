@@ -15,12 +15,6 @@ const languageModes = {
 const exampleCode = {
     html: `<h1>Code is Poetry.</h1>`,
     css: `/* CSS Example */
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
 .button {
     background: #007cba;
     color: white;
@@ -40,7 +34,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });`,
     php: `<?php
 // PHP Example
-echo 'Code is Poetry.';`
+add_filter( 'the_title', 'convert_smilies' );
+add_filter( 'wp_title', 'convert_smilies' );
+add_filter( 'sanitize_file_name', 'mb_strtolower' );`
 };
 
 // Create ESC button and inject CSS
@@ -121,20 +117,45 @@ function createEscButton() {
 function initializeEditor() {
     const editorContainer = document.getElementById('wp-code-editor-container');
     const hiddenField = document.getElementById('code-content-hidden');
+    const codeTypeElement = document.getElementById('code-type');
 
     if (!editorContainer) {
         console.warn('Editor container not found');
         return;
     }
 
+    // Get initial content and detect type
+    const initialContent = hiddenField ? hiddenField.value || '' : '';
+    const detectedType = detectCodeType(initialContent);
+
+    // Update the select to match detected type if needed
+    if (codeTypeElement && initialContent) {
+        codeTypeElement.value = detectedType;
+    }
+
+    // Get the correct mode
+    const initialMode = languageModes[detectedType] || languageModes.html;
+
+    // Initialize CodeMirror with proper configuration
     editor = CodeMirror(editorContainer, {
-        lineNumbers: true,
-        mode: languageModes.html,
+        value: initialContent,
+        mode: initialMode,
         theme: 'default',
-        indentUnit: 4,
+        lineNumbers: true,
         lineWrapping: true,
+        indentUnit: 4,
+        tabSize: 4,
+        indentWithTabs: false,
         autoCloseBrackets: true,
         autoCloseTags: true,
+        matchBrackets: true,
+        matchTags: true,
+        styleActiveLine: true,
+        showCursorWhenSelecting: true,
+        scrollbarStyle: 'native',
+        viewportMargin: Infinity,
+        cursorBlinkRate: 530,
+        dragDrop: true,
         foldGutter: true,
         gutters: [
             "CodeMirror-linenumbers",
@@ -205,6 +226,15 @@ function initializeEditor() {
         value: hiddenField ? hiddenField.value || '' : '',
     });
 
+    // Force refresh to ensure proper rendering
+    setTimeout(function() {
+        if (editor) {
+            editor.refresh();
+            // Re-apply the mode to ensure syntax highlighting
+            editor.setOption("mode", initialMode);
+        }
+    }, 100);
+
     // Update hidden field on change
     if (hiddenField) {
         editor.on('change', function() {
@@ -215,6 +245,41 @@ function initializeEditor() {
 
     // Initial stats update
     updateStats();
+}
+
+function detectCodeType(content) {
+    if (!content || content.trim() === '') {
+        const codeTypeElement = document.getElementById('code-type');
+        return codeTypeElement ? codeTypeElement.value : 'html';
+    }
+
+    // Check for PHP tags
+    if (content.includes('<?php') || content.includes('<?=')) {
+        return 'php';
+    }
+
+    // Check for HTML tags
+    if (/<\/?[a-z][\s\S]*>/i.test(content)) {
+        // Check if it's mainly CSS
+        if (content.includes('{') && content.includes('}') && content.includes(':') && !content.includes('<style>')) {
+            return 'css';
+        }
+        return 'html';
+    }
+
+    // Check for JavaScript patterns
+    if (content.includes('function') || content.includes('var ') || content.includes('let ') || content.includes('const ') || content.includes('=>')) {
+        return 'javascript';
+    }
+
+    // Check for CSS patterns
+    if (content.includes('{') && content.includes('}') && content.includes(':')) {
+        return 'css';
+    }
+
+    // Default to current select value or html
+    const codeTypeElement = document.getElementById('code-type');
+    return codeTypeElement ? codeTypeElement.value : 'html';
 }
 
 // Change language mode
@@ -247,7 +312,7 @@ function updateStats() {
     }
 }
 
-// Toggle theme
+// Toggle theme.
 function toggleTheme() {
     if (!editor) return;
 
@@ -286,9 +351,9 @@ function exitFullscreen() {
     isFullscreen = false;
     const wrapper = editor.getWrapperElement();
     wrapper.classList.remove('fullscreen');
-    editor.setSize('100%', '300px');
+    editor.setSize('100%', '500px');
     if (escButton) {
-        escButton.classList.remove('show'); // Hide ESC button
+        escButton.classList.remove('show');
     }
     editor.refresh();
     showNotification('Exited fullscreen mode');
@@ -392,8 +457,20 @@ function showNotification(message) {
     }, 3000);
 }
 
-// Event listeners
-document.addEventListener('DOMContentLoaded', function() {
+// Global function for inline oninput attribute (if you need to keep it)
+function updatePriorityValue(value) {
+    const priorityValue = document.getElementById('priority-value');
+    if (priorityValue) {
+        priorityValue.value = value;
+    }
+}
+
+// ==========================================
+// INITIALIZATION FUNCTIONS
+// ==========================================
+
+// Initialize main editor functionality
+function initializeEditorFunctionality() {
     // Create ESC button first
     createEscButton();
 
@@ -462,25 +539,22 @@ document.addEventListener('DOMContentLoaded', function() {
             toggleTheme();
         }
     });
-});
+}
 
-// Show Hide location fields.
-document.addEventListener('DOMContentLoaded', function () {
+// Initialize PHP/Other code type location toggle
+function initializeLocationToggle() {
     const codeTypeSelect = document.getElementById('code-type');
-    const loadLocationElement = document.getElementById('load-location');
+    const loadLocationElement = document.getElementById('load-location-group');
     const loadNotice = document.getElementById('php-version-notice');
 
     if (!codeTypeSelect || !loadLocationElement || !loadNotice) return;
 
-    const loadLocationField = loadLocationElement.closest('.form-group');
-    if (!loadLocationField) return;
-
     function toggleLoadLocation() {
         if (codeTypeSelect.value === 'php') {
-            loadLocationField.style.display = 'none';
+            loadLocationElement.style.display = 'none';
             loadNotice.style.display = '';
         } else {
-            loadLocationField.style.display = '';
+            loadLocationElement.style.display = '';
             loadNotice.style.display = 'none';
         }
     }
@@ -490,9 +564,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // On change
     codeTypeSelect.addEventListener('change', toggleLoadLocation);
-});
+}
 
-document.addEventListener('DOMContentLoaded', function () {
+// Initialize visibility page list toggle
+function initializeVisibilityPageToggle() {
     const codeTypeSelect = document.getElementById('visibility-page');
     const loadLocationElement = document.getElementById('visibility-page-list');
 
@@ -514,16 +589,62 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // On change
     codeTypeSelect.addEventListener('change', toggleLoadLocation);
-});
-
-function updatePriorityValue(value) {
-    const priorityValueElement = document.getElementById('priority-value');
-    if (priorityValueElement) {
-        priorityValueElement.textContent = value;
-    }
 }
 
-document.addEventListener('DOMContentLoaded', function () {
+// Initialize priority slider functionality
+function initializePrioritySlider() {
+    const prioritySlider = document.getElementById('priority-slider');
+    const priorityValue = document.getElementById('priority-value');
+
+    function updatePriorityValue(value) {
+        if (priorityValue) {
+            priorityValue.value = value;
+        }
+    }
+
+    function updatePrioritySlider(value) {
+        let numValue = parseInt(value, 10);
+
+        if (isNaN(numValue)) {
+            numValue = 1;
+        } else if (numValue < 1) {
+            numValue = 1;
+        } else if (numValue > 999) {
+            numValue = 999;
+        }
+
+        if (prioritySlider) {
+            prioritySlider.value = numValue;
+        }
+        if (priorityValue) {
+            priorityValue.value = numValue;
+        }
+    }
+
+    if (prioritySlider) {
+        prioritySlider.addEventListener('input', function() {
+            updatePriorityValue(this.value);
+        });
+    }
+
+    if (priorityValue) {
+        priorityValue.addEventListener('input', function() {
+            updatePrioritySlider(this.value);
+        });
+
+        priorityValue.addEventListener('blur', function() {
+            updatePrioritySlider(this.value);
+        });
+
+        priorityValue.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                updatePrioritySlider(this.value);
+                this.blur(); // Remove focus from input
+            }
+        });
+    }
+
+    // Secondary priority slider display (if exists)
     const slider = document.getElementById('priority-slider');
     const valueDisplay = document.getElementById('priority-value');
 
@@ -533,9 +654,10 @@ document.addEventListener('DOMContentLoaded', function () {
             valueDisplay.textContent = this.value;
         });
     }
-});
+}
 
-document.addEventListener('DOMContentLoaded', function () {
+// Initialize PHP version checking
+function initializePHPVersionCheck() {
     const codeTypeSelect = document.querySelector('[name="code_type"]');
     const codeTextarea = document.querySelector('[name="code_content"]');
 
@@ -569,7 +691,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // === PHP 7.2 ===
         { regex: /object\s+\$[A-Za-z_]/, min: 7.2, name: 'object type hint' },
-        { regex: /(?<!::)count\(/, min: 7.2, name: 'count() with Countable objects' }, // mild check
+        { regex: /(?<!::)count\(/, min: 7.2, name: 'count() with Countable objects' },
         { regex: /stream_isatty\s*\(/, min: 7.2, name: 'stream_isatty() function' },
 
         // === PHP 7.3 ===
@@ -647,111 +769,54 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
-});
+}
 
-/// Ajax Call for page select
-(function($){
-    "use strict";
-    const WCFCustomCode = {
-        init: function() {
-            $('#visibility-page-list').select2({
-                ajax: {
-                    url: ajaxurl,
-                    dataType: 'json',
-                    method: 'post',
-                    delay: 250,
-                    data: function (params) {
-                        return {
-                            q: params.term, // search term
-                            page: params.page || 1,
-                            action: 'add_custom_page',
-                            nonce: WCFCustomCodeVars.nonce,
-                        };
-                    },
-                    processResults: function (data) {
-                        let uniqueData = [];
-                        let seen = new Set();
-                        data.forEach(item => {
-                            if (!seen.has(item.id)) {
-                                seen.add(item.id);
-                                uniqueData.push(item);
-                            }
-                        });
-                        return {
-                            results: uniqueData
-                        };
-                    },
-                    cache: true
+// Initialize Select2 for page selection
+function initializeSelect2PageSelection() {
+    // This needs jQuery, so we'll wrap it
+    if (typeof jQuery !== 'undefined' && jQuery('#visibility-page-list').length) {
+        jQuery('#visibility-page-list').select2({
+            ajax: {
+                url: ajaxurl,
+                dataType: 'json',
+                method: 'post',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        q: params.term, // search term
+                        page: params.page || 1,
+                        action: 'add_custom_page',
+                        nonce: WCFCustomCodeVars.nonce,
+                    };
                 },
-                minimumInputLength: 2,
-                placeholder: 'Search and select an option',
-                allowClear: true
-            });
-
-            $(document).on('change', '.snippet-status-toggle', function() {
-                var $checkbox = $(this);
-                var snippetId = $checkbox.data('id');
-                var isActive = $checkbox.is(':checked') ? 'yes' : 'no';
-
-                // Disable checkbox during AJAX request
-                $checkbox.prop('disabled', true);
-
-                $.ajax({
-                    url: ajaxurl,
-                    type: 'POST',
-                    data: {
-                        action: 'toggle_snippet_status',
-                        snippet_id: snippetId,
-                        status: isActive,
-                        nonce: WCFCustomCodeVars.nonce
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            // Show success message
-                            showNotification(response.data.message);
-                            if (typeof wp !== 'undefined' && wp.data && wp.data.dispatch) {
-                                wp.data.dispatch('core/notices').createSuccessNotice(
-                                    response.data.message || 'Status updated successfully.',
-                                    { id: 'snippet-status-updated' }
-                                );
-                            }
-                        } else {
-                            // Revert checkbox state on error
-                            $checkbox.prop('checked', !$checkbox.is(':checked'));
-                            if (typeof wp !== 'undefined' && wp.data && wp.data.dispatch) {
-                                wp.data.dispatch('core/notices').createErrorNotice(
-                                    response.data.message || 'Failed to update status.',
-                                    { id: 'snippet-status-error' }
-                                );
-                            }
+                processResults: function (data) {
+                    let uniqueData = [];
+                    let seen = new Set();
+                    data.forEach(item => {
+                        if (!seen.has(item.id)) {
+                            seen.add(item.id);
+                            uniqueData.push(item);
                         }
-                    },
-                    error: function() {
-                        // Revert checkbox state on error
-                        $checkbox.prop('checked', !$checkbox.is(':checked'));
-                        if (typeof wp !== 'undefined' && wp.data && wp.data.dispatch) {
-                            wp.data.dispatch('core/notices').createErrorNotice(
-                                'Network error occurred while updating status.',
-                                { id: 'snippet-status-error' }
-                            );
-                        }
-                    },
-                    complete: function() {
-                        // Re-enable checkbox
-                        $checkbox.prop('disabled', false);
-                    }
-                });
-            });
-        },
-    };
+                    });
+                    return {
+                        results: uniqueData
+                    };
+                },
+                cache: true
+            },
+            minimumInputLength: 2,
+            placeholder: 'Search and select an option',
+            allowClear: true
+        });
+    }
+}
 
-    WCFCustomCode.init();
-})(jQuery);
-
-
-document.addEventListener('DOMContentLoaded', function() {
+// Initialize visibility options based on code type
+function initializeVisibilityOptions() {
     const codeTypeSelect = document.getElementById('code-type');
     const visibilityPageSelect = document.getElementById('visibility-page');
+
+    if (!codeTypeSelect || !visibilityPageSelect) return;
 
     // Store original options for restoration
     const originalOptions = visibilityPageSelect.innerHTML;
@@ -794,4 +859,136 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('load', function() {
         updateVisibilityOptions();
     });
+}
+
+// Initialize load location options based on code type
+function initializeLoadLocationOptions() {
+    const codeType = document.getElementById('code-type');
+    const loadLocation = document.getElementById('load-location');
+
+    if (!codeType || !loadLocation) return;
+
+    function updateLoadLocations() {
+        const value = codeType.value;
+
+        Array.from(loadLocation.options).forEach(option => {
+            if (value === 'javascript') {
+                // Only enable head, footer, and empty option
+                option.disabled = !(option.value === '' || option.value === 'head' || option.value === 'footer');
+            } else {
+                // HTML, CSS, PHP → enable all options
+                option.disabled = false;
+            }
+        });
+
+        // Auto-select first enabled option if current selection is disabled
+        if (loadLocation.options[loadLocation.selectedIndex].disabled) {
+            const firstEnabled = Array.from(loadLocation.options).find(opt => !opt.disabled);
+            if (firstEnabled) {
+                loadLocation.value = firstEnabled.value;
+            }
+        }
+    }
+
+    // Run once on page load
+    updateLoadLocations();
+
+    // Listen for code type changes
+    codeType.addEventListener('change', updateLoadLocations);
+}
+
+// Initialize dependency toggles between load location and page location
+function initializeDependencyToggles() {
+    const loadLocation = document.getElementById("load-location"); // head/footer/before/after select
+    const pageLocation = document.getElementById("visibility-page"); // page condition select
+
+    if (!loadLocation || !pageLocation) {
+        return;
+    }
+
+    function toggleDependencies() {
+        const loadVal = loadLocation.value;
+        const pageVal = pageLocation.value;
+
+        const isArchiveLike =
+            pageVal.includes("archive") || pageVal === "blog";
+
+        Array.from(pageLocation.options).forEach(option => {
+            if (option.value.includes("archive") || option.value === "blog") {
+                option.disabled = (loadVal === "content_before" || loadVal === "content_after");
+            }
+        });
+
+        const beforeOpt = loadLocation.querySelector('option[value="content_before"]');
+        const afterOpt = loadLocation.querySelector('option[value="content_after"]');
+
+        if (isArchiveLike) {
+            if (beforeOpt) beforeOpt.disabled = true;
+            if (afterOpt) afterOpt.disabled = true;
+
+            if (loadVal === "content_before" || loadVal === "content_after") {
+                loadLocation.value = "";
+            }
+        } else {
+            if (beforeOpt) beforeOpt.disabled = false;
+            if (afterOpt) afterOpt.disabled = false;
+        }
+    }
+
+    // Initial run
+    toggleDependencies();
+
+    // Bind events
+    loadLocation.addEventListener("change", toggleDependencies);
+    pageLocation.addEventListener("change", toggleDependencies);
+}
+
+// Initialize active toggle status
+function initializeActiveToggle() {
+    const toggle = document.getElementById("active-toggle");
+    const statusEl = document.querySelector(".aae-csp-active__status");
+
+    if (!toggle || !statusEl) return;
+
+    const statusText = statusEl.querySelector("span");
+
+    if (toggle && statusEl && statusText) {
+        toggle.addEventListener("change", function () {
+            if (this.checked) {
+                statusEl.classList.remove("inactive");
+                statusText.textContent = "Active";
+            } else {
+                statusEl.classList.add("inactive");
+                statusText.textContent = "Inactive";
+            }
+        });
+    }
+}
+
+// ==========================================
+// MAIN INITIALIZATION
+// ==========================================
+
+// Single DOMContentLoaded event listener
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all modules
+    initializeEditorFunctionality();
+    initializeLocationToggle();
+    initializeVisibilityPageToggle();
+    initializePrioritySlider();
+    initializePHPVersionCheck();
+    initializeSelect2PageSelection();
+    initializeVisibilityOptions();
+    initializeLoadLocationOptions();
+    initializeDependencyToggles();
+    initializeActiveToggle();
+
+    setTimeout(function() {
+        if (editor) {
+            editor.refresh();
+            // Force re-apply current mode
+            const currentMode = editor.getOption('mode');
+            editor.setOption('mode', currentMode);
+        }
+    }, 500);
 });

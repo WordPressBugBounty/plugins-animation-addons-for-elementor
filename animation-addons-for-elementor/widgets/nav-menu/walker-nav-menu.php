@@ -237,8 +237,11 @@ class WCF_Menu_Walker extends \Walker_Nav_Menu {
 		$submenu_indicator = '';
 		if ( in_array( 'menu-item-has-children', $classes ) || ! empty( $buildercontent ) ) {
 			// Use an if statement to conditionally display the submenu indicator icon
-			if ( ! empty( $args->submenu_indicator_icon ) ) {
+			if ( ! empty( $args->submenu_indicator_icon ) && $depth == 0 ) {
 				$submenu_indicator .= '<span class="wcf-submenu-indicator">' . $args->submenu_indicator_icon . '</span>';
+			}
+			if ( ! empty( $args->innersubmenu_indicator_icon ) && $depth !== 0 ) {
+				$submenu_indicator .= '<span class="wcf-submenu-indicator">' . $args->innersubmenu_indicator_icon . '</span>';
 			}
 		}
 		
@@ -247,7 +250,8 @@ class WCF_Menu_Walker extends \Walker_Nav_Menu {
 		if( isset($this->elementor_settings['remove_span']) && $this->elementor_settings['remove_span'] == true){		
 			$item_output .= $args->link_before . $title . $args->link_after;				
 		}else{
-			$item_output .= $args->link_before .'<span class="menu-text" data-text="'.$title.'">'. $title .'</span>'. $args->link_after;			
+			$item_output .= $args->link_before . $title . $args->link_after;	
+			//$item_output .= $args->link_before . sprintf('<i class="menu-text" data-text="%s">%s</i>', $title, $title) . $args->link_after;			
 		}
 		$item_output .= $badge;
 		$item_output .= $submenu_indicator . '</a>';

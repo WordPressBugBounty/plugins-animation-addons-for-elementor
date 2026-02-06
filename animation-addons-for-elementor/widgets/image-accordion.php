@@ -41,7 +41,7 @@ class Image_Accordion extends Widget_Base
 	 */
 	public function get_name()
 	{
-		return 'wcf--imag-accordion';
+		return 'wcf--image-accordion';
 	}
 
 	/**
@@ -95,7 +95,16 @@ class Image_Accordion extends Widget_Base
 	 */
 	public function get_style_depends()
 	{
-		return ['wcf--image-accordion', 'wcf--button'];
+		return ['wcf--image-accordion'];
+	}
+
+	/**
+	 * Requires js files.
+	 *
+	 * @return array
+	 */
+	public function get_script_depends() {
+		return [ 'wcf--image-accordion' ];
 	}
 
 	/**
@@ -248,6 +257,92 @@ class Image_Accordion extends Widget_Base
 				'selectors'  => [
 					'{{WRAPPER}} .wcf__image-accordion' => 'height: {{SIZE}}{{UNIT}};',
 				],
+			]
+		);
+
+		// Aligtment control
+
+		$this->add_responsive_control(
+			'aae_content_alignment',
+			[
+				'label'     => esc_html__('Horizontal Align', 'animation-addons-for-elementor'),
+				'type'      => Controls_Manager::CHOOSE,
+				'options'   => [
+					'start'   => [
+						'title' => esc_html__('Left', 'animation-addons-for-elementor'),
+						'icon'  => 'eicon-text-align-left',
+					],
+					'center' => [
+						'title' => esc_html__('Center', 'animation-addons-for-elementor'),
+						'icon'  => 'eicon-text-align-center',
+					],
+					'end'  => [
+						'title' => esc_html__('Right', 'animation-addons-for-elementor'),
+						'icon'  => 'eicon-text-align-right',
+					],
+				],
+				'default'   => '',
+				'toggle'    => true,
+				'selectors' => [
+					'{{WRAPPER}} .wcf__image-accordion .accordion-item' => 'justify-content: {{VALUE}};',
+				],
+				'prefix_class' => 'aae-ct-align-',
+			]
+		);
+
+		$this->add_responsive_control(
+			'aae_item_alignment',
+			[
+				'label'     => esc_html__('Vertical Align', 'animation-addons-for-elementor'),
+				'type'      => Controls_Manager::CHOOSE,
+				'options'   => [
+					'flex-start'   => [
+						'title' => esc_html__('Left', 'animation-addons-for-elementor'),
+						'icon'  => 'eicon-v-align-top',
+					],
+					'center' => [
+						'title' => esc_html__('Center', 'animation-addons-for-elementor'),
+						'icon'  => 'eicon-v-align-middle',
+					],
+					'flex-end'  => [
+						'title' => esc_html__('Right', 'animation-addons-for-elementor'),
+						'icon'  => 'eicon-v-align-bottom',
+					],
+				],
+				'default'   => '',
+				'toggle'    => true,
+				'selectors' => [
+					'{{WRAPPER}} .wcf__image-accordion .accordion-item' => 'align-items: {{VALUE}};',					
+				],
+				'prefix_class' => 'aae-im-alig-',
+			]
+		);
+
+		$this->add_responsive_control(
+			'aae_text_alignment',
+			[
+				'label'     => esc_html__('Text Align', 'animation-addons-for-elementor'),
+				'type'      => Controls_Manager::CHOOSE,
+				'options'   => [
+					'start'   => [
+						'title' => esc_html__('Left', 'animation-addons-for-elementor'),
+						'icon'  => 'eicon-text-align-left',
+					],
+					'center' => [
+						'title' => esc_html__('Center', 'animation-addons-for-elementor'),
+						'icon'  => 'eicon-text-align-center',
+					],
+					'end'  => [
+						'title' => esc_html__('Right', 'animation-addons-for-elementor'),
+						'icon'  => 'eicon-text-align-right',
+					],
+				],
+				'default'   => '',
+				'toggle'    => true,
+				'selectors' => [
+					'{{WRAPPER}} .wcf__image-accordion .content' => 'text-align: {{VALUE}};',					
+				],
+				'prefix_class' => 'aae-im-alig-',
 			]
 		);
 

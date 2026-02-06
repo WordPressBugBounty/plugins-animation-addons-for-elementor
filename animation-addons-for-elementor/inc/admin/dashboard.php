@@ -38,6 +38,7 @@ class WCF_Admin_Init
 	 * @var null
 	 */
 	private static $_instance = null;
+	private $plugin_file = null;
 
 	/**
 	 * [instance] Initializes a singleton instance
@@ -55,6 +56,7 @@ class WCF_Admin_Init
 
 	public function __construct()
 	{
+		$this->plugin_file = WP_PLUGIN_DIR . '/animation-addons-for-elementor-pro/animation-addons-for-elementor-pro.php';
 		$this->remove_all_notices();
 		$this->include();
 		$this->init();
@@ -71,7 +73,7 @@ class WCF_Admin_Init
 		}
 
 		// Check if we are on the correct page
-		if ($screen && $screen->id === 'animation-addon_page_wcf_addons_settings') {
+		if ($screen && strpos($screen->id, '_page_wcf_addons_settings') !== false) {
 			$classes .= ' wcf-anim2024';
 		}
 
@@ -108,7 +110,53 @@ class WCF_Admin_Init
 		add_action('elementor/core/files/clear_cache', function () {
 			delete_transient('wcf_menu_42_data');
 		});
+
+		//add_action('wp_dashboard_setup', [$this, 'dashboard_widget'], 999);
 	}
+
+	public function dashboard_widget()
+	{
+
+
+		if (file_exists($this->plugin_file)) {
+			return;
+		}
+
+		wp_add_dashboard_widget(
+			'aae_dashboard_widget',
+			'Animation Addons Overview',
+			[$this, 'aae_render_dashboard_widget']
+		);
+
+
+		global $wp_meta_boxes;
+
+		// Check that our widget actually exists before reordering
+		if (isset($wp_meta_boxes['dashboard']['normal']['core']['aae_dashboard_banner'])) {
+			// Get current dashboard widgets
+			$normal_dashboard = $wp_meta_boxes['dashboard']['normal']['core'];
+
+			// Backup our widget
+			$aae_widget_backup = [
+				'aae_dashboard_banner' => $normal_dashboard['aae_dashboard_banner']
+			];
+
+			// Remove from bottom and merge on top
+			unset($normal_dashboard['aae_dashboard_banner']);
+			$sorted_dashboard = array_merge($aae_widget_backup, $normal_dashboard);
+
+			// Assign back
+			$wp_meta_boxes['dashboard']['normal']['core'] = $sorted_dashboard;
+		}
+	}
+
+	function aae_render_dashboard_widget()
+	{
+		$view = __DIR__ . '/banner/ads.php';
+		require_once $view;
+	}
+
+
 	/**
 	 * Summary of elementor_disabled_elements
 	 *
@@ -284,8 +332,12 @@ class WCF_Admin_Init
 	public function enqueue_scripts($hook)
 	{
 		$total_extensions = $total_widgets = 0;
-
-		if ($hook == 'animation-addon_page_wcf_addons_settings') {
+     
+		$screen = get_current_screen();
+		if ( ! $screen || strpos($screen->id, '_page_wcf_addons_settings') === false) {
+			return;
+		}
+		//if ($hook == 'animation-addon_page_wcf_addons_settings') {
 			// sync element manager
 			$this->disable_widgets_by_element_manager();
 			// CSS
@@ -316,6 +368,7 @@ class WCF_Admin_Init
 
 			$localize_data = array(
 				'ajaxurl'             => admin_url('admin-ajax.php'),
+				'isSettingsPage' => true, // 🔥 IMPORTANT
 				'nonce'               => wp_create_nonce('wcf_admin_nonce'),
 				'addons_config'       => apply_filters('wcf_addons_dashboard_config', $GLOBALS['wcf_addons_config']),
 				'adminURL'            => admin_url(),
@@ -334,19 +387,21 @@ class WCF_Admin_Init
 				'user_role'           => wcfaddon_get_current_user_roles(),
 				'version'             => WCF_ADDONS_VERSION,
 				'st_template_domain'  => WCF_TEMPLATE_STARTER_BASE_URL,
-				'home_url'            => home_url('/'),
-				'template_menu' => $this->get_template_menu_data()
-			);
+				'home_url' => add_query_arg(['aae-cache' => 1], home_url('/')),
+				'template_menu' => $this->get_template_menu_data(),
+				'hero' => file_exists($this->plugin_file) ? WCF_ADDONS_URL . 'assets/images/hero-banner.jpg' : 'no',
+				'hero_offer' => WCF_ADDONS_URL . 'assets/video/cyber-sale.mp4',
 
+			);
 			wp_localize_script('wcf-admin', 'WCF_ADDONS_ADMIN', $localize_data);
-		}
+		//}
 	}
 
 	public function get_template_menu_data()
 	{
 		$transient_key = 'wcf_menu_42_data';
 		$cached_data   = get_transient($transient_key);
-		
+
 		// ✅ Return cached data if available
 		if ($cached_data !== false) {
 			return $cached_data;
@@ -455,7 +510,7 @@ class WCF_Admin_Init
 		$screen = get_current_screen();
 
 		// Check if we are on the correct admin page
-		if ($screen && $screen->id === 'animation-addon_page_wcf_addons_settings') {
+		if ($screen && strpos($screen->id, '_page_wcf_addons_settings') !== false) {
 			echo '<div id="wcf-admin-toast"></div>';
 		}
 	}
@@ -478,7 +533,7 @@ class WCF_Admin_Init
 			'in_admin_header',
 			function () {
 				$screen = get_current_screen();
-				if ($screen && 'animation-addon_page_wcf_addons_settings' === $screen->id) {
+				if ($screen && strpos($screen->id, '_page_wcf_addons_settings') !== false) {
 					remove_all_actions('admin_notices');
 					remove_all_actions('all_admin_notices');
 					remove_all_actions('user_admin_notices');
@@ -500,6 +555,7 @@ class WCF_Admin_Init
 	public function save_settings()
 	{
 
+	
 		check_ajax_referer('wcf_admin_nonce', 'nonce');
 
 		if (! current_user_can('manage_options')) {
@@ -514,12 +570,14 @@ class WCF_Admin_Init
 		$option_name   = isset($_POST['settings']) ? sanitize_text_field(wp_unslash($_POST['settings'])) : '';
 		$sanitize_data = sanitize_text_field(wp_unslash($_POST['fields']));
 		$settings      = json_decode($sanitize_data, true);
-		wcf_get_nested_config_keys($settings, $foundkeys, $actives);
+		wcf_get_nested_active_config_keys($settings, $found, $actives);
+		wcf_get_nested_config_keys($settings, $foundkeys, $updatedSettings);
+
 		update_option('wcf_addons_setup_wizard', 'complete');
 		// update new settings
 		if (! empty($option_name)) {
 
-			$updated = update_option($option_name, $actives);
+			$updated = update_option($option_name, $updatedSettings);
 
 			if ($option_name == 'wcf_save_widgets') {
 				$this->sync_widgets_by_element_manager();
@@ -527,10 +585,10 @@ class WCF_Admin_Init
 			} else {
 				update_option('wcf_extension_dashboardv2', true);
 			}
-			$elements       = get_option($option_name);
+
 			$return_message = array(
 				'status' => $updated,
-				'total'  => is_array($elements) ? count($elements) : 0,
+				'total'  => is_array($actives) ? count($actives) : 0,
 
 			);
 			wp_send_json($return_message);
@@ -745,21 +803,10 @@ class WCF_Admin_Init
 			return;
 		}
 
-		$settings = array(
-			'smooth' => sanitize_text_field(wp_unslash($_POST['smooth'])),
-		);
-
-		if (isset($_POST['mobile'])) {
-			$settings['mobile'] = sanitize_text_field(wp_unslash($_POST['mobile']));
-		}
-		if (isset($_POST['disableMode'])) {
-			$settings['disableMode'] = sanitize_text_field(wp_unslash($_POST['disableMode']));
-		}
-		if (isset($_POST['media'])) {
-			$settings['media'] = sanitize_text_field(wp_unslash($_POST['media']));
-		}
-
-		$option = wp_json_encode($settings);
+		$settings = sanitize_text_field(wp_unslash($_POST['smooth']));
+	
+		$decode = json_decode($settings);
+		$option = wp_json_encode($decode);
 
 		// update new settings
 		if (! empty($_POST['smooth'])) {
