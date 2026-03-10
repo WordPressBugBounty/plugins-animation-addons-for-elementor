@@ -4,8 +4,8 @@ Donate link: https://buy.stripe.com/3cs3dI7DQauI0py9AC
 Tags: Elementor, Elementor Addons, Elementor Templates, Animation, Templates
 Requires at least: 6
 Tested up to: 6.9
-Requires PHP: 7.4
-Stable tag: 2.5.6
+Requires PHP: 7.4 
+Stable tag: 2.5.7
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
