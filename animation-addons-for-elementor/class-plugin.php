@@ -967,7 +967,6 @@ class Plugin
 
 			if (! $data['is_pro'] && ! $data['is_extension']) {
 				if (file_exists(WCF_ADDONS_PATH . 'inc/class-wcf-' . $slug . '.php')) {
-
 					include_once WCF_ADDONS_PATH . 'inc/class-wcf-' . $slug . '.php';
 				}
 			}
@@ -1062,6 +1061,8 @@ class Plugin
 		include_once WCF_ADDONS_PATH . 'inc/admin/page-import.php';
 		include_once WCF_ADDONS_PATH . 'widgets/mailchimp/mailchimp-api.php';
 		include_once WCF_ADDONS_PATH . 'inc/trait-wcf-nested-slider.php';
+		include_once WCF_ADDONS_PATH . 'inc/class-wcf-starter-animations.php';
+
 
 		// Load Loop Builder Integration.
 		require_once WCF_ADDONS_PATH . 'widgets/loop-builder/init.php';
@@ -1508,7 +1509,14 @@ class Plugin
 	 */
 	public function register_starter_animation_style() {
 
-		
+		wp_register_style(
+			'aae-starter-animations',
+			WCF_ADDONS_URL . 'assets/css/starter-animations.css',
+			[],
+			WCF_ADDONS_VERSION
+		);
+
+		wp_enqueue_style('aae-starter-animations');
 
 	}
 
@@ -1523,15 +1531,6 @@ class Plugin
 		);
 		
 		wp_enqueue_script('aae-starter-animations');
-
-		wp_register_style(
-			'aae-starter-animations',
-			WCF_ADDONS_URL . 'assets/css/starter-animations.css',
-			[],
-			WCF_ADDONS_VERSION
-		);
-
-		wp_enqueue_style('aae-starter-animations');
 		
 	}
 

@@ -4,8 +4,8 @@ Donate link: https://buy.stripe.com/3cs3dI7DQauI0py9AC
 Tags: Elementor, Elementor Addons, Elementor Templates, Animation, Templates
 Requires at least: 6
 Tested up to: 6.9
-Requires PHP: 7.4 
-Stable tag: 2.5.7
+Requires PHP: 7.4
+Stable tag: 2.5.8
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -20,7 +20,7 @@ Build stunning, high-performance **[Elementor](https://wordpress.org/plugins/ele
 [**👉 50+ Free Website Templates**](https://animation-addons.com/starter-templates/?mode=free)
 
 ***Create full Elementor websites for free*** — including 50+ free website templates, 80+ widgets, and built-in animation features.
- 
+
 Upgrade only if you need advanced GSAP power animated website.
 
   [**👉 Animation Addons**](https://animation-addons.com/)
@@ -603,8 +603,8 @@ See the unminified JS and CSS in our public repo: [GitHub Repository](https://gi
 = 🌀 Animation Addons for Elementor v2.5.6 – 5th March 2026
 
   - **Fixed:** Starter Animation Issue Fixed.
-  - **Fixed:** Loop grid widget conflict with Elementor Loop grid issue fixed.
-  - **Improved:** Starter Animation Dependency remove as extension.
+  - **Fixed:** Loop grid widget conflict with Elmentor Loop grid issue fixed.
+  - **Imporved:** Starter Animation Dependancy remove as extension.
 
 = 🌀 Animation Addons for Elementor v2.5.5 – 22th February 2026
 
