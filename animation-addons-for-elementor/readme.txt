@@ -5,7 +5,7 @@ Tags: animation, elementor, elementor addons, elementor templates, elementor wid
 Requires at least: 6
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.6.2
+Stable tag: 2.6.3
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -17,9 +17,9 @@ Build stunning, high-performance **[Elementor](https://wordpress.org/plugins/ele
 
 **Animation Addons includes 300+ full website templates, 10,000+ professionally designed Elementor section templates, and 100+ powerful widgets — built to help you launch faster and increase conversions.**
  
-[**👉 50+ Free Website Templates**](https://animation-addons.com/starter-templates/?mode=free)
+[**👉 80+ Free Website Templates**](https://animation-addons.com/starter-templates/?mode=free)
 
-***Create full Elementor websites for free*** — including 50+ free website templates, 80+ widgets, and built-in animation features.
+***Create full Elementor websites for free*** — including 80+ free website templates, 100+ widgets, and built-in animation features.
 
 Upgrade only if you need advanced GSAP power animated website.
 
@@ -77,7 +77,7 @@ Create advanced Elementor animations with a flexible, GSAP-powered motion system
 Speed up development with one of the largest Elementor template collections available:
 
 [👉 300+ Full Elementor Website Templates](https://animation-addons.com/starter-templates/) 
-[👉 50+ Free Elementor Website Templates](https://animation-addons.com/starter-templates/?mode=free)
+[👉 80+ Free Elementor Website Templates](https://animation-addons.com/starter-templates/?mode=free)
 [👉 10,000+ Modern Elementor Section Templates](https://animation-addons.com/section-templates/)
 [👉 15,00+ Creative Elementor Page templates](https://animation-addons.com/page-templates/)
 👉 Conversion-focused layouts
@@ -599,6 +599,12 @@ Subscribing is optional—no data is collected unless you opt in.
 See the unminified JS and CSS in our public repo: [GitHub Repository](https://github.com/Wealcoder/animation-addons-for-elementor/tree/dashboard/assets/src). 
 
 == Changelog ==
+
+= 🌀 Animation Addons for Elementor v2.6.3 – 20th April 2026
+  
+    - Added: Lightbox Feature Added at  Image Gallery Widget
+    - Imporoved: Dashboard Performance Improved.
+    - Added: Brand Slider Widget- New control auto slide width
 
 = 🌀 Animation Addons for Elementor v2.6.2 – 9th April 2026
   - Added: Language Support at Dashboard.
