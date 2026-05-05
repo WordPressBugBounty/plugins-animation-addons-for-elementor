@@ -1,10 +1,17 @@
 
 == Changelog ==
 
+= 🌀 Animation Addons for Elementor v2.6.4 – 4th May 2026
+    - Fixed : Loop Grid Default pagination Icon size.
+    - Fixed : Loop Grid Pagination alignment.
+    - Improved: Widget Categories Toggle Position reorder.
+    - Improved: Loop Grid , weather, archive widget security maintain.
+
 = 🌀 Animation Addons for Elementor v2.6.3 – 20th April 2026
   
     - Added: Lightbox Feature Added at  Image Gallery Widget
     - Imporoved: Dashboard Performance Improved.
+    - Added: Brand Slider Widget- New control auto slide width
 
 = 🌀 Animation Addons for Elementor v2.6.2 – 9th April 2026
 

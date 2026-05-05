@@ -1021,7 +1021,16 @@ class Plugin
 		);
 
 		$old_categories = $elements_manager->get_categories();
-		$categories     = array_merge($categories, $old_categories);
+
+		$top_categories = array();
+		foreach ( array( 'layout', 'basic' ) as $top_key ) {
+			if ( isset( $old_categories[ $top_key ] ) ) {
+				$top_categories[ $top_key ] = $old_categories[ $top_key ];
+				unset( $old_categories[ $top_key ] );
+			}
+		}
+
+		$categories = array_merge( $top_categories, $categories, $old_categories );
 
 		$set_categories = function ($categories) {
 			$this->categories = $categories;
@@ -1439,7 +1448,7 @@ class Plugin
 			'wcf_widget_skins',
 			array(
 				'advance-pricing-table' => array( // widget file/dir name.
-					'label'       => __( 'Advanced Pricing Table', 'animation-addons-for-elementor-pro' ),
+					'label'       => __( 'Advanced Pricing Table', 'animation-addons-for-elementor' ),
 					'widget_name' => 'wcf--a-pricing-table',
 					'is_active'   => true,
 					'skins'       => array( // skin file names.
