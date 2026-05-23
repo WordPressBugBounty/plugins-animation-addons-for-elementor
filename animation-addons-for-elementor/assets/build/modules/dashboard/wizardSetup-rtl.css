@@ -958,6 +958,9 @@
 .wcf-anim2024 .max-w-\[200px\] {
   max-width: 200px;
 }
+.wcf-anim2024 .max-w-\[240px\] {
+  max-width: 240px;
+}
 .wcf-anim2024 .max-w-\[400px\] {
   max-width: 400px;
 }
@@ -990,6 +993,9 @@
 }
 .wcf-anim2024 .max-w-\[892px\] {
   max-width: 892px;
+}
+.wcf-anim2024 .max-w-\[95\%\] {
+  max-width: 95%;
 }
 .wcf-anim2024 .max-w-lg {
   max-width: 32rem;
