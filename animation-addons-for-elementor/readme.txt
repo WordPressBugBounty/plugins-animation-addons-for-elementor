@@ -2,14 +2,14 @@
 Contributors: wealcoder, wcrayhan, jhshakil, ahsanriad, hamimbepari
 Donate link: https://buy.stripe.com/3cs3dI7DQauI0py9AC
 Tags: animation, elementor, elementor addons, elementor templates, elementor widgets
-Requires at least: 6.0
+Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 2.6.8
+Stable tag: 2.6.9
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-GSAP Animation-Powered Free Elementor Addons with Motion Effects, Free Elementor Templates, Free Elementor Extensions, Free Elementor Widgets, and Free Header Footer Builder.
+GSAP-powered free Elementor addons with motion effects, templates, widgets, extensions, and a header & footer builder.
 
 == Description ==
 
@@ -602,6 +602,11 @@ Subscribing is optional—no data is collected unless you opt in.
 See the unminified JS and CSS in our public repo: [GitHub Repository](https://github.com/Wealcoder/animation-addons-for-elementor/tree/dashboard/assets/src). 
 
 == Changelog ==
+
+= 🌀 Animation Addons for Elementor v2.6.9 – 07th July 2026
+
+  - **Fixed:** Secrutiy Fixed at whole plugin.
+  - ** Improved:** Performance Improved at whole plugin.
 
 = 🌀 Animation Addons for Elementor v2.6.8 – 16th June 2026
 

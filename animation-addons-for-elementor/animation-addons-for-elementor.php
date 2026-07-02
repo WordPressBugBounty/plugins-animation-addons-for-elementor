@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name:                Animation Addons
+ * Plugin Name:                Animation Addons for Elementor – GSAP Motion Elementor Addons & Website Templates
  * Description:                Animation Addons for Elementor comes with GSAP Animation Builder, Customizable Widgets, Header Footer, Single Post, Archive Page Builder, and more.
  * Plugin URI:                 https://animation-addons.com/
- * Version:                    2.6.8
+ * Version:                    2.6.9
  * Author:                     Wealcoder
  * Author URI:                 https://animation-addons.com/
  * License:                    GPL v2 or later
@@ -12,7 +12,7 @@
  * Domain Path:                /languages
  * Requires at least: 		   6.6
  * Requires PHP:               7.4
- * Tested up to:               6.9
+ * Tested up to:               7.0
  * Elementor tested up to:     3.34.0
  * Elementor Pro tested up to: 3.33.1
  */
@@ -29,7 +29,7 @@ if ( ! defined( 'WCF_ADDONS_VERSION' ) ) {
 	/**
 	 * Plugin Version.
 	 */
-	define( 'WCF_ADDONS_VERSION', '2.6.8' );
+	define( 'WCF_ADDONS_VERSION', '2.6.9' );
 }
 if ( ! defined( 'WCF_ADDONS_FILE' ) ) {
 	/**
@@ -93,7 +93,7 @@ final class WCF_ADDONS_Plugin {
 	 * @since 1.0.0
 	 * @var string The plugin version.
 	 */
-	const VERSION = '2.6.8';
+	const VERSION = '2.6.9';
 
 	/**
 	 * Minimum Elementor Version
@@ -219,12 +219,8 @@ final class WCF_ADDONS_Plugin {
 	 */
 	public function init() {
 
-		// Load plugin textdomain for translations
-		load_plugin_textdomain(
-			'animation-addons-for-elementor',
-			false,
-			dirname( plugin_basename( WCF_ADDONS_FILE ) ) . '/languages'
-		);
+		// Translations for plugins hosted on WordPress.org are loaded automatically
+		// since WordPress 4.6, so a manual load_plugin_textdomain() call is not needed.
 
 		// Check if Elementor installed and activated
 		if ( ! did_action( 'elementor/loaded' ) ) {			
@@ -272,7 +268,8 @@ final class WCF_ADDONS_Plugin {
 		require_once 'class-plugin.php';
 
 		//wcf plugin loaded
-		do_action( 'wcf_plugins_loaded' );
+		// Established public hook name; renaming would break backward compatibility.
+		do_action( 'wcf_plugins_loaded' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 	}
 
 	/**

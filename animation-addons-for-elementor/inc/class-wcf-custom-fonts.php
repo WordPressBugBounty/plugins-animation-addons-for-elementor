@@ -1,6 +1,8 @@
 <?php
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
 namespace WCF_ADDONS\Extensions;
+// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly
@@ -156,7 +158,7 @@ Class CustomFonts_Lite{
         if(is_array($this->gl_settings) && isset($this->gl_settings['load_in_head']) && $this->gl_settings['load_in_head'] == true){
         
             $custom_css = '';
-            $fontlist   = apply_filters('wcf_addin_pro_custom_webfonts',[]);       
+            $fontlist   = apply_filters('wcf_addin_pro_custom_webfonts',[]); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
             foreach ($fontlist as $font_family => $fonts) 
             {
                 foreach ($fonts as $weight => $font_sources)
@@ -199,7 +201,7 @@ Class CustomFonts_Lite{
         }
         
         $custom_css = '';
-        $fontlist   = apply_filters('wcf_addin_pro_custom_webfonts',[]);   
+        $fontlist   = apply_filters('wcf_addin_pro_custom_webfonts',[]); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
      
         foreach ($fontlist as $font_family => $fonts) 
         {
@@ -550,7 +552,7 @@ Class CustomFonts_Lite{
 		
 		if(isset($current_screen->id) && $current_screen->id == 'wcf-custom-fonts'){
 			wp_enqueue_media();
-			wp_enqueue_style( 'wcf-addon-pro-custom-fonts', WCF_ADDONS_URL . 'assets/build/modules/custom-font/main.css' );
+			wp_enqueue_style( 'wcf-addon-pro-custom-fonts', WCF_ADDONS_URL . 'assets/build/modules/custom-font/main.css', array(), WCF_ADDONS_VERSION );
 			wp_enqueue_script( 'wcf-addon-pro-custom-fonts', WCF_ADDONS_URL . 'assets/build/modules/custom-font/main.js', array(
 				'react', 'react-dom', 'wp-element' , 'wp-i18n'
 			), WCF_ADDONS_VERSION, true );
