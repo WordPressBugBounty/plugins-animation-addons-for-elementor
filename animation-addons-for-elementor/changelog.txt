@@ -1,6 +1,14 @@
 
 == Changelog ==
 
+= 🌀 Animation Addons for Elementor v2.7.3 – 9th August 2026
+
+  - **Improved:** General performance improvements and minor bug fixes.
+
+= 🌀 Animation Addons for Elementor v2.7.2 – 9th August 2026
+
+  - **Fixed:** Mailchimp security issue fixed.
+
 = 🌀 Animation Addons for Elementor v2.7.1 – 21th July 2026 
 
   - **Fixed:** Wordpress Security Fixation.

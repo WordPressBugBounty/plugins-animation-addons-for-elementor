@@ -18,6 +18,22 @@ class WCF_Admin_Init
 	use \WCF_ADDONS\WCF_Extension_Widgets_Trait;
 
 	/**
+	 * Allowed option names for AJAX read/write.
+	 * Prevents arbitrary option manipulation (e.g., siteurl, admin_email).
+	 *
+	 * @since 2.7.3
+	 */
+	private static $allowed_option_names = array(
+		'wcf_save_widgets',
+		'wcf_save_extensions',
+		'wcf_custom_font_setting',
+		'wcf_smooth_scroller',
+		'wcf_notice_data',
+		'wcf_addons_setup_wizard',
+		'aae_mailchimp_api',
+	);
+
+	/**
 	 * Parent Menu Page Slug
 	 */
 	const MENU_PAGE_SLUG = 'wcf_addons_page';
@@ -626,6 +642,12 @@ class WCF_Admin_Init
 
 		$actives       = $foundkeys = array();
 		$option_name   = isset($_POST['settings']) ? sanitize_text_field(wp_unslash($_POST['settings'])) : '';
+
+		// Security: only allow whitelisted option names.
+		if ( ! empty( $option_name ) && ! in_array( $option_name, self::$allowed_option_names, true ) ) {
+			wp_send_json_error( esc_html__( 'Invalid option name.', 'animation-addons-for-elementor' ) );
+		}
+
 		$sanitize_data = sanitize_text_field(wp_unslash($_POST['fields']));
 		$settings      = json_decode($sanitize_data, true);
 		wcf_get_nested_active_config_keys($settings, $found, $actives);
@@ -668,6 +690,12 @@ class WCF_Admin_Init
 		}
 
 		$setting_name = sanitize_text_field(wp_unslash($_POST['setting_name']));
+
+		// Security: only allow whitelisted option names.
+		if ( ! in_array( $setting_name, self::$allowed_option_names, true ) ) {
+			wp_send_json_error( esc_html__( 'Invalid option name.', 'animation-addons-for-elementor' ) );
+		}
+
 		$settings     = get_option($setting_name);
 
 		// If the option was stored as JSON, decode it
@@ -710,6 +738,12 @@ class WCF_Admin_Init
 
 		$form_data    = sanitize_text_field(wp_unslash($_POST['form_fields']));
 		$setting_name = sanitize_text_field(wp_unslash($_POST['setting_name']));
+
+		// Security: only allow whitelisted option names.
+		if ( ! in_array( $setting_name, self::$allowed_option_names, true ) ) {
+			wp_send_json_error( esc_html__( 'Invalid option name.', 'animation-addons-for-elementor' ) );
+		}
+
 		update_option($setting_name, $form_data);
 
 		$return_message = array(
@@ -805,6 +839,12 @@ class WCF_Admin_Init
 
 		$actives       = array();
 		$option_name   = isset($_POST['settings']) ? sanitize_text_field(wp_unslash($_POST['settings'])) : '';
+
+		// Security: only allow whitelisted option names.
+		if ( ! empty( $option_name ) && ! in_array( $option_name, self::$allowed_option_names, true ) ) {
+			wp_send_json_error( esc_html__( 'Invalid option name.', 'animation-addons-for-elementor' ) );
+		}
+
 		$sanitize_data = sanitize_text_field(wp_unslash($_POST['fields']));
 		$settings      = json_decode($sanitize_data, true);
 		$actives       = get_option('wcf_save_widgets');
