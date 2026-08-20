@@ -1,6 +1,12 @@
 
 == Changelog ==
 
+= 🌀 Animation Addons for Elementor v2.7.4 – 20 August 2026 =
+
+  - ** Improved compatibility with WordPress 7.1.
+  - ** Improved overall plugin stability and performance.
+  - ** Fixed minor compatibility issues and bugs.
+
 = 🌀 Animation Addons for Elementor v2.7.3 – 9th August 2026
 
   - **Improved:** General performance improvements and minor bug fixes.
