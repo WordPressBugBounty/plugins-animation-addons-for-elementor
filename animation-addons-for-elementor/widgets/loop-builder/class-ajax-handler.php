@@ -65,6 +65,10 @@ class Ajax_Handler {
 	public function ajax_get_posts() {
 		$this->verify_nonce();
 
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Unauthorized user.', 'animation-addons-for-elementor' ) ), 403 );
+		}
+
 		$search    = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
 		$post_type = isset( $_GET['post_type'] ) ? sanitize_text_field( wp_unslash( $_GET['post_type'] ) ) : 'post'; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
 
@@ -82,6 +86,10 @@ class Ajax_Handler {
 	 */
 	public function ajax_get_terms() {
 		$this->verify_nonce();
+
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Unauthorized user.', 'animation-addons-for-elementor' ) ), 403 );
+		}
 
 		$search   = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
 		$taxonomy = isset( $_GET['taxonomy'] ) ? sanitize_text_field( wp_unslash( $_GET['taxonomy'] ) ) : 'category'; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
@@ -101,6 +109,10 @@ class Ajax_Handler {
 	public function ajax_get_authors() {
 		$this->verify_nonce();
 
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Unauthorized user.', 'animation-addons-for-elementor' ) ), 403 );
+		}
+
 		$search = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
 
 		$query_manager = Query_Manager::instance();
@@ -117,6 +129,10 @@ class Ajax_Handler {
 	 */
 	public function ajax_get_templates() {
 		$this->verify_nonce();
+
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Unauthorized user.', 'animation-addons-for-elementor' ) ), 403 );
+		}
 
 		$search      = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
 		$source_type = isset( $_GET['source_type'] ) ? sanitize_text_field( wp_unslash( $_GET['source_type'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
@@ -261,11 +277,9 @@ class Ajax_Handler {
 	 * @return void
 	 */
 	private function verify_nonce() {
-		if ( isset( $_REQUEST['nonce'] ) || isset( $_GET['nonce'] ) || isset( $_POST['nonce'] ) ) {
-			$nonce = sanitize_text_field( wp_unslash( $_REQUEST['nonce'] ) ) ?? sanitize_text_field( wp_unslash( $_GET['nonce'] ) ) ?? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) ?? '';
-			if ( ! wp_verify_nonce( $nonce, 'aae_loop_builder_nonce' ) ) {
-				wp_send_json_error( 'Security check failed' );
-			}
+		$nonce = isset( $_REQUEST['nonce'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['nonce'] ) ) : ( isset( $_GET['nonce'] ) ? sanitize_text_field( wp_unslash( $_GET['nonce'] ) ) : ( isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '' ) );
+		if ( empty( $nonce ) || ! wp_verify_nonce( $nonce, 'aae_loop_builder_nonce' ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Security check failed.', 'animation-addons-for-elementor' ) ), 403 );
 		}
 	}
 
@@ -287,7 +301,7 @@ class Ajax_Handler {
 	}
 
 	/**
-	 * AJAX handler for page loading.
+	 * AJAX handler for page load pagination.
 	 *
 	 * @since 2.4.16
 	 * @return void
@@ -298,7 +312,7 @@ class Ajax_Handler {
 
 			// Nonce is verified in verify_nonce() above.
 			$settings = isset( $_POST['settings'] ) ? $this->sanitize_settings( wp_unslash( $_POST['settings'] ) ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing
-			$page     = isset( $_POST['page'] ) ? absint( wp_unslash( $_POST['page'] ) ) : ( $settings['paged'] ?? 1 ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			$page     = isset( $_POST['page'] ) ? intval( wp_unslash( $_POST['page'] ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Missing
 
 			if ( empty( $settings['template_id'] ) ) {
 				wp_send_json_error( array( 'message' => 'No template specified' ) );
@@ -309,7 +323,8 @@ class Ajax_Handler {
 			$query_manager = Query_Manager::instance();
 			$query         = $query_manager->get_query( $settings );
 
-			$html = '';
+			$html       = '';
+			$pagination = '';
 
 			if ( $query->have_posts() ) {
 				while ( $query->have_posts() ) {
@@ -322,21 +337,16 @@ class Ajax_Handler {
 				wp_reset_postdata();
 			}
 
-			$pagination = '';
-			if ( $query->max_num_pages > 1 ) {
-				$pagination_type = isset( $settings['pagination_type'] ) ? $settings['pagination_type'] : 'numbers';
-				$page_limit      = isset( $settings['pagination_page_limit'] ) ? intval( $settings['pagination_page_limit'] ) : 5;
-
-				$base_url = $this->get_pagination_base_url();
+			// Generate pagination if needed.
+			if ( ! empty( $settings['pagination_type'] ) && 'numbers' === $settings['pagination_type'] && $query->max_num_pages > 1 ) {
+				$pagination_type = $settings['pagination_type'];
+				$base_url        = $this->get_pagination_base_url();
 
 				$args = array(
 					'base'      => $base_url . '%_%',
-					'format'    => '%#%',
-					'total'     => min( $page_limit, $query->max_num_pages ),
+					'format'    => '?paged=%#%',
 					'current'   => $page,
-					'type'      => 'list',
-					'mid_size'  => 2,
-					'end_size'  => 1,
+					'total'     => $query->max_num_pages,
 					'prev_next' => false,
 				);
 
@@ -396,6 +406,10 @@ class Ajax_Handler {
 	 */
 	public function ajax_get_taxonomies() {
 		$this->verify_nonce();
+
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'Unauthorized user.', 'animation-addons-for-elementor' ) ), 403 );
+		}
 
 		$post_type  = isset( $_GET['post_type'] ) ? sanitize_text_field( wp_unslash( $_GET['post_type'] ) ) : 'post'; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
 		$taxonomies = $this->get_taxonomies( $post_type );

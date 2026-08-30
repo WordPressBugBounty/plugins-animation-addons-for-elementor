@@ -5,7 +5,7 @@ Tags: animation, elementor, elementor addons, elementor templates, elementor wid
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 2.7.4
+Stable tag: 3.0.0
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -602,6 +602,21 @@ Subscribing is optional—no data is collected unless you opt in.
 See the unminified JS and CSS in our public repo: [GitHub Repository](https://github.com/Wealcoder/animation-addons-for-elementor/tree/dashboard/assets/src). 
 
 == Changelog ==
+
+
+= 🌀 Animation Addons for Elementor 3.0.0 – 30 August 2026 =
+
+  - **Improved:** Added compatibility with WordPress 7.1.
+  - **Improved:** Added compatibility with Elementor 4.2.3.
+  - **Improved:** Added compatibility with PHP 8.5.
+  - **Improved:** General performance improvements and minor bug fixes.
+
+
+= 🌀 Animation Addons for Elementor v2.7.5 – 25 August 2026 =
+
+  - **Security:** Enhanced Post Rating Form validation, authorization, server-side moderation enforcement, and review count synchronization.
+  - **Security:** Hardened AJAX handlers and autocomplete endpoints with strict capability and nonce checks.
+  - **Improved:** General stability and compatibility improvements.
 
 = 🌀 Animation Addons for Elementor v2.7.4 – 20 August 2026 =
 
