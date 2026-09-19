@@ -1,0 +1,105 @@
+/* eslint-env browser */
+
+/**
+ * Registers AAE element-controls into Elementor's shared controlsRegistry.
+ *
+ * Element-controls (unlike prop-bound controls) carry no stored value — they
+ * project the element tree. The editing panel resolves a PHP control that
+ * serialises as { type: 'element-control', value: { type: 'aae-slides' } } to
+ * the component registered here under the same type id.
+ *
+ * controlsRegistry.register() throws if a type is already registered, so this
+ * is guarded to stay idempotent across re-inits / HMR.
+ */
+
+import { controlsRegistry } from '@elementor/editor-editing-panel';
+import { colorPropTypeUtil, htmlV3PropTypeUtil, stringArrayPropTypeUtil, stringPropTypeUtil } from '@elementor/editor-props';
+
+import { SlidesControl } from './SlidesControl';
+import { AccordionItemsControl } from './AccordionItemsControl';
+import { TimelineItemsControl } from './TimelineItemsControl';
+import { SocialShareItemsControl } from './SocialShareItemsControl';
+import { IconListItemsControl } from './IconListItemsControl';
+import { PresetPickerControl } from './PresetPickerControl';
+import { FormActionsControl } from './FormActionsControl';
+import { FormConditionsControl } from './FormConditionsControl';
+import { MobileNavLifecycleControl, NavItemsControl, NavSubItemsControl } from './NavItemsControl';
+import { QueryChipsControl } from './QueryChipsControl';
+import { DrawPlayControl } from './DrawPlayControl';
+import { HotspotsControl } from './HotspotsControl';
+import { MediaUrlControl } from './MediaUrlControl';
+import { InlineTextControl } from './InlineTextControl';
+import { StackCardsControl } from './StackCardsControl';
+import { StackPreviewControl } from './StackPreviewControl';
+import { BtnHoverStyleControl } from './BtnHoverStyleControl';
+import { ProNoticeControl } from './ProNoticeControl';
+import { NoticeControl } from './NoticeControl';
+import { AaeColorControl } from './ColorControl';
+import { AcfFieldControl } from './AcfFieldControl';
+
+const ELEMENT_CONTROLS = [
+	{ type: 'aae-slides', component: SlidesControl, layout: 'full' },
+	{ type: 'aae-hotspots', component: HotspotsControl, layout: 'full' },
+	{ type: 'aae-items', component: AccordionItemsControl, layout: 'full' },
+	{ type: 'aae-timeline-items', component: TimelineItemsControl, layout: 'full' },
+	{ type: 'aae-social-share-items', component: SocialShareItemsControl, layout: 'full' },
+	{ type: 'aae-icon-list-items', component: IconListItemsControl, layout: 'full' },
+	{ type: 'aae-nav-items', component: NavItemsControl, layout: 'full' },
+	{ type: 'aae-nav-sub-items', component: NavSubItemsControl, layout: 'full' },
+	{ type: 'aae-mobile-nav-lifecycle', component: MobileNavLifecycleControl, layout: 'full' },
+	{ type: 'aae-preset-picker', component: PresetPickerControl, layout: 'full' },
+	{ type: 'aae-form-actions', component: FormActionsControl, layout: 'full' },
+	{ type: 'aae-form-conditions', component: FormConditionsControl, layout: 'full' },
+	{ type: 'aae-draw-play', component: DrawPlayControl, layout: 'full' },
+	{ type: 'aae-stack-cards', component: StackCardsControl, layout: 'full' },
+	{ type: 'aae-stack-preview', component: StackPreviewControl, layout: 'full' },
+	// Pinned to the top of a locked Pro form field's panel by
+	// inc/Forms/Pro_Gate.php — see that class on why the element stays editable.
+	{ type: 'aae-pro-notice', component: ProNoticeControl, layout: 'full' },
+	// Generic instruction card — inc/AtomicWidgets/Controls/class-aae-notice-control.php.
+	{ type: 'aae-notice', component: NoticeControl, layout: 'full' },
+	// Prop-bound (unlike the element-controls above): the panel wraps it in a
+	// SettingsField for its bind key; useBoundProp(stringArrayPropTypeUtil)
+	// reads/writes the String_Array prop.
+	{ type: 'aae-query-chips', component: QueryChipsControl, layout: 'full', propTypeUtil: stringArrayPropTypeUtil },
+	// Also prop-bound, to a plain String: a URL field plus a Media Library
+	// picker, for asset types Elementor has no control for (Lottie .json, …).
+	{ type: 'aae-media-url', component: MediaUrlControl, layout: 'full', propTypeUtil: stringPropTypeUtil },
+	// Rich text bound to an html-v3 prop. Core's own Inline_Editing_Control
+	// would bind the same value but renders no toolbar — its buttons live on
+	// the canvas, which is closed to third-party types. See InlineTextControl.
+	{ type: 'aae-inline-text', component: InlineTextControl, layout: 'full', propTypeUtil: htmlV3PropTypeUtil },
+	// Also prop-bound, to a plain String: the Btn widget's "Hover Style"
+	// picker, which additionally hides its own row unless a sibling boolean
+	// prop is set — see BtnHoverStyleControl.jsx.
+	{ type: 'aae-btn-hover-style', component: BtnHoverStyleControl, layout: 'full', propTypeUtil: stringPropTypeUtil },
+	// Prop-bound to a Color_Prop_Type: Elementor's own picker on the Content
+	// tab, for a part whose colours are not its root box (a slider's rail /
+	// fill / thumb). inc/AtomicWidgets/Controls/class-aae-color-control.php.
+	{ type: 'aae-color', component: AaeColorControl, layout: 'two-columns', propTypeUtil: colorPropTypeUtil },
+	// Prop-bound to a plain String (an ACF field KEY): a dropdown of the
+	// site's ACF fields, narrowed to the post type of the Loop Grid the
+	// filter targets. inc/AtomicWidgets/Controls/class-aae-acf-field-control.php.
+	{ type: 'aae-acf-field', component: AcfFieldControl, layout: 'full', propTypeUtil: stringPropTypeUtil },
+];
+
+let registered = false;
+
+export function registerAaeElementControls() {
+	if ( registered ) {
+		return;
+	}
+	registered = true;
+
+	ELEMENT_CONTROLS.forEach( ( { type, component, layout, propTypeUtil } ) => {
+		try {
+			// Skip if something already claimed this type (defensive).
+			if ( controlsRegistry.get?.( type ) ) {
+				return;
+			}
+			controlsRegistry.register( type, component, layout, propTypeUtil );
+		} catch ( _e ) {
+			// Already registered or registry shape changed — non-fatal.
+		}
+	} );
+}

@@ -1,7 +1,7 @@
 <?php
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
-namespace WCF_ADDONS\CodeSnippet;
-// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
+namespace Wealcoder\AnimationAddons\CodeSnippet;
+
+use Wealcoder\AnimationAddons\Nonce;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit();
@@ -12,7 +12,7 @@ require_once __DIR__ . '/CodeSnippetAjax.php';
 /**
  * CodeSnippet Class
  *
- * @package WCF_ADDONS\CodeSnippet
+ * @package Wealcoder\AnimationAddons\CodeSnippet
  */
 class CodeSnippet {
 	use CodeSnippetSettingsTrait;
@@ -23,6 +23,13 @@ class CodeSnippet {
 	 * @since 2.3.10
 	 */
 	const CPTTYPE = 'wcf-code-snippet';
+
+	/**
+	 * The admin page slug (`admin.php?page=...`). Distinct from CPTTYPE, which is
+	 * the post type stored on every saved snippet and never changes; the old
+	 * `wcf-code-snippet` page slug 301s here via Compat\Admin_Page_Alias.
+	 */
+	const PAGE_SLUG = 'aaeaddon-code-snippet';
 
 
 	/**
@@ -57,9 +64,10 @@ class CodeSnippet {
 		add_action( 'init', array( $this, 'register_code_snippet_post_type' ) );
 		add_action( 'admin_menu', array( $this, 'admin_menu' ), 225 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
-		add_action( 'admin_post_add_wcf_code_snippet', array( $this, 'handle_add_wcf_code_snippet' ) );
-		add_action( 'wp_ajax_add_custom_page', array( $this, 'add_custom_page' ) );
-		add_action( 'wp_ajax_toggle_snippet_status', array( $this, 'handle_toggle_snippet_status' ) );
+		add_action( 'admin_post_aaeaddon_add_code_snippet', array( $this, 'handle_add_code_snippet' ) );
+		// Page search for the snippet location select. Old unprefixed name kept
+		// for one release for a cached admin bundle -- remove the alias in 4.3.
+		\Wealcoder\AnimationAddons\Ajax_Alias::register( 'add_custom_page', 'aaeaddon_snippet_page_search', array( $this, 'add_custom_page' ) );
 
 		// Initialize AJAX handler.
 		new CodeSnippetAjax();
@@ -73,13 +81,13 @@ class CodeSnippet {
 	 * @return void
 	 */
 	public function remove_query_vars() {
-		if ( isset( $_GET['page'] ) && 'wcf-code-snippet' === $_GET['page'] && isset( $_GET['_wp_http_referer'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( isset( $_GET['page'] ) && self::PAGE_SLUG === $_GET['page'] && isset( $_GET['_wp_http_referer'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			// FIXED: Better redirect handling to avoid WooCommerce issues.
-			$redirect_url = admin_url( 'admin.php?page=wcf-code-snippet' );
+			$redirect_url = admin_url( 'admin.php?page=' . self::PAGE_SLUG );
 
 			// Only use referer if it's safe and contains our page.
 			$referer = wp_get_referer();
-			if ( $referer && strpos( $referer, 'wcf-code-snippet' ) !== false ) {
+			if ( $referer && strpos( $referer, 'page=' . self::PAGE_SLUG ) !== false ) {
 				$redirect_url = remove_query_arg(
 					array( 'action', 'action2', 'ids', 'id', '_wpnonce', '_wp_http_referer' ),
 					$referer
@@ -158,9 +166,9 @@ class CodeSnippet {
 		register_post_type( self::CPTTYPE, $args );
 
 		// FIXED: Only flush rewrite rules if needed to avoid WooCommerce conflicts.
-		if ( ! get_option( 'wcf_code_snippet_rewrite_rules_flushed' ) ) {
+		if ( ! get_option( 'aaeaddon_code_snippet_rewrite_rules_flushed' ) ) {
 			flush_rewrite_rules();
-			update_option( 'wcf_code_snippet_rewrite_rules_flushed', true );
+			update_option( 'aaeaddon_code_snippet_rewrite_rules_flushed', true );
 		}
 	}
 
@@ -172,11 +180,11 @@ class CodeSnippet {
 	 */
 	public function admin_menu() {
 		add_submenu_page(
-			'wcf_addons_page',
+			'aaeaddon_page',
 			esc_html__( 'Code Snippet', 'animation-addons-for-elementor' ),
 			esc_html__( 'Code Snippet', 'animation-addons-for-elementor' ),
 			'manage_options',
-			self::CPTTYPE,
+			self::PAGE_SLUG,
 			array( $this, 'code_snippet_page_admin_page' )
 		);
 	}
@@ -192,10 +200,10 @@ class CodeSnippet {
 		$code_snippet_id = isset( $_GET['edit'] ) ? absint( wp_unslash( $_GET['edit'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
 		if ( $add_new_tab ) {
-			$snippet_details = $this->aae_get_code_snippet_settings();
+			$snippet_details = $this->get_code_snippet_settings();
 			include __DIR__ . '/views/edit-code-snippet.php';
 		} elseif ( $code_snippet_id ) {
-			$snippet_details = $this->aae_get_code_snippet_settings( $code_snippet_id );
+			$snippet_details = $this->get_code_snippet_settings( $code_snippet_id );
 			include __DIR__ . '/views/edit-code-snippet.php';
 		} else {
 			include __DIR__ . '/views/code-snippet-list.php';
@@ -211,33 +219,33 @@ class CodeSnippet {
 	 * @return void
 	 */
 	public function enqueue_scripts( $hook ) {
-		if ( 'animation-addon_page_wcf-code-snippet' === $hook ) {
-			wp_enqueue_style( 'aae-code-snippet', WCF_ADDONS_URL . 'assets/css/code-snippet.min.css', null, WCF_ADDONS_VERSION, 'all' );
-			wp_enqueue_style( 'aae-code-snippet-ajax', WCF_ADDONS_URL . 'assets/css/code-snippet-ajax.css', null, WCF_ADDONS_VERSION, 'all' );
-			wp_enqueue_style( 'select2', WCF_ADDONS_URL . 'assets/css/select2.min.css', null, WCF_ADDONS_VERSION, 'all' );
-			wp_enqueue_style( 'codemirror-core', WCF_ADDONS_URL . 'assets/css/cs-css/codemirror.min.css', null, WCF_ADDONS_VERSION, 'all' );
-			wp_enqueue_style( 'foldgutter', WCF_ADDONS_URL . 'assets/css/cs-css/foldgutter.min.css', null, WCF_ADDONS_VERSION, 'all' );
-			wp_enqueue_style( 'material', WCF_ADDONS_URL . 'assets/css/cs-css/material.min.css', null, WCF_ADDONS_VERSION, 'all' );
+		if ( 'animation-addon_page_' . self::PAGE_SLUG === $hook ) {
+			wp_enqueue_style( 'aae-code-snippet', AAEADDON_URL . 'assets/css/code-snippet.min.css', array( \Wealcoder\AnimationAddons\Aaeaddon_Fonts::ensure() ), AAEADDON_VERSION, 'all' );
+			wp_enqueue_style( 'aae-code-snippet-ajax', AAEADDON_URL . 'assets/css/code-snippet-ajax.css', null, AAEADDON_VERSION, 'all' );
+			wp_enqueue_style( 'select2', AAEADDON_URL . 'assets/css/select2.min.css', null, AAEADDON_VERSION, 'all' );
+			wp_enqueue_style( 'codemirror-core', AAEADDON_URL . 'assets/css/cs-css/codemirror.min.css', null, AAEADDON_VERSION, 'all' );
+			wp_enqueue_style( 'aaeaddon-codemirror-foldgutter', AAEADDON_URL . 'assets/css/cs-css/foldgutter.min.css', null, AAEADDON_VERSION, 'all' );
+			wp_enqueue_style( 'aaeaddon-codemirror-material', AAEADDON_URL . 'assets/css/cs-css/material.min.css', null, AAEADDON_VERSION, 'all' );
 
 			// code mirror.
-			wp_enqueue_script( 'codemirror-core', WCF_ADDONS_URL . 'assets/js/cs-js/custom-code.min.js', array(), WCF_ADDONS_VERSION, true );
-			wp_enqueue_script( 'codemirror-mode-htmlmixed', WCF_ADDONS_URL . 'assets/js/cs-js/htmlmixed.min.js', array( 'codemirror-core' ), WCF_ADDONS_VERSION, true );
-			wp_enqueue_script( 'codemirror-mode-js-css', WCF_ADDONS_URL . 'assets/js/cs-js/css.min.js', array( 'codemirror-core' ), WCF_ADDONS_VERSION, true );
-			wp_enqueue_script( 'codemirror-mode-javascript', WCF_ADDONS_URL . 'assets/js/cs-js/javascript.min.js', array( 'codemirror-core' ), WCF_ADDONS_VERSION, true );
-			wp_enqueue_script( 'codemirror-mode-php', WCF_ADDONS_URL . 'assets/js/cs-js/php.min.js', array( 'codemirror-core' ), WCF_ADDONS_VERSION, true );
-			wp_enqueue_script( 'codemirror-mode-xml', WCF_ADDONS_URL . 'assets/js/cs-js/xml.min.js', array( 'codemirror-core' ), WCF_ADDONS_VERSION, true );
-			wp_enqueue_script( 'codemirror-mode-clike', WCF_ADDONS_URL . 'assets/js/cs-js/clike.min.js', array( 'codemirror-core' ), WCF_ADDONS_VERSION, true );
-			wp_enqueue_script( 'codemirror-addon-closebrackets', WCF_ADDONS_URL . 'assets/js/cs-js/closebrackets.min.js', array( 'codemirror-core' ), WCF_ADDONS_VERSION, true );
-			wp_enqueue_script( 'codemirror-addon-closetag', WCF_ADDONS_URL . 'assets/js/cs-js/closetag.min.js', array( 'codemirror-core' ), WCF_ADDONS_VERSION, true );
-			wp_enqueue_script( 'codemirror-addon-foldcode', WCF_ADDONS_URL . 'assets/js/cs-js/foldcode.min.js', array( 'codemirror-core' ), WCF_ADDONS_VERSION, true );
-			wp_enqueue_script( 'codemirror-addon-foldgutter', WCF_ADDONS_URL . 'assets/js/cs-js/foldgutter.min.js', array( 'codemirror-core' ), WCF_ADDONS_VERSION, true );
-			wp_enqueue_script( 'codemirror-addon-brace-fold', WCF_ADDONS_URL . 'assets/js/cs-js/brace-fold.min.js', array( 'codemirror-core' ), WCF_ADDONS_VERSION, true );
-			wp_enqueue_script( 'codemirror-addon-xml-fold', WCF_ADDONS_URL . 'assets/js/cs-js/xml-fold.min.js', array( 'codemirror-core' ), WCF_ADDONS_VERSION, true );
+			wp_enqueue_script( 'codemirror-core', AAEADDON_URL . 'assets/js/cs-js/custom-code.min.js', array(), AAEADDON_VERSION, true );
+			wp_enqueue_script( 'codemirror-mode-htmlmixed', AAEADDON_URL . 'assets/js/cs-js/htmlmixed.min.js', array( 'codemirror-core' ), AAEADDON_VERSION, true );
+			wp_enqueue_script( 'codemirror-mode-js-css', AAEADDON_URL . 'assets/js/cs-js/css.min.js', array( 'codemirror-core' ), AAEADDON_VERSION, true );
+			wp_enqueue_script( 'codemirror-mode-javascript', AAEADDON_URL . 'assets/js/cs-js/javascript.min.js', array( 'codemirror-core' ), AAEADDON_VERSION, true );
+			wp_enqueue_script( 'codemirror-mode-php', AAEADDON_URL . 'assets/js/cs-js/php.min.js', array( 'codemirror-core' ), AAEADDON_VERSION, true );
+			wp_enqueue_script( 'codemirror-mode-xml', AAEADDON_URL . 'assets/js/cs-js/xml.min.js', array( 'codemirror-core' ), AAEADDON_VERSION, true );
+			wp_enqueue_script( 'codemirror-mode-clike', AAEADDON_URL . 'assets/js/cs-js/clike.min.js', array( 'codemirror-core' ), AAEADDON_VERSION, true );
+			wp_enqueue_script( 'codemirror-addon-closebrackets', AAEADDON_URL . 'assets/js/cs-js/closebrackets.min.js', array( 'codemirror-core' ), AAEADDON_VERSION, true );
+			wp_enqueue_script( 'codemirror-addon-closetag', AAEADDON_URL . 'assets/js/cs-js/closetag.min.js', array( 'codemirror-core' ), AAEADDON_VERSION, true );
+			wp_enqueue_script( 'codemirror-addon-foldcode', AAEADDON_URL . 'assets/js/cs-js/foldcode.min.js', array( 'codemirror-core' ), AAEADDON_VERSION, true );
+			wp_enqueue_script( 'codemirror-addon-foldgutter', AAEADDON_URL . 'assets/js/cs-js/foldgutter.min.js', array( 'codemirror-core' ), AAEADDON_VERSION, true );
+			wp_enqueue_script( 'codemirror-addon-brace-fold', AAEADDON_URL . 'assets/js/cs-js/brace-fold.min.js', array( 'codemirror-core' ), AAEADDON_VERSION, true );
+			wp_enqueue_script( 'codemirror-addon-xml-fold', AAEADDON_URL . 'assets/js/cs-js/xml-fold.min.js', array( 'codemirror-core' ), AAEADDON_VERSION, true );
 
 			// Custom Code Editor.
 			wp_enqueue_script(
 				'codemirror-editor',
-				WCF_ADDONS_URL . 'assets/js/code-snippet.min.js',
+				AAEADDON_URL . 'assets/js/code-snippet.min.js',
 				array( 'jquery', 'select2', 'codemirror-core' ),
 				'1.0.0',
 				true
@@ -245,27 +253,27 @@ class CodeSnippet {
 
 			// AJAX functionality for list page.
 			wp_enqueue_script(
-				'code-snippet-ajax',
-				WCF_ADDONS_URL . 'assets/js/code-snippet-ajax.js',
+				'aaeaddon-code-snippet-ajax',
+				AAEADDON_URL . 'assets/js/code-snippet-ajax.js',
 				array( 'jquery' ),
-				WCF_ADDONS_VERSION,
+				AAEADDON_VERSION,
 				true
 			);
 			$localize_data = array(
 				'ajaxurl'       => admin_url( 'admin-ajax.php' ),
-				'nonce'         => wp_create_nonce( 'wcf_custom_code_security' ),
+				'nonce'         => Nonce::create( Nonce::CODE_SNIPPET ),
 				'adminURL'      => admin_url(),
-				'snippet_page'  => admin_url( 'admin.php?page=wcf-code-snippet' ),
+				'snippet_page'  => admin_url( 'admin.php?page=' . self::PAGE_SLUG ),
 				'serverDetails' => array(
 					'currentVersion' => PHP_VERSION,
 					'majorVersion'   => PHP_MAJOR_VERSION,
 					'minorVersion'   => PHP_MINOR_VERSION,
 				),
 				'ajaxActions'   => array(
-					'search' => 'wcf_search_snippets',
-					'delete' => 'wcf_delete_snippet',
-					'bulk'   => 'wcf_bulk_action_snippets',
-					'toggle' => 'wcf_toggle_snippet_status',
+					'search' => 'aaeaddon_search_snippets',
+					'delete' => 'aaeaddon_delete_snippet',
+					'bulk'   => 'aaeaddon_bulk_action_snippets',
+					'toggle' => 'aaeaddon_toggle_snippet_status',
 				),
 				'messages'      => array(
 					'confirmDelete'     => __( 'Are you sure you want to delete this snippet?', 'animation-addons-for-elementor' ),
@@ -275,7 +283,7 @@ class CodeSnippet {
 				),
 			);
 			wp_localize_script( 'codemirror-editor', 'WCFCustomCodeVars', $localize_data );
-			wp_enqueue_script( 'select2', WCF_ADDONS_URL . '/assets/js/select2.min.js', array( 'jquery' ), WCF_ADDONS_VERSION, true );
+			wp_enqueue_script( 'select2', AAEADDON_URL . 'assets/js/select2.min.js', array( 'jquery' ), AAEADDON_VERSION, true );
 		}
 	}
 
@@ -286,8 +294,78 @@ class CodeSnippet {
 	 * @since 2.3.10
 	 * @return void
 	 */
-	public function handle_add_wcf_code_snippet() {
-		check_admin_referer( 'wcf_code_snippet' );
+	/**
+	 * May the current user author a PHP snippet?
+	 *
+	 * A PHP snippet is executed code, so the gate is the same one WordPress
+	 * uses for its own plugin and theme editors -- `edit_plugins` -- and not
+	 * merely `manage_options`, which grants no ability to run code. The two
+	 * diverge exactly where it matters: on multisite a site administrator has
+	 * `manage_options` and NOT `edit_plugins`, and on any site hardened with
+	 * DISALLOW_FILE_EDIT or DISALLOW_FILE_MODS the owner has said that
+	 * administrators may not execute code. Honouring those constants here is
+	 * what stops this feature becoming a way around them.
+	 *
+	 * CSS, JS and HTML snippets are unaffected and keep the `manage_options`
+	 * gate below.
+	 *
+	 * @since 4.1.0
+	 * @return bool
+	 */
+	/**
+	 * Whether PHP snippets are offered at all (Pro answers the filter).
+	 *
+	 * @return bool
+	 */
+	public static function php_snippets_allowed() {
+		return (bool) apply_filters( 'aaeaddon_allow_php_snippets', false );
+	}
+
+	public static function can_manage_php() {
+
+		if ( defined( 'DISALLOW_FILE_EDIT' ) && DISALLOW_FILE_EDIT ) {
+			return false;
+		}
+
+		if ( defined( 'DISALLOW_FILE_MODS' ) && DISALLOW_FILE_MODS ) {
+			return false;
+		}
+
+		return current_user_can( 'edit_plugins' );
+	}
+
+	public function handle_add_code_snippet() {
+		check_admin_referer( Nonce::action( Nonce::CODE_SNIPPET_FORM, '_wpnonce' ), '_wpnonce' );
+
+		// This stores code_content unsanitised — it is executed PHP/JS/CSS — so
+		// authorization cannot rest on the nonce alone. The snippet screen this
+		// posts from is registered with `manage_options` (add_submenu_page),
+		// so require the same capability here rather than trusting that the
+		// only way to hold the nonce is to have already passed that gate.
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You are not allowed to do this.', 'animation-addons-for-elementor' ) );
+		}
+
+		// Validate posted code type against registered code types.
+		$posted_code_type = isset( $_POST['code_type'] ) ? sanitize_key( wp_unslash( $_POST['code_type'] ) ) : '';
+		$valid_types      = array_keys( Helpers::get_code_type_list() );
+
+		if ( ! in_array( $posted_code_type, $valid_types, true ) ) {
+			wp_die(
+				esc_html__( 'Invalid code snippet type selected.', 'animation-addons-for-elementor' ),
+				esc_html__( 'Invalid Type', 'animation-addons-for-elementor' ),
+				array( 'response' => 400 )
+			);
+		}
+
+		if ( 'php' === $posted_code_type && ( ! self::php_snippets_allowed() || ! self::can_manage_php() ) ) {
+			wp_die(
+				esc_html__( 'PHP snippets are only available in Animation Addons Pro and require plugin editing capabilities.', 'animation-addons-for-elementor' ),
+				esc_html__( 'Permission denied', 'animation-addons-for-elementor' ),
+				array( 'response' => 403 )
+			);
+		}
+
 		$snippet_id = isset( $_POST['snippet_id'] ) ? absint( $_POST['snippet_id'] ) : '';
 		$referer    = wp_get_referer();
 
@@ -307,7 +385,7 @@ class CodeSnippet {
 			exit();
 		}
 
-		$settings = $this->aae_get_code_snippet_settings();
+		$settings = $this->get_code_snippet_settings();
 		foreach ( $settings as $key => $default_value ) {
 			if ( isset( $_POST[ $key ] ) ) {
 				if ( 'code_content' === $key ) {
@@ -339,9 +417,9 @@ class CodeSnippet {
 		 * @since 2.3.10
 		 */
 		// Established public hook name (no plugin prefix); kept for backward compatibility.
-		do_action( 'after_update_code_snippet_post_data', $snippet_id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
+		do_action( 'aaeaddon_after_update_code_snippet_post_data', $snippet_id );
 
-		$redirect_to = admin_url( 'admin.php?page=wcf-code-snippet&edit=' . $snippet_id );
+		$redirect_to = admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&edit=' . $snippet_id );
 		if ( isset( $_POST['snippet_id'] ) && ! empty( $_POST['snippet_id'] ) ) {
 			Helpers::add_flash_message(
 				__( 'Code Snippet Updated Successfully!', 'animation-addons-for-elementor' ),
@@ -369,7 +447,11 @@ class CodeSnippet {
 
 			$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
 
-			if ( ! wp_verify_nonce( $nonce, 'wcf_custom_code_security' ) ) {
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_send_json_error( array( 'message' => esc_html__( 'You do not have permission to perform this action.', 'animation-addons-for-elementor' ) ) );
+			}
+
+			if ( ! wp_verify_nonce( $nonce, Nonce::action_for( $nonce, Nonce::CODE_SNIPPET ) ) ) {
 				$errormessage = array(
 					'message' => esc_html__( 'Nonce Varification Failed!', 'animation-addons-for-elementor' ),
 				);
@@ -510,53 +592,6 @@ class CodeSnippet {
 		return $query->found_posts;
 	}
 
-	/**
-	 * Handle AJAX request to toggle snippet status.
-	 *
-	 * @since 2.3.10
-	 * @return void
-	 */
-	public function handle_toggle_snippet_status() {
-		// Verify nonce.
-		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
-
-		if ( ! wp_verify_nonce( $nonce, 'wcf_custom_code_security' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Security check failed.', 'animation-addons-for-elementor' ) ) );
-		}
-
-		// Check permissions.
-		if ( ! current_user_can( 'edit_posts' ) ) {
-			wp_send_json_error( array( 'message' => __( 'You do not have permission to perform this action.', 'animation-addons-for-elementor' ) ) );
-		}
-
-		$snippet_id = isset( $_POST['snippet_id'] ) ? intval( $_POST['snippet_id'] ) : '';
-		$status     = isset( $_POST['status'] ) ? sanitize_text_field( wp_unslash( $_POST['status'] ) ) : '';
-
-		// Validate snippet exists and is of correct post-type.
-		$snippet = get_post( $snippet_id );
-		if ( ! $snippet || self::CPTTYPE !== $snippet->post_type ) {
-			wp_send_json_error( array( 'message' => __( 'Invalid snippet.', 'animation-addons-for-elementor' ) ) );
-		}
-
-		// Update the status.
-		$updated = update_post_meta( $snippet_id, 'is_active', $status );
-
-		if ( $updated ) {
-			$status_text = ( 'yes' === $status ) ? __( 'Activated', 'animation-addons-for-elementor' ) : __( 'Deactivated', 'animation-addons-for-elementor' );
-			wp_send_json_success(
-				array(
-					'message' => sprintf(
-						/* translators: %s: snippet status text. */
-						__( 'Snippet %s successfully.', 'animation-addons-for-elementor' ),
-						$status_text
-					),
-					'status'  => $status,
-				)
-			);
-		} else {
-			wp_send_json_error( array( 'message' => __( 'Failed to update snippet status.', 'animation-addons-for-elementor' ) ) );
-		}
-	}
 }
 
 CodeSnippet::instance();

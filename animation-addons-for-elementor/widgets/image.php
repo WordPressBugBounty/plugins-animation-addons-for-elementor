@@ -1,8 +1,6 @@
 <?php
 
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
-namespace WCF_ADDONS\Widgets;
-// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
+namespace Wealcoder\AnimationAddons\Widgets;
 
 use Elementor\Group_Control_Border;
 use Elementor\Group_Control_Box_Shadow;
@@ -495,10 +493,7 @@ class Image extends Widget_Base {
 			<?php if ( $link['url'] ) { ?>
 				<a <?php $this->print_render_attribute_string( 'link' ); ?>>
 				<?php } ?>
-				<?php 
-				// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-				echo Group_Control_Image_Size::get_attachment_image_html( $settings, 'image_size', 'image' ); 
-				?>
+				<?php Group_Control_Image_Size::print_attachment_image_html( $settings, 'image_size', 'image' ); ?>
 				<?php if ( $link['url'] ) { ?>
 				</a>
 			<?php } ?>

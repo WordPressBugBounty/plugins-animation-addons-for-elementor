@@ -3,7 +3,6 @@
  * Post Rating Handler
  *
  * @package AnimationAddons
- * @phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
  */
 
 if (! defined('ABSPATH')) {
@@ -15,18 +14,19 @@ if (function_exists('aaeaddon_register_post_rating_cpt')) {
 }
 
 // Only register Post Rating CPT and AJAX handler if the widget feature is enabled
-if (function_exists('wcf_addons_get_settings') && wcf_addons_get_settings('wcf_save_widgets', 'post-rating-form')) {
+if (function_exists('aaeaddon_get_settings') && aaeaddon_get_settings('aaeaddon_save_widgets', 'post-rating-form')) {
 	add_action('init', 'aaeaddonlite_register_post_rating_cpt');
-	add_action('wp_ajax_aaeaddon_submit_post_review_rating', 'handle_lite_post_rating_submission');
+	add_action('wp_ajax_aaeaddon_submit_post_review_rating', 'aaeaddon_handle_lite_post_rating_submission');
 }
 
+if ( ! function_exists( 'aaeaddonlite_register_post_rating_cpt' ) ) :
 // Register Post Rating CPT
 function aaeaddonlite_register_post_rating_cpt()
 {
 	if (function_exists('aaeaddon_register_post_rating_cpt')) {
 		return;
 	}
-	if (!function_exists('wcf_addons_get_settings') || !wcf_addons_get_settings('wcf_save_widgets', 'post-rating-form')) {
+	if (!function_exists('aaeaddon_get_settings') || !aaeaddon_get_settings('aaeaddon_save_widgets', 'post-rating-form')) {
 		return;
 	}
 	register_post_type('aaeaddon_post_rating', [
@@ -40,12 +40,14 @@ function aaeaddonlite_register_post_rating_cpt()
 		'supports'  => ['title'],
 	]);
 }
+endif;
 
 // Remove "Add New" from admin menu
 add_action('admin_menu', function () {
 	remove_submenu_page('edit.php?post_type=aaeaddon_post_rating', 'post-new.php?post_type=aaeaddon_post_rating');
 });
 
+if ( ! function_exists( 'aaeaddon_lite_post_rating_columns' ) ) :
 // Admin Columns
 function aaeaddon_lite_post_rating_columns($columns)
 {
@@ -59,15 +61,17 @@ function aaeaddon_lite_post_rating_columns($columns)
 		'date'               => esc_html__('Date', 'animation-addons-for-elementor'),
 	];
 }
+endif;
 
 add_filter('manage_aaeaddon_post_rating_posts_columns', 'aaeaddon_lite_post_rating_columns');
 
+if ( ! function_exists( 'aaeaddon_lite_post_rating_custom_column_content' ) ) :
 function aaeaddon_lite_post_rating_custom_column_content($column, $post_id)
 {
 	switch ($column) {
 		case 'reviewed_post_type':
 			$type = get_post_meta($post_id, 'reviewed_post_type', true);
-			echo $type ? esc_html($type) : 'N/A';
+			echo esc_html( $type ?: 'N/A' );
 			break;
 
 		case 'name':
@@ -81,7 +85,7 @@ function aaeaddon_lite_post_rating_custom_column_content($column, $post_id)
 			break;
 
 		case 'rating':
-			echo intval(get_post_meta($post_id, 'rating', true)) ?: 'N/A';
+			echo esc_html( intval( get_post_meta( $post_id, 'rating', true ) ) ?: 'N/A' );
 			break;
 
 		case 'review':
@@ -89,17 +93,21 @@ function aaeaddon_lite_post_rating_custom_column_content($column, $post_id)
 			break;
 	}
 }
+endif;
 
 add_action('manage_aaeaddon_post_rating_posts_custom_column', 'aaeaddon_lite_post_rating_custom_column_content', 10, 2);
 
+if ( ! function_exists( 'aaeaddon_lite_add_review_meta_boxes' ) ) :
 // Admin Meta Box for Editing Fields
 function aaeaddon_lite_add_review_meta_boxes()
 {
 	add_meta_box('aaeaddon_review_details', esc_html__('Review Details', 'animation-addons-for-elementor'), 'aaeaddon_lite_review_meta_box_callback', 'aaeaddon_post_rating', 'normal', 'default');
 }
+endif;
 
 add_action('add_meta_boxes', 'aaeaddon_lite_add_review_meta_boxes');
 
+if ( ! function_exists( 'aaeaddon_lite_review_meta_box_callback' ) ) :
 function aaeaddon_lite_review_meta_box_callback($post)
 {
 	$user_id = get_post_meta($post->ID, 'user_id', true);
@@ -115,13 +123,13 @@ function aaeaddon_lite_review_meta_box_callback($post)
 		<label><strong>Name:</strong></label><br>
 		<input type="text" name="aae_name"
 			value="<?php echo esc_attr($user_id ? get_the_author_meta('display_name', $user_id) : $name); ?>"
-			<?php echo $user_id ? 'readonly' : ''; ?> class="widefat" />
+			<?php echo esc_attr( $user_id ? 'readonly' : '' ); ?> class="widefat" />
 	</p>
 	<p>
 		<label><strong><?php echo esc_html__('Email:', 'animation-addons-for-elementor') ?></strong></label><br>
 		<input type="email" name="aae_email"
 			value="<?php echo esc_attr($user_id ? get_the_author_meta('user_email', $user_id) : $email); ?>"
-			<?php echo $user_id ? 'readonly' : ''; ?> class="widefat" />
+			<?php echo esc_attr( $user_id ? 'readonly' : '' ); ?> class="widefat" />
 	</p>
 	<p>
 		<label><strong><?php echo esc_html__('Rating (1-5):', 'animation-addons-for-elementor')  ?></strong></label><br>
@@ -134,7 +142,9 @@ function aaeaddon_lite_review_meta_box_callback($post)
 	</p>
 <?php
 }
+endif;
 
+if ( ! function_exists( 'aaeaddon_lite_save_review_meta_box' ) ) :
 function aaeaddon_lite_save_review_meta_box($post_id)
 {
 	if (function_exists('aaeaddon_register_post_rating_cpt')) {
@@ -183,9 +193,11 @@ function aaeaddon_lite_save_review_meta_box($post_id)
 		aaeaddon_sync_post_review_count((int) $target_post_id);
 	}
 }
+endif;
 
 add_action('save_post', 'aaeaddon_lite_save_review_meta_box');
 
+if ( ! function_exists( 'aaeaddon_sync_post_review_count' ) ) :
 /**
  * Synchronize post review count based strictly on published ratings.
  *
@@ -218,6 +230,7 @@ function aaeaddon_sync_post_review_count($post_id)
 
 	return $count;
 }
+endif;
 
 /**
  * Keep review count in sync when rating post status changes.
@@ -244,21 +257,22 @@ add_action('deleted_post', function ($post_id) {
 	}
 });
 
+if ( ! function_exists( 'aaeaddon_handle_lite_post_rating_submission' ) ) :
 // AJAX Handler for Rating Submissions
-function handle_lite_post_rating_submission()
+function aaeaddon_handle_lite_post_rating_submission()
 {
 	if (function_exists('aaeaddon_register_post_rating_cpt')) {
 		return;
 	}
 
 	// 1. Feature enablement check
-	if (!function_exists('wcf_addons_get_settings') || !wcf_addons_get_settings('wcf_save_widgets', 'post-rating-form')) {
+	if (!function_exists('aaeaddon_get_settings') || !aaeaddon_get_settings('aaeaddon_save_widgets', 'post-rating-form')) {
 		wp_send_json_error(['message' => esc_html__('Post rating feature is disabled.', 'animation-addons-for-elementor')], 403);
 	}
 
 	// 2. Nonce verification
 	$nonce = isset($_REQUEST['nonce']) ? sanitize_text_field(wp_unslash($_REQUEST['nonce'])) : '';
-	if (! $nonce || ! wp_verify_nonce($nonce, 'wcf-addons-frontend')) {
+	if (! $nonce || ! wp_verify_nonce( $nonce, \Wealcoder\AnimationAddons\Nonce::action_for( $nonce, \Wealcoder\AnimationAddons\Nonce::FRONTEND ) )) {
 		wp_send_json_error(['message' => esc_html__('Security check failed.', 'animation-addons-for-elementor')], 403);
 	}
 
@@ -297,7 +311,7 @@ function handle_lite_post_rating_submission()
 	$email   = $user ? $user->user_email : '';
 
 	// 7. Prevent rapid duplicate submissions (Rate limiting)
-	$rate_lock_key = 'aae_rate_lock_' . md5('user_' . $user_id . '_' . $post_id);
+	$rate_lock_key = 'aaeaddon_rate_lock_' . md5('user_' . $user_id . '_' . $post_id);
 
 	if (get_transient($rate_lock_key)) {
 		wp_send_json_error(['message' => esc_html__('You have submitted a review recently. Please wait a moment before trying again.', 'animation-addons-for-elementor')]);
@@ -344,7 +358,9 @@ function handle_lite_post_rating_submission()
 			: esc_html__('Review submitted successfully!', 'animation-addons-for-elementor'),
 	]);
 }
+endif;
 
+if ( ! function_exists( 'aaeaddon_lite_disable_post_rating_title_field' ) ) :
 function aaeaddon_lite_disable_post_rating_title_field($hook)
 {
 	$screen = get_current_screen();
@@ -353,11 +369,12 @@ function aaeaddon_lite_disable_post_rating_title_field($hook)
 	}
 
 	wp_enqueue_script(
-		'admin-post-rating',
-		WCF_ADDONS_URL . 'assets/js/admin-post-rating.js',
+		'aaeaddon-admin-post-rating',
+		AAEADDON_URL . 'assets/js/admin-post-rating.js',
 		[],
-		WCF_ADDONS_VERSION,
+		AAEADDON_VERSION,
 		true
 	);
 }
+endif;
 add_action('admin_enqueue_scripts', 'aaeaddon_lite_disable_post_rating_title_field');

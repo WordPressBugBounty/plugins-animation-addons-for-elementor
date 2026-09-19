@@ -1,80 +1,210 @@
 <?php
 /**
- * Plugin Name:                Animation Addons for Elementor – GSAP Motion Elementor Addons & Website Templates
+ * Plugin Name:                Animation Addons
  * Description:                Animation Addons for Elementor comes with GSAP Animation Builder, Customizable Widgets, Header Footer, Single Post, Archive Page Builder, and more.
  * Plugin URI:                 https://animation-addons.com/
- * Version:                    3.0.0
+ * Version:                    4.2.1
  * Author:                     Wealcoder
  * Author URI:                 https://animation-addons.com/
  * License:                    GPL v2 or later
  * License URI:                https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:                animation-addons-for-elementor
  * Domain Path:                /languages
- * Requires at least:          6.6
+ * Requires at least: 		   6.6
  * Requires PHP:               7.4
- * Tested up to:               7.1
- * Elementor tested up to:     4.2.2
- * Elementor Pro tested up to: 4.2.1
+ * Requires Plugins:           elementor
+ * Elementor tested up to:     4.2.4
+ * Elementor Pro tested up to: 4.2.3
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 } // Exit if accessed directly
 
-if ( ! defined( 'WCF_ADDONS_DASHBOARD_V2' ) ) {
-	define( 'WCF_ADDONS_DASHBOARD_V2', true );
+if ( ! function_exists( 'aaeaddon_define' ) ) :
+/**
+ * Define one of this plugin's constants, honouring a pre-4.2 override.
+ *
+ * 4.2.0 renamed the define prefix from `WCF_ADDONS_` / `WCF_` to `AAEADDON_`
+ * for WordPress.org's unique-prefix review. `wp-config.php` runs long before
+ * any plugin, so a site that pins one of these — a staging site pointing the
+ * template server somewhere else, a feature flag switched off, a self-hosted
+ * feature-request endpoint — has ALREADY defined the old name by the time we
+ * get here. Taking the built-in default instead would drop that override
+ * silently: the site keeps working and quietly talks to the wrong server.
+ *
+ * So the old name wins when it is present, and is then defined under the new
+ * name as well. `$legacy` is the pre-4.2 spelling, or null for a constant that
+ * never had one.
+ *
+ * @since 4.2.0
+ *
+ * @param string      $name   The current constant name.
+ * @param mixed       $value  Its built-in default.
+ * @param string|null $legacy The pre-4.2 spelling to prefer, if defined.
+ */
+function aaeaddon_define( $name, $value, $legacy = null ) {
+	if ( defined( $name ) ) {
+		return;
+	}
+	if ( null !== $legacy && defined( $legacy ) ) {
+		$value = constant( $legacy );
+	}
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.VariableConstantNameFound -- every caller below passes an AAEADDON_ literal.
+	define( $name, $value );
 }
+endif;
 
-if ( ! defined( 'WCF_ADDONS_VERSION' ) ) {
+if ( ! function_exists( 'aaeaddon_pro_constant' ) ) :
 	/**
-	 * Plugin Version.
+	 * One of the paid add-on's constants, whichever Pro version is installed.
+	 *
+	 * Pro 4.3 renamed its constants to `AAEADDON_PRO_*` and keeps the old
+	 * `WCF_ADDONS_PRO_*` names as aliases; a Pro older than that defines only
+	 * the old names. This plugin asks for the new one first and falls back, so
+	 * it spells no `WCF_` name of its own and still runs beside either Pro.
+	 *
+	 * @param string $suffix  'VERSION', 'PATH', 'URL', 'FILE', 'BASE', 'WIDGETS_PATH'.
+	 * @param mixed  $default Returned when no Pro is active.
+	 * @return mixed
 	 */
-	define( 'WCF_ADDONS_VERSION', '3.0.0' );
-}
-if ( ! defined( 'WCF_ADDONS_FILE' ) ) {
-	/**
-	 * Plugin File Ref.
-	 */
-	define( 'WCF_ADDONS_FILE', __FILE__ );
-}
-if ( ! defined( 'WCF_ADDONS_BASE' ) ) {
-	/**
-	 * Plugin Base Name.
-	 */
-	define( 'WCF_ADDONS_BASE', plugin_basename( WCF_ADDONS_FILE ) );
-}
-if ( ! defined( 'WCF_ADDONS_PATH' ) ) {
-	/**
-	 * Plugin Dir Ref.
-	 */
-	define( 'WCF_ADDONS_PATH', plugin_dir_path( WCF_ADDONS_FILE ) );
-}
-if ( ! defined( 'WCF_ADDONS_URL' ) ) {
-	/**
-	 * Plugin URL.
-	 */
-	define( 'WCF_ADDONS_URL', plugin_dir_url( WCF_ADDONS_FILE ) );
-}
-if ( ! defined( 'WCF_ADDONS_WIDGETS_PATH' ) ) {
-	/**
-	 * Widgets Dir Ref.
-	 */
-	define( 'WCF_ADDONS_WIDGETS_PATH', WCF_ADDONS_PATH . 'widgets/' );
-}
+	function aaeaddon_pro_constant( $suffix, $default = null ) {
+		if ( defined( 'AAEADDON_PRO_' . $suffix ) ) {
+			return constant( 'AAEADDON_PRO_' . $suffix );
+		}
+		if ( defined( 'WCF_ADDONS_PRO_' . $suffix ) ) {
+			return constant( 'WCF_ADDONS_PRO_' . $suffix );
+		}
+		return $default;
+	}
+endif;
 
-if ( ! defined( 'WCF_TEMPLATE_STARTER_BASE_URL' ) ) {
+if ( ! function_exists( 'aaeaddon_pro_defined' ) ) :
 	/**
-	 * Template Path
+	 * `defined()` for one of the add-on's constants under either spelling.
+	 *
+	 * @param string $suffix See aaeaddon_pro_constant().
+	 * @return bool
 	 */
-	define( 'WCF_TEMPLATE_STARTER_BASE_URL', 'https://www.themecrowdy.com/' );
-}
+	function aaeaddon_pro_defined( $suffix ) {
+		return defined( 'AAEADDON_PRO_' . $suffix ) || defined( 'WCF_ADDONS_PRO_' . $suffix );
+	}
+endif;
 
-if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
+aaeaddon_define( 'AAEADDON_DASHBOARD_V2', true, 'WCF_ADDONS_DASHBOARD_V2' );
+
+/**
+ * Plugin Version.
+ */
+aaeaddon_define( 'AAEADDON_VERSION', '4.2.1', 'WCF_ADDONS_VERSION' );
+
+/**
+ * Plugin File Ref.
+ */
+aaeaddon_define( 'AAEADDON_FILE', __FILE__, 'WCF_ADDONS_FILE' );
+
+/**
+ * Plugin Base Name.
+ */
+aaeaddon_define( 'AAEADDON_BASE', plugin_basename( AAEADDON_FILE ), 'WCF_ADDONS_BASE' );
+
+/**
+ * Plugin Dir Ref.
+ */
+aaeaddon_define( 'AAEADDON_PATH', plugin_dir_path( AAEADDON_FILE ), 'WCF_ADDONS_PATH' );
+
+/**
+ * Plugin URL.
+ */
+aaeaddon_define( 'AAEADDON_URL', plugin_dir_url( AAEADDON_FILE ), 'WCF_ADDONS_URL' );
+
+/**
+ * Widgets Dir Ref.
+ */
+aaeaddon_define( 'AAEADDON_WIDGETS_PATH', AAEADDON_PATH . 'widgets/', 'WCF_ADDONS_WIDGETS_PATH' );
+
+/**
+ * Template server base.
+ *
+ * Overridden in wp-config.php on staging sites to point at a local copy — the
+ * reason `aaeaddon_define()` prefers the old spelling.
+ */
+aaeaddon_define( 'AAEADDON_TEMPLATE_STARTER_BASE_URL', 'https://www.themecrowdy.com/', 'WCF_TEMPLATE_STARTER_BASE_URL' );
+
+aaeaddon_define( 'AAEADDON_FEATURE_REQUEST_ENDPOINT', 'https://animation-addons.com/wp-json/aae/v1/request-new-feature', 'WCF_FEATURE_REQUEST_ENDPOINT' );
+
+/**
+ * Shared key the receiver checks, sent as the X-API-Key header.
+ *
+ * Must match AAEFR_API_KEY on the receiving side — change one without the
+ * other and every submission comes back 401.
+ *
+ * Shared client key sent as the X-API-Key header to route and rate-limit
+ * submissions on the feature request receiving endpoint.
+ */
+aaeaddon_define( 'AAEADDON_FEATURE_REQUEST_API_KEY', '0700c72d204521236f5af03011cb0cbb4f6229a6bbdc2ef041d76184e9a795b7', 'WCF_FEATURE_REQUEST_API_KEY' );
+
+/*
+ * The pre-4.2 spellings of the seven constants above, kept as aliases.
+ *
+ * `WCF_ADDONS_*` was the plugin's define prefix until 4.2.0 renamed it to
+ * `AAEADDON_` for WordPress.org's unique-prefix review. These seven are the
+ * ONLY ones that leave this plugin: the paid add-on reads `WCF_ADDONS_PATH` on
+ * 37 lines (eleven of its loop-filter files `require_once` OUR files by that
+ * path), `WCF_ADDONS_VERSION` on eleven — it is the add-on's whole
+ * free-is-present-and-new-enough test — plus `_URL` and `_DASHBOARD_V2`. A
+ * child theme or a site snippet may read any of them.
+ *
+ * So they are defined, not merely documented: the add-on is updated by hand,
+ * weeks after this plugin auto-updates from WordPress.org, and an undefined
+ * constant is a fatal in PHP 8. Same reasoning, and the same permanence, as
+ * the `WCF_ADDONS_Plugin` class alias at the bottom of this file.
+ *
+ * `AAEADDON_TEMPLATE_STARTER_BASE_URL` and the two feature-request constants
+ * get NO alias: nothing outside this plugin has ever read them.
+ *
+ * @since 4.2.0
+ */
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals -- the pre-4.2 names being aliased, defined from a keyed list.
+foreach (
+	array(
+		'WCF_ADDONS_DASHBOARD_V2' => AAEADDON_DASHBOARD_V2,
+		'WCF_ADDONS_VERSION'      => AAEADDON_VERSION,
+		'WCF_ADDONS_FILE'         => AAEADDON_FILE,
+		'WCF_ADDONS_BASE'         => AAEADDON_BASE,
+		'WCF_ADDONS_PATH'         => AAEADDON_PATH,
+		'WCF_ADDONS_URL'          => AAEADDON_URL,
+		'WCF_ADDONS_WIDGETS_PATH' => AAEADDON_WIDGETS_PATH,
+	) as $aaeaddon_legacy_const => $aaeaddon_const_value
+) {
+	if ( ! defined( $aaeaddon_legacy_const ) ) {
+		define( $aaeaddon_legacy_const, $aaeaddon_const_value );
+	}
+}
+unset( $aaeaddon_legacy_const, $aaeaddon_const_value );
+// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals
+
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
 	require __DIR__ . '/vendor/autoload.php';
 }
 
+/*
+ * The pre-4.2 namespace (`WCF_ADDONS\`) is still answered, for the paid
+ * add-on and for any site code that imported a class under the old name.
+ * Must follow Composer's loader and precede everything else.
+ */
+require __DIR__ . '/inc/Compat/namespace-alias.php';
+
+/*
+ * Every option is `aaeaddon_…` in the code from 4.2 on; the database keeps
+ * the pre-4.2 rows and the bridge answers both spellings from one live row
+ * (inc/Compat/key-map.php is the list). Booted here, before the add-on or
+ * anything else reads an option.
+ */
+\Wealcoder\AnimationAddons\Compat\Key_Bridge::boot();
+
 /**
- * Main WCF_ADDONS_Plugin Class
+ * Main Aaeaddon_Plugin Class
  *
  * The init class that runs the Hello World plugin.
  * Intended To make sure that the plugin's minimum requirements are met.
@@ -85,7 +215,7 @@ if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
  *
  * @since 1.2.0
  */
-final class WCF_ADDONS_Plugin {
+final class Aaeaddon_Plugin {
 
 	/**
 	 * Plugin Version
@@ -93,7 +223,7 @@ final class WCF_ADDONS_Plugin {
 	 * @since 1.0.0
 	 * @var string The plugin version.
 	 */
-	const VERSION = '2.7.4';
+	const VERSION = '3.0.1';
 
 	/**
 	 * Minimum Elementor Version
@@ -118,16 +248,32 @@ final class WCF_ADDONS_Plugin {
 	 * @access public
 	 */
 	public function __construct() {
-
-		// register_activation_hook( WCF_ADDONS_BASE, [ __CLASS__, 'plugin_activation_hook' ] );
-		// register_deactivation_hook( WCF_ADDONS_BASE, [ __CLASS__, 'plugin_deactivation_hook' ] );
-		// register_uninstall_hook( WCF_ADDONS_BASE, [ __CLASS__, 'plugin_unregister_hook' ] );
-		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_elementor_install_script' ) );
-		add_action( 'wp_ajax_wcf_install_elementor_plugin', array( $this, 'install_elementor_plugin_handler' ) );
+		
+		// register_activation_hook( AAEADDON_BASE, [ __CLASS__, 'plugin_activation_hook' ] );
+		// register_deactivation_hook( AAEADDON_BASE, [ __CLASS__, 'plugin_deactivation_hook' ] );
+		// register_uninstall_hook( AAEADDON_BASE, [ __CLASS__, 'plugin_unregister_hook' ] );
+		add_action('admin_enqueue_scripts', [$this,'enqueue_admin_notice_style']);
+		add_action('admin_head', [$this,'print_admin_menu_icon_style']);
+		// The storage-name migration screen, notices and endpoints. Before
+		// init() and NOT gated on Elementor: the bridge serves options either way.
+		//
+		// is_admin() only, because every hook Migration::init() registers is an
+		// admin one -- admin_menu, admin_init, submenu_file, after_plugin_row_*,
+		// five wp_ajax_* and the dashboard config filter. On a visitor's request
+		// not one of them can fire, so loading the class there parsed 29 KB to
+		// register callbacks nothing would ever call. The BRIDGE is what a
+		// front-end request needs and that is a different file, booted above.
+		if ( is_admin() ) {
+			add_action( 'plugins_loaded', array( '\Wealcoder\AnimationAddons\Compat\Migration', 'init' ), 5 );
+			// The pre-4.2 admin page slugs (?page=wcf_addons_settings ...) keep
+			// resolving: a redirect for the URL, a parent-slug alias for the
+			// submenus an older Pro registers under `wcf_addons_page`.
+			\Wealcoder\AnimationAddons\Compat\Admin_Page_Alias::init();
+		}
 		// Init Plugin
 		add_action( 'plugins_loaded', array( $this, 'init' ) );
-		add_action( 'admin_notices', array( $this, 'admin_notice_missing_main_plugin' ) );
-		add_action( 'admin_init', array( $this, 'redirect_to_dashboard' ) );
+		add_action( 'admin_notices', array( $this, 'admin_notice_missing_main_plugin' ) );		
+		
 	}
 
 	/**
@@ -135,26 +281,32 @@ final class WCF_ADDONS_Plugin {
 	 *
 	 * @since 1.0.0
 	 */
-	public static function plugin_activation_hook() {
+	public static function plugin_activation_hook( $network_wide = false ) {
 
-		if ( ! get_option( 'aae_installed' ) ) {
-			add_option( 'aae_installed', time(), '', false );
+		// MULTISITE: a network activation fires this ONCE, on the main site.
+		// Every option below is per site, so the work runs once per site.
+		\Wealcoder\AnimationAddons\Compat\Migration::for_each_site( array( __CLASS__, 'activate_site' ), (bool) $network_wide );
+	}
+
+	/**
+	 * The per-site half of activation (the migration decision, the install
+	 * markers, the wizard redirect, the rewrite flush). Runs with the site in
+	 * question current.
+	 */
+	public static function activate_site() {
+
+		// Decide the storage-name migration state FIRST: a fresh site is
+		// complete from here, an existing database waits for consent. Every
+		// option written below goes to whichever row that decision made live.
+		\Wealcoder\AnimationAddons\Compat\Migration::on_activation();
+
+		if ( ! get_option('aaeaddon_installed') ) {
+			add_option('aaeaddon_installed', time(), '', false);
 		}
 
-		update_option( 'aae_do_activation_redirect', 'new', false );
-
-		if ( ! get_option( 'wcf_addons_setup_wizard' ) ) {
-			update_option( 'wcf_addons_setup_wizard', 'redirect', false );
+		if ( ! get_option('aaeaddon_setup_wizard') ) {
+			update_option('aaeaddon_setup_wizard', 'redirect', false);
 		}
-
-		$count = (int) get_option( 'aae_activation_count', 0 );
-
-		if ( ! $count ) {
-			update_option( 'aae_send_activation_event', true, false );
-		}
-
-		update_option( 'aae_activation_count', $count + 1, false );
-		update_option( 'aae_last_activated', current_time( 'mysql' ), false );
 
 		flush_rewrite_rules();
 	}
@@ -165,15 +317,6 @@ final class WCF_ADDONS_Plugin {
 	 */
 	public static function plugin_deactivation_hook() {
 
-		$count = (int) get_option( 'aae_deactivation_count', 0 );
-
-		if ( ! $count ) {
-			update_option( 'aae_send_deactivation_event', true, false );
-		}
-
-		update_option( 'aae_deactivation_count', $count + 1, false );
-		update_option( 'aae_last_deactivated', current_time( 'mysql' ), false );
-
 		flush_rewrite_rules();
 	}
 
@@ -183,25 +326,31 @@ final class WCF_ADDONS_Plugin {
 	 * @since 1.0.0
 	 */
 	public static function plugin_unregister_hook() {
+		// MULTISITE: uninstall runs once for the network; the rows are per site.
+		\Wealcoder\AnimationAddons\Compat\Migration::for_each_site( array( __CLASS__, 'uninstall_site' ), is_multisite() );
+	}
 
-		$options = array(
-			'aae_installed',
-			'aae_do_activation_redirect',
-			'wcf_addons_setup_wizard',
-			'wcf_addons_version',
+	/** The per-site half of uninstall. Runs with the site in question current. */
+	public static function uninstall_site() {
 
-			'aae_activation_count',
-			'aae_deactivation_count',
+		// The plugin's own bookkeeping. Each name is deleted under BOTH its
+		// spellings (inc/Compat/key-map.php) — the only place the pre-4.2 rows
+		// are ever removed. Settings, templates and post data are left alone,
+		// as they always were.
+		$options = [
+			'aaeaddon_installed',
+			'aaeaddon_setup_wizard',
+			'aaeaddon_version',
+			'aaeaddon_wizard_subscribed',
+			'aaeaddon_migration_state',
+			'aaeaddon_migration_log',
+		];
 
-			'aae_last_activated',
-			'aae_last_deactivated',
-
-			'aae_send_activation_event',
-			'aae_send_deactivation_event',
-		);
-
-		foreach ( $options as $option ) {
-			delete_option( $option );
+		foreach ($options as $option) {
+			\Wealcoder\AnimationAddons\Compat\Key_Bridge::delete_option($option);
+		}
+		foreach (\Wealcoder\AnimationAddons\Compat\Key_Bridge::map()['dead'] as $option) {
+			delete_option($option);
 		}
 	}
 
@@ -217,13 +366,11 @@ final class WCF_ADDONS_Plugin {
 	 * @since 1.2.0
 	 * @access public
 	 */
+
 	public function init() {
 
-		// Translations for plugins hosted on WordPress.org are loaded automatically
-		// since WordPress 4.6, so a manual load_plugin_textdomain() call is not needed.
-
 		// Check if Elementor installed and activated
-		if ( ! did_action( 'elementor/loaded' ) ) {
+		if ( ! did_action( 'elementor/loaded' ) ) {			
 			return;
 		}
 
@@ -241,40 +388,83 @@ final class WCF_ADDONS_Plugin {
 			return;
 		}
 
-		add_action(
-			'wp_loaded',
-			function () {
-				// Set current version to DB
-				if ( get_option( 'wcf_addons_version' ) !== WCF_ADDONS_VERSION ) {
-					// Update plugin version
-					update_option( 'wcf_addons_version', WCF_ADDONS_VERSION );
+		add_action( 'wp_loaded', function () {
+			// Set current version to DB
+			$previous_version = get_option( 'aaeaddon_version' );
+			if ( $previous_version !== AAEADDON_VERSION ) {
+				// Update plugin version
+				update_option( 'aaeaddon_version', AAEADDON_VERSION );
+
+				/*
+				 * Decide the storage-name migration once per version: an
+				 * existing database waits for consent, a fresh one is complete.
+				 * One option write, no scan — see inc/Compat/Migration.php.
+				 */
+				\Wealcoder\AnimationAddons\Compat\Migration::on_version_change( is_string( $previous_version ) ? $previous_version : '' );
+
+				/*
+				 * Drop Elementor's cached ATOMIC BASE STYLES on every version change.
+				 *
+				 * Atomic_Widget_Base_Styles::get_all_base_styles() walks every
+				 * registered atomic element ONCE and caches the combined
+				 * stylesheet under a single 'base' key. Nothing in that pipeline
+				 * notices that a plugin update added a widget or edited a
+				 * define_base_styles() — the cache is only invalidated by
+				 * Elementor's own `elementor/core/files/clear_cache`, which this
+				 * plugin listened to but never fired.
+				 *
+				 * So a new widget shipped with NO base CSS at all until somebody
+				 * happened to press Elementor > Tools > Clear Files & Data. That
+				 * is how the Google Maps widget reached a live page with its
+				 * `position/overflow/width/height` rules missing: the iframe kept
+				 * the browser's default 300x150 inline box, so resizing the
+				 * widget in the Style tab appeared to do nothing.
+				 *
+				 * The version option is written BEFORE this on purpose. If
+				 * clearing ever throws, the site loses one cache clear rather
+				 * than re-running a full cache rebuild on every single request.
+				 */
+				if ( class_exists( '\Elementor\Plugin' )
+					&& isset( \Elementor\Plugin::$instance->files_manager ) ) {
+					\Elementor\Plugin::$instance->files_manager->clear_cache();
 				}
-
-				// Sanitize and check the 'page' parameter
 			}
-		);
-
-		add_action(
-			'current_screen',
-			function ( $screen ) {
-				// Check if user has required capabilities
-
-				if ( current_user_can( 'manage_options' ) && strpos( $screen->id, '_page_wcf_addons_settings' ) !== false ) {
-					// Redirect if setup is incomplete
-					if ( 'complete' !== get_option( 'wcf_addons_setup_wizard' ) ) {
-						wp_safe_redirect( admin_url( 'admin.php?page=wcf_addons_setup_page' ) );
-						exit; // Always exit after redirection
-					}
+		
+			// Sanitize and check the 'page' parameter
+			
+		} );
+		
+		add_action( 'current_screen', function ( $screen ) {
+			// Check if user has required capabilities
+			
+			if ( current_user_can( 'manage_options' ) &&  strpos( $screen->id, '_page_aaeaddon_settings' ) !== false ) {
+				// Redirect if setup is incomplete
+				if ( 'complete' !== get_option( 'aaeaddon_setup_wizard' ) ) {
+					wp_safe_redirect( admin_url( 'admin.php?page=aaeaddon_setup_page' ) );
+					exit; // Always exit after redirection
 				}
 			}
-		);
-
+		});
+		
 		// Once we get here, We have passed all validation checks so we can safely include our plugin
 		require_once 'class-plugin.php';
+		require_once 'inc/AtomicWidgets/class-atomic.php';
 
-		// wcf plugin loaded
-		// Established public hook name; renaming would break backward compatibility.
-		do_action( 'wcf_plugins_loaded' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
+		/*
+		 * The plugin is fully loaded and its classes are available.
+		 *
+		 * Renamed in 4.2.1 for WordPress.org's unique-prefix rule. Nothing in
+		 * either plugin, nor in the Crowdy theme, ever listened to the old
+		 * spelling — but it has been a public extension point for years and a
+		 * customer's child theme is exactly the kind of place it would be used,
+		 * so the pre-4.2 name keeps firing. `do_action_deprecated` still runs
+		 * every listener; it only adds a notice under WP_DEBUG, which is how a
+		 * site owner finds out before the name goes away.
+		 *
+		 * Remove the deprecated call in 4.4, with the AJAX aliases.
+		 */
+		do_action( 'aaeaddon_plugins_loaded' );
+		do_action_deprecated( 'wcf_plugins_loaded', array(), '4.2.1', 'aaeaddon_plugins_loaded' );
 	}
 
 	/**
@@ -287,125 +477,107 @@ final class WCF_ADDONS_Plugin {
 	 */
 	public function admin_notice_missing_main_plugin() {
 
-		if ( ! is_plugin_active( 'elementor/elementor.php' ) ) {
-			echo '<div class="notice notice-error" id="elementor-install-notice">';
-			echo '<p><svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-				<path d="M14.0002 25.6666C20.4435 25.6666 25.6668 20.4433 25.6668 14C25.6668 7.55666 20.4435 2.33331 14.0002 2.33331C7.55684 2.33331 2.3335 7.55666 2.3335 14C2.3335 20.4433 7.55684 25.6666 14.0002 25.6666Z" stroke="#FC6848" stroke-width="2.33333" stroke-linecap="round" stroke-linejoin="round"/>
-				<path d="M14 9.33331V14.5833" stroke="#FC6848" stroke-width="2.33333" stroke-linecap="round" stroke-linejoin="round"/>
-				<path d="M14 18.653V18.6647" stroke="#FC6848" stroke-width="2.33333" stroke-linecap="round" stroke-linejoin="round"/>
-				</svg> <strong>Animation Addons for Elementor</strong> requires <strong>Elementor</strong> plugin to be installed and activated.</p>';
-				echo '<button name="animation-addons-for-elementor" slug="animation-addons-for-elementor/animation-addons-for-elementor.php" id="wcf-install-elementor" class="button button-primary"><svg width="16" height="15" viewBox="0 0 16 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-				<path d="M6.96475 6.85674L13.5055 0.315979L14.684 1.49449L13.5055 2.673L15.5679 4.7354L14.3894 5.9139L12.327 3.85151L11.1485 5.03002L12.9163 6.79782L11.7378 7.97632L9.97 6.20857L8.14325 8.03524C9.21509 9.65307 9.03833 11.8542 7.61292 13.2796C5.98576 14.9068 3.34758 14.9068 1.72039 13.2796C0.0932021 11.6524 0.0932021 9.01424 1.72039 7.38707C3.14578 5.96165 5.34694 5.7849 6.96475 6.85674ZM6.43442 12.1011C7.41075 11.1247 7.41075 9.5419 6.43442 8.56557C5.45813 7.58924 3.87521 7.58924 2.8989 8.56557C1.92259 9.5419 1.92259 11.1247 2.8989 12.1011C3.87521 13.0774 5.45813 13.0774 6.43442 12.1011Z" fill="white"/>
-				</svg>Activate</button>';
-			echo '</div>';
+		if ( is_plugin_active( 'elementor/elementor.php' ) ) {
+			return;
 		}
+
+		// This plugin installs nothing and activates nothing on the user's
+		// behalf. The notice says what is missing and hands the job to
+		// WordPress's own screens, which do it with their own capability
+		// checks and their own nonces -- so there is no installer, no
+		// activator and no endpoint of ours behind this button.
+		$installed = file_exists( WP_PLUGIN_DIR . '/elementor/elementor.php' );
+
+		$action_url  = '';
+		$action_text = '';
+
+		if ( $installed && current_user_can( 'activate_plugins' ) ) {
+			$action_url  = wp_nonce_url(
+				self_admin_url( 'plugins.php?action=activate&plugin=elementor%2Felementor.php' ),
+				'activate-plugin_elementor/elementor.php'
+			);
+			$action_text = __( 'Activate Elementor', 'animation-addons-for-elementor' );
+		} elseif ( ! $installed && current_user_can( 'install_plugins' ) ) {
+			$action_url  = self_admin_url( 'plugin-install.php?tab=search&type=term&s=elementor' );
+			$action_text = __( 'Find Elementor', 'animation-addons-for-elementor' );
+		}
+
+		$message = $installed
+			? __( 'requires <strong>Elementor</strong> to be activated.', 'animation-addons-for-elementor' )
+			: __( 'requires the <strong>Elementor</strong> plugin to be installed and activated.', 'animation-addons-for-elementor' );
+
+		echo '<div class="notice notice-error" id="elementor-install-notice">';
+		echo '<p><svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+			<path d="M14.0002 25.6666C20.4435 25.6666 25.6668 20.4433 25.6668 14C25.6668 7.55666 20.4435 2.33331 14.0002 2.33331C7.55684 2.33331 2.3335 7.55666 2.3335 14C2.3335 20.4433 7.55684 25.6666 14.0002 25.6666Z" stroke="#FC6848" stroke-width="2.33333" stroke-linecap="round" stroke-linejoin="round"/>
+			<path d="M14 9.33331V14.5833" stroke="#FC6848" stroke-width="2.33333" stroke-linecap="round" stroke-linejoin="round"/>
+			<path d="M14 18.653V18.6647" stroke="#FC6848" stroke-width="2.33333" stroke-linecap="round" stroke-linejoin="round"/>
+			</svg> <strong>Animation Addons for Elementor</strong> ' . wp_kses( $message, array( 'strong' => array() ) ) . '</p>';
+
+		if ( $action_url ) {
+			echo '<a href="' . esc_url( $action_url ) . '" id="wcf-elementor-action" class="button button-primary"><svg width="16" height="15" viewBox="0 0 16 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+			<path d="M6.96475 6.85674L13.5055 0.315979L14.684 1.49449L13.5055 2.673L15.5679 4.7354L14.3894 5.9139L12.327 3.85151L11.1485 5.03002L12.9163 6.79782L11.7378 7.97632L9.97 6.20857L8.14325 8.03524C9.21509 9.65307 9.03833 11.8542 7.61292 13.2796C5.98576 14.9068 3.34758 14.9068 1.72039 13.2796C0.0932021 11.6524 0.0932021 9.01424 1.72039 7.38707C3.14578 5.96165 5.34694 5.7849 6.96475 6.85674ZM6.43442 12.1011C7.41075 11.1247 7.41075 9.5419 6.43442 8.56557C5.45813 7.58924 3.87521 7.58924 2.8989 8.56557C1.92259 9.5419 1.92259 11.1247 2.8989 12.1011C3.87521 13.0774 5.45813 13.0774 6.43442 12.1011Z" fill="white"/>
+			</svg>' . esc_html( $action_text ) . '</a>';
+		}
+
+		echo '</div>';
+	}
+	
+	/**
+	 * The one admin rule that belongs on every screen: our own item in
+	 * #adminmenu, which WordPress prints on every page. Two declarations,
+	 * inlined, so no stylesheet is requested on screens that need nothing
+	 * else from us. It reaches only our own menu item.
+	 */
+	public function print_admin_menu_icon_style() {
+
+		echo '<style id="aae-admin-menu-icon">#adminmenu .toplevel_page_aaeaddon_page .wp-menu-image img{opacity:1;padding:7px 0 0}</style>';
 	}
 
-	public function enqueue_elementor_install_script( $hook ) {
+	/**
+	 * Admin styles for the "Elementor is missing" notice.
+	 *
+	 * Loads on the screens that need it and nowhere else: this stylesheet used
+	 * to be enqueued on every admin page, which is asking every screen in
+	 * WordPress to download our CSS for nothing.
+	 *
+	 * @param string $hook Current admin page.
+	 */
+	public function enqueue_admin_notice_style($hook) {
 
-		// ✅ Load CSS
-		wp_enqueue_style(
-			'aaeaddon-common',
-			WCF_ADDONS_URL . 'assets/css/wcf-admin.min.css',
-			array(),
-			WCF_ADDONS_VERSION
-		);
+		// The screen check is a string compare and decides the answer on its
+		// own for our own pages, so it goes first. Everywhere else the
+		// stylesheet is only wanted while the notice is printing, and that
+		// is the one question worth loading a core file to answer.
+		$screen     = function_exists('get_current_screen') ? get_current_screen() : null;
+		$our_screen = $screen && false !== strpos( (string) $screen->id, '_page_wcf_addons_' );
 
-		// ✅ Load script only if Elementor not active
-		if ( ! is_plugin_active( 'elementor/elementor.php' ) ) {
+		if ( ! $our_screen ) {
 
-			wp_enqueue_script(
-				'wcf-install-elementor-script',
-				plugin_dir_url( __FILE__ ) . 'assets/js/install-elementor.js',
-				array( 'jquery' ),
-				WCF_ADDONS_VERSION,
-				true
-			);
-
-			wp_localize_script(
-				'wcf-install-elementor-script',
-				'wcfelementorAjax',
-				array(
-					'ajax_url' => admin_url( 'admin-ajax.php' ),
-					'nonce'    => wp_create_nonce( 'wcfinstall_elementor_nonce' ),
-				)
-			);
-		}
-	}
-
-	function install_elementor_plugin_handler() {
-		// Verify the AJAX nonce for security
-		check_ajax_referer( 'wcfinstall_elementor_nonce', '_ajax_nonce' );
-
-		if ( ! current_user_can( 'activate_plugins' ) ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'Plugin Activation Permission Required, Contact Admin', 'animation-addons-for-elementor' ) ) );
-		}
-
-		// Include required WordPress files
-		if ( ! class_exists( 'Plugin_Upgrader' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
-		}
-		if ( ! class_exists( 'WP_Ajax_Upgrader_Skin' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/class-wp-ajax-upgrader-skin.php';
-		}
-		if ( ! function_exists( 'plugins_api' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/plugin-install.php'; // Include the plugins_api function
-		}
-
-		$plugin_slug = 'elementor';
-		$plugin_file = 'elementor/elementor.php';
-
-		// Check if the plugin is already active
-		if ( is_plugin_active( $plugin_file ) ) {
-			wp_send_json_success( array( 'message' => esc_html__( 'Plugin is already active.', 'animation-addons-for-elementor' ) ) );
-		}
-
-		// Fetch plugin information dynamically using the WordPress Plugin API
-		$api = plugins_api(
-			'plugin_information',
-			array(
-				'slug'   => $plugin_slug,
-				'fields' => array(
-					'sections' => false,
-				),
-			)
-		);
-
-		if ( is_wp_error( $api ) ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'Failed to retrieve plugin information.', 'animation-addons-for-elementor' ) ) );
-		}
-
-		// Get the download URL for the plugin
-		$download_url = $api->download_link;
-
-		if ( empty( $download_url ) ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'Failed to retrieve plugin download URL.', 'animation-addons-for-elementor' ) ) );
-		}
-
-		// Install the plugin using the retrieved download URL
-		$upgrader  = new Plugin_Upgrader( new WP_Ajax_Upgrader_Skin() );
-		$installed = $upgrader->install( $download_url );
-
-		if ( is_wp_error( $installed ) ) {
-			wp_send_json_error( array( 'message' => $installed->get_error_message() ) );
-		}
-
-		// Activate the plugin if installed successfully
-		if ( file_exists( WP_PLUGIN_DIR . '/' . $plugin_file ) ) {
-			$activated = activate_plugin( $plugin_file );
-
-			if ( is_wp_error( $activated ) ) {
-				wp_send_json_error( array( 'message' => $activated->get_error_message() ) );
+			// wp-admin/includes/plugin.php is loaded on admin screens, but
+			// this runs on a hook other plugins can fire early, so do not
+			// assume it. is_plugin_active() is called immediately below.
+			if ( ! function_exists('is_plugin_active') ) {
+				require_once ABSPATH . 'wp-admin/includes/plugin.php';
 			}
 
-			wp_send_json_success( array( 'message' => esc_html__( 'Elementor has been successfully installed and activated.', 'animation-addons-for-elementor' ) ) );
+			// The notice prints on every admin screen while Elementor is
+			// missing, so its styles have to follow it. With Elementor
+			// active there is no notice and this is not our page.
+			if ( is_plugin_active('elementor/elementor.php') ) {
+				return;
+			}
 		}
 
-		// If the plugin file is not found, send an error
-		wp_send_json_error( array( 'message' => esc_html__( 'Plugin installation failed.', 'animation-addons-for-elementor' ) ) );
+		wp_enqueue_style(
+			'aaeaddon-common',
+			AAEADDON_URL . 'assets/css/wcf-admin.min.css',
+			[],
+			AAEADDON_VERSION
+		);
+
+		// No script goes with the notice: its button is an ordinary link to a
+		// WordPress screen, so it works with nothing of ours loaded at all.
 	}
-
-
 
 	/**
 	 * Admin notice
@@ -416,7 +588,7 @@ final class WCF_ADDONS_Plugin {
 	 * @access public
 	 */
 	public function admin_notice_minimum_elementor_version() {
-		if ( ! current_user_can( 'activate_plugins' ) ) {
+		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
 
@@ -440,7 +612,7 @@ final class WCF_ADDONS_Plugin {
 	 * @access public
 	 */
 	public function admin_notice_minimum_php_version() {
-		if ( ! current_user_can( 'activate_plugins' ) ) {
+		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
 
@@ -455,56 +627,36 @@ final class WCF_ADDONS_Plugin {
 		printf( '<div class="notice notice-warning is-dismissible"><p>%1$s</p></div>', wp_kses_post( $message ) );
 	}
 
-
-
-	public function redirect_to_dashboard() {
-
-		if ( ! is_plugin_active( 'elementor/elementor.php' ) ) {
-			return;
-		}
-
-		if ( get_option( 'aae_do_activation_redirect' ) ) {
-
-			delete_option( 'aae_do_activation_redirect' );
-
-			if ( isset( $_GET['activate-multi'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-				return;
-			}
-			wp_safe_redirect( admin_url( 'admin.php?page=wcf_addons_settings' ) );
-			exit;
-		}
-
-		if ( get_option( 'aae_send_activation_event' ) ) {
-			delete_option( 'aae_send_activation_event' );
-
-			wp_remote_post(
-				'https://data.animation-addons.com/wp-json/wmd/v1/org/install/daily/increment?plugin_slug=animation-addons-for-elementor&event=activated',
-				array(
-					'timeout'  => 2,
-					'blocking' => false,
-				)
-			);
-		}
-
-		if ( get_option( 'aae_send_deactivation_event' ) ) {
-			delete_option( 'aae_send_deactivation_event' );
-
-			wp_remote_post(
-				'https://data.animation-addons.com/wp-json/wmd/v1/org/install/daily/increment?plugin_slug=animation-addons-for-elementor&event=deactivated',
-				array(
-					'timeout'  => 2,
-					'blocking' => false,
-				)
-			);
-		}
-	}
+	
 }
 
+/*
+ * The pre-4.2 name of the class above, and the ONLY backward-compatible shim
+ * this plugin keeps: every pre-4.2 function name lives in the paid add-on's
+ * inc/Compat/legacy-functions.php.
+ *
+ * `WCF_ADDONS_Plugin` is how everything outside this plugin asks whether it is
+ * installed: the paid add-on gates its whole boot on `class_exists()` of it,
+ * its own diagnostics screen reads it, and the Crowdy theme's "essential
+ * plugins" panel names it. None of those is updated at the moment this plugin
+ * auto-updates from WordPress.org, so the old name has to keep answering.
+ *
+ * Declared here rather than through the autoloader in `inc/Compat/`: this is a
+ * GLOBAL class defined in the bootstrap, not a namespaced one Composer could
+ * ever reach, and `class_exists( 'WCF_ADDONS_Plugin' )` has to be true from the
+ * moment the plugin file has finished loading.
+ *
+ * @since 4.2.0
+ */
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedClassnameFound -- the pre-4.2 name being aliased.
+class_alias( 'Aaeaddon_Plugin', 'WCF_ADDONS_Plugin' );
 
 // ✅ Register hooks here (outside class)
-register_activation_hook( WCF_ADDONS_FILE, array( 'WCF_ADDONS_Plugin', 'plugin_activation_hook' ) );
-register_deactivation_hook( WCF_ADDONS_FILE, array( 'WCF_ADDONS_Plugin', 'plugin_deactivation_hook' ) );
-register_uninstall_hook( WCF_ADDONS_FILE, array( 'WCF_ADDONS_Plugin', 'plugin_unregister_hook' ) );
+register_activation_hook( AAEADDON_FILE, ['Aaeaddon_Plugin', 'plugin_activation_hook'] );
+register_deactivation_hook( AAEADDON_FILE, ['Aaeaddon_Plugin', 'plugin_deactivation_hook'] );
+register_uninstall_hook( AAEADDON_FILE, ['Aaeaddon_Plugin', 'plugin_unregister_hook'] );
 
-// Instantiate WCF_ADDONS_Plugin.
-new WCF_ADDONS_Plugin();
+// Instantiate Aaeaddon_Plugin.
+new Aaeaddon_Plugin();
+
+

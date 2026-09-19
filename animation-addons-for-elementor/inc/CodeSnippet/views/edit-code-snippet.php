@@ -4,17 +4,17 @@
  * Admin views: Add/Edit Code Snippet
  *
  * @since 2.3.10
- * @package WCF_ADDONS\CodeSnippet
+ * @package Wealcoder\AnimationAddons\CodeSnippet
  * 
  */
  
 
-use WCF_ADDONS\CodeSnippet\Helpers;
-use WCF_ADDONS\WCF_Theme_Builder;
+use Wealcoder\AnimationAddons\CodeSnippet\Helpers;
+use Wealcoder\AnimationAddons\Aaeaddon_Theme_Builder;
 
 defined( 'ABSPATH' ) || exit;
 
-$locations = WCF_Theme_Builder::get_hf_location_selections();  // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward compatibility with existing wcf hooks.
+$locations = Aaeaddon_Theme_Builder::get_hf_location_selections();  // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward compatibility with existing wcf hooks.
 
 if ( 'php' === $snippet_details['code_type'] ) {
 	 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward compatibility with existing wcf hooks.
@@ -34,7 +34,7 @@ if ( 'php' === $snippet_details['code_type'] ) {
 		<div class="aae-csp-top">
 			<div class="aae-csp-top__start">
 				<div>
-				<a href="<?php echo esc_url( admin_url( 'admin.php?page=wcf-code-snippet' ) ); ?>" class="aae-csp-top__backward-btn">
+				<a href="<?php echo esc_url( admin_url( 'admin.php?page=' . \Wealcoder\AnimationAddons\CodeSnippet\CodeSnippet::PAGE_SLUG ) ); ?>" class="aae-csp-top__backward-btn">
 					<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none" class="w-[14px] h-[14px] flex-shrink-0">
 						<path d="M3.34988 6.1001H14V7.90001H3.34988L8.04335 12.7273L6.80593 14L0 7.00005L6.80593 0L8.04335 1.27273L3.34988 6.1001Z" fill="#717784"></path>
 					</svg>
@@ -54,10 +54,10 @@ if ( 'php' === $snippet_details['code_type'] ) {
 				</div>
 			</div>
 			<div class="aae-csp-top__end">
-				<input type="hidden" name="action" value="add_wcf_code_snippet"/>
-				<?php wp_nonce_field( 'wcf_code_snippet' ); ?>
+				<input type="hidden" name="action" value="aaeaddon_add_code_snippet"/>
+				<?php wp_nonce_field( \Wealcoder\AnimationAddons\Nonce::CODE_SNIPPET_FORM ); ?>
 				<?php if ( isset( $_GET['edit'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wcf-code-snippet&new=1' ) ); ?>" class="aae-csp-top__tools-btn">
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=' . \Wealcoder\AnimationAddons\CodeSnippet\CodeSnippet::PAGE_SLUG . '&new=1' ) ); ?>" class="aae-csp-top__tools-btn">
 						<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
 							<path d="M7.99992 14.6667C11.6666 14.6667 14.6666 11.6667 14.6666 8.00004C14.6666 4.33337 11.6666 1.33337 7.99992 1.33337C4.33325 1.33337 1.33325 4.33337 1.33325 8.00004C1.33325 11.6667 4.33325 14.6667 7.99992 14.6667Z" stroke="#525866" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 							<path d="M5.33325 8H10.6666" stroke="#525866" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -131,10 +131,11 @@ if ( 'php' === $snippet_details['code_type'] ) {
 						<select class="visibility-page-list" name="visibility_page_list[]" id="visibility-page-list" multiple="multiple">
 							<?php
 							if ( ! empty( $snippet_details['visibility_page_list'] ) && is_array( $snippet_details['visibility_page_list'] ) ) {
-								foreach ( $snippet_details['visibility_page_list'] as $page ) :
+								// $page is a WordPress global; this view runs in global scope.
+								foreach ( $snippet_details['visibility_page_list'] as $wcf_page_id ) :
 									?>
-									<option value="<?php echo esc_attr( $page ); ?>" selected="selected">
-										<?php echo esc_html( get_the_title( $page ) ); ?>
+									<option value="<?php echo esc_attr( $wcf_page_id ); ?>" selected="selected">
+										<?php echo esc_html( get_the_title( $wcf_page_id ) ); ?>
 									</option>
 									<?php
 								endforeach;
@@ -221,7 +222,7 @@ if ( 'php' === $snippet_details['code_type'] ) {
 				<div id="wp-code-editor-container" class="code-editor-wrapper">
 					<!-- CodeMirror will be initialized here -->
 				</div>
-				<input type="hidden" id="code-content-hidden" name="code_content" value="<?php echo $snippet_details['code_content'] ? esc_textarea( $snippet_details['code_content'] ) : ''; ?>">
+				<input type="hidden" id="code-content-hidden" name="code_content" value="<?php echo esc_textarea( $snippet_details['code_content'] ?? '' ); ?>">
 				<div class="aae-csp-editor__footer">
 					<div id="editor-stats" class="editor-stats"></div>
 					<button class="aae-csp-editor__insertBtn" type="button" id="insert-example-btn">

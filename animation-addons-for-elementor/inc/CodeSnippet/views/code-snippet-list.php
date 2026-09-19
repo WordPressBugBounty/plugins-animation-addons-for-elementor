@@ -3,18 +3,21 @@
 /**
  * Admin View: List Code Snippets
  *
- * @package WCF_ADDONS\CodeSnippet
+ * @package Wealcoder\AnimationAddons\CodeSnippet
  * @since 1.0.0
 */
 
-use WCF_ADDONS\CodeSnippet\Helpers;
+use Wealcoder\AnimationAddons\CodeSnippet\Helpers;
 
 defined( 'ABSPATH' ) || exit;
 
-$list_table = Helpers::aae_get_list_table( 'wcf-code-snippet' );  // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward compatibility with existing wcf hooks.
-$action     = $list_table->current_action();
-if ( $action ) {
-	$list_table->process_bulk_action( $action );
+// These view files are included in global scope, so a variable named after a
+// WordPress global would overwrite it. Hence the wcf_ prefixes below.
+
+$list_table = Helpers::get_list_table( 'wcf-code-snippet' );  // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward compatibility with existing wcf hooks.
+$wcf_action     = $list_table->current_action();
+if ( $wcf_action ) {
+	$list_table->process_bulk_action( $wcf_action );
 }
 $list_table->prepare_items();
 
@@ -41,7 +44,7 @@ if ( isset( $_GET['message'] ) ) { // phpcs:ignore WordPress.Security.NonceVerif
 		<div class="wcf-header-content">
 			<h1 class="wp-heading-inline">
 				<?php esc_html_e( 'Code Snippets', 'animation-addons-for-elementor' ); ?>
-				<a href="<?php echo esc_url( admin_url( 'admin.php?page=wcf-code-snippet&new=1' ) ); ?>" class="page-title-action">
+				<a href="<?php echo esc_url( admin_url( 'admin.php?page=' . \Wealcoder\AnimationAddons\CodeSnippet\CodeSnippet::PAGE_SLUG . '&new=1' ) ); ?>" class="page-title-action">
 					<?php esc_html_e( 'Add New Snippet', 'animation-addons-for-elementor' ); ?>
 				</a>
 			</h1>

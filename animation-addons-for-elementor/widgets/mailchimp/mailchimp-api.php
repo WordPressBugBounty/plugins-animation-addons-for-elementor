@@ -3,10 +3,9 @@
  * MailChimp api
  */
 
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
-namespace WCF_ADDONS\Widgets\Mailchimp;
-// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
+namespace Wealcoder\AnimationAddons\Widgets\Mailchimp;
 
+use Wealcoder\AnimationAddons\Nonce;
 defined('ABSPATH') || die();
 
 class Mailchimp_Api {
@@ -102,19 +101,61 @@ class Mailchimp_Api {
         // 0) Basic nonce check
         $nonce = isset($_REQUEST['nonce']) ? sanitize_text_field(wp_unslash($_REQUEST['nonce'])) : '';
 
-        if (!isset($_REQUEST['nonce']) || !wp_verify_nonce($nonce , 'wcf-addons-frontend')) {
+        if (!isset($_REQUEST['nonce']) || !wp_verify_nonce( $nonce, Nonce::action_for( $nonce, Nonce::FRONTEND ) )) {
             wp_send_json_error('Invalid nonce');
         }
-  
-        // 1) Decode API key and basic inputs
-        $api_key = '';
-        if (!empty($_POST['key'])) {
-            $api_key = str_replace('w1c2f', '', base64_decode( sanitize_text_field( wp_unslash($_POST['key']) )));
-        }
-        $list_id = isset($_POST['listId']) ? trim((string) sanitize_text_field( wp_unslash($_POST['listId']))) : '';
-        $double  = (isset($_POST['doubleOpt']) && $_POST['doubleOpt'] === 'yes');
 
-        if (!$api_key || !$list_id) {
+        // The front-end nonce is printed on every public page, so it proves
+        // nothing about the sender. Without a limit one client can fill the
+        // site owner's audience with addresses at network speed. Ten per
+        // visitor per ten minutes leaves room for a typo and a retry.
+        if ( function_exists( 'aaeaddon_public_rate_limited' ) && aaeaddon_public_rate_limited( 'mailchimp-subscribe', 10, 10 * MINUTE_IN_SECONDS ) ) {
+            return ['status' => 0, 'msg' => esc_html__('Too many attempts. Please wait a moment and try again.', 'animation-addons-for-elementor')];
+        }
+
+        // 1) Retrieve API key securely on the server side
+        $api_key         = '';
+        $post_id         = ! empty( $_POST['postId'] ) ? absint( $_POST['postId'] ) : 0;
+        $widget_id       = ! empty( $_POST['widgetId'] ) ? sanitize_text_field( wp_unslash( $_POST['widgetId'] ) ) : '';
+        $widget_settings = [];
+
+        if ( $post_id && $widget_id && function_exists( 'aaeaddon_get_widget_settings' ) ) {
+            $widget_settings = aaeaddon_get_widget_settings( $post_id, $widget_id );
+            if ( ! empty( $widget_settings['mailchimp_api'] ) ) {
+                $api_key = trim( (string) $widget_settings['mailchimp_api'] );
+            }
+        }
+
+        // Fallback to global option if not set in widget settings
+        if ( empty( $api_key ) ) {
+            $global_api = get_option( 'aaeaddon_mailchimp_api', '' );
+            if ( ! empty( $global_api ) ) {
+                $api_key = trim( (string) $global_api );
+            }
+        }
+
+        // The SAVED widget decides which audience, whether double opt-in is
+        // on, and which tags apply. Those used to be read from the request
+        // first, which let a visitor subscribe any address to ANY list in the
+        // owner's account, switch the confirmation email off, and attach
+        // arbitrary tags. The posted values are honoured only when the
+        // request names no saved widget at all (a page built before the
+        // widget printed its ids).
+        $from_widget = $post_id && $widget_id && ! empty( $widget_settings );
+        $list_id     = '';
+        $double      = false;
+        $tags_raw    = '';
+        if ( $from_widget ) {
+            $list_id  = trim( (string) ( $widget_settings['mailchimp_lists'] ?? '' ) );
+            $double   = 'yes' === ( $widget_settings['enable_double_opt_in'] ?? '' );
+            $tags_raw = (string) ( $widget_settings['mailchimp_list_tags'] ?? '' );
+        } else {
+            $list_id  = isset( $_POST['listId'] ) ? trim( (string) sanitize_text_field( wp_unslash( $_POST['listId'] ) ) ) : '';
+            $double   = ( isset( $_POST['doubleOpt'] ) && 'yes' === $_POST['doubleOpt'] );
+            $tags_raw = isset( $_POST['listTags'] ) ? sanitize_text_field( wp_unslash( $_POST['listTags'] ) ) : '';
+        }
+
+        if ( ! $api_key || ! $list_id ) {
             return ['status' => 0, 'msg' => esc_html__('Missing API key or List ID.', 'animation-addons-for-elementor')];
         }
 
@@ -133,8 +174,8 @@ class Mailchimp_Api {
 
         // 3) Optional tags (array of strings)
         $tags = [];
-        if (!empty($_POST['listTags'])) {
-            $tags = array_filter(array_map('trim', preg_split('/\s*,\s*/', sanitize_text_field(wp_unslash($_POST['listTags'])))));
+        if ( '' !== trim( $tags_raw ) ) {
+            $tags = array_filter( array_map( 'trim', preg_split( '/\s*,\s*/', sanitize_text_field( $tags_raw ) ) ) );
         }
 
         // 4) Build merge_fields safely
@@ -228,7 +269,7 @@ class Mailchimp_Api {
         $url = "https://{$dc}.api.mailchimp.com/3.0/lists/".trim($list_id)."/merge-fields?count=30";
         $res = self::request('GET', $url, $api);
         if ($res['http_code'] >= 200 && !empty($res['body']['merge_fields'])) {
-            update_option('aae_addon_mailchimp_form_field', $res['body']['merge_fields']);
+            update_option('aaeaddon_mailchimp_form_field', $res['body']['merge_fields']);
             return $res['body']['merge_fields'];
         }
         return [];

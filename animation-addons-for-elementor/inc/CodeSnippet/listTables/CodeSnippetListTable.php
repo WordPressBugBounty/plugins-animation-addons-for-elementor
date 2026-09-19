@@ -1,14 +1,9 @@
 <?php
-/**
- * @phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
- */
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
-namespace WCF_ADDONS\CodeSnippet\listTables;
-// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
+namespace Wealcoder\AnimationAddons\CodeSnippet\listTables;
 
-use WCF_ADDONS\CodeSnippet\CodeSnippet;
-use WCF_ADDONS\CodeSnippet\Helpers;
-use WCF_ADDONS\CodeSnippet\listTables\AbstractListTable;
+use Wealcoder\AnimationAddons\CodeSnippet\CodeSnippet;
+use Wealcoder\AnimationAddons\CodeSnippet\Helpers;
+use Wealcoder\AnimationAddons\CodeSnippet\listTables\AbstractListTable;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -16,7 +11,7 @@ defined( 'ABSPATH' ) || exit;
  * CodeSnippetListTable ListTable class.
  *
  * @since 1.0.0
- * @package WCF_ADDONS
+ * @package Wealcoder\AnimationAddons
  */
 class CodeSnippetListTable extends AbstractListTable {
 
@@ -38,7 +33,7 @@ class CodeSnippetListTable extends AbstractListTable {
 			)
 		);
 		$this->screen   = get_current_screen();
-		$this->base_url = admin_url( 'admin.php?page=wcf-code-snippet' );
+		$this->base_url = admin_url( 'admin.php?page=' . \Wealcoder\AnimationAddons\CodeSnippet\CodeSnippet::PAGE_SLUG );
 		parent::__construct( $args );
 	}
 
@@ -263,12 +258,9 @@ class CodeSnippetListTable extends AbstractListTable {
 	protected function get_views() {
 		$current      = $this->get_request_status( 'all' );
 		$status_links = array();
-		$snippets     = array(
-			'all'        => __( 'All', 'animation-addons-for-elementor' ),
-			'html'       => __( 'HTML', 'animation-addons-for-elementor' ),
-			'css'        => __( 'CSS', 'animation-addons-for-elementor' ),
-			'javascript' => __( 'JavaScript', 'animation-addons-for-elementor' ),
-			'php'        => __( 'PHP', 'animation-addons-for-elementor' ),
+		$snippets     = array_merge(
+			array( 'all' => __( 'All', 'animation-addons-for-elementor' ) ),
+			Helpers::get_code_type_list()
 		);
 
 		foreach ( $snippets as $snippet => $label ) {
@@ -493,7 +485,7 @@ class CodeSnippetListTable extends AbstractListTable {
 				break;
 
 			default:
-				$value = apply_filters( 'wcf_code_snippet_list_table_column_' . $column_name, $value, $item ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward compatibility with existing wcf hooks.
+				$value = apply_filters( 'aaeaddon_code_snippet_list_table_column_' . $column_name, $value, $item );
 		}
 
 		return $value;

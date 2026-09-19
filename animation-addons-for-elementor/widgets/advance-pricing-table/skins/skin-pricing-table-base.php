@@ -1,14 +1,7 @@
 <?php
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
-namespace WCF_ADDONS\Widgets\Skin;
-// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
+namespace Wealcoder\AnimationAddons\Widgets\Skin;
 
-use Elementor\Controls_Manager;
-use Elementor\Group_Control_Background;
-use Elementor\Group_Control_Border;
-use Elementor\Group_Control_Typography;
 use Elementor\Icons_Manager;
-use Elementor\Plugin;
 use Elementor\Utils;
 use Elementor\Widget_Base;
 use Elementor\Skin_Base;

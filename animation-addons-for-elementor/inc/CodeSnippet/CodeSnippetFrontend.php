@@ -1,10 +1,5 @@
 <?php
-/**
- * @phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
- */
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
-namespace WCF_ADDONS\CodeSnippet;
-// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
+namespace Wealcoder\AnimationAddons\CodeSnippet;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit();
@@ -15,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Handles frontend execution of code snippets with conditional loading
  *
- * @package WCF_ADDONS\CodeSnippet
+ * @package Wealcoder\AnimationAddons\CodeSnippet
  */
 class CodeSnippetFrontend {
 	use CodeSnippetSettingsTrait;
@@ -29,12 +24,42 @@ class CodeSnippetFrontend {
 	private static $_instance = null;
 
 	/**
-	 * Active snippets cache
+	 * Loadable snippet_data for the location path, computed once per request.
+	 * null = not computed yet, so an empty result still memoises (an
+	 * array() default would re-run the whole walk on every location hook).
 	 *
 	 * @since 2.3.10
-	 * @var array
+	 * @var array|null
 	 */
-	private $active_snippets = array();
+	private $active_snippets = null;
+
+	/**
+	 * All active snippet POSTS, fetched once. Both the PHP path and the
+	 * location path filter from this in memory instead of each running its own
+	 * `posts_per_page => -1` query — the query was firing at least twice per
+	 * front-end request (the PHP path returned before the memo was set).
+	 *
+	 * @var \WP_Post[]|null
+	 */
+	private $all_active_posts = null;
+
+	/**
+	 * Snippet post ids whose PHP has already been considered this request,
+	 * so the two lanes below can never execute the same snippet twice.
+	 * Marked when a snippet is EVALUATED, not only when it runs, because a
+	 * context-free visibility answer cannot change between the two lanes.
+	 *
+	 * @var array<int,bool>
+	 */
+	private $php_considered = array();
+
+	/**
+	 * Visibility values that can be answered before the main query exists.
+	 * Everything else asks a conditional query tag and is only valid on 'wp'.
+	 *
+	 * @var string[]
+	 */
+	const CONTEXT_FREE_VISIBILITY = array( 'global', 'admin', 'frontend' );
 
 	/**
 	 * Constructor
@@ -65,17 +90,34 @@ class CodeSnippetFrontend {
 	 * @return void
 	 */
 	private function init_hooks() {
-		// Use 'wp' so conditional tags (is_singular, is_archive, etc.) are available.
-		$this->run_php_code_snippets();
+		// PHP snippets are DEFERRED, never run at include time. This file is
+		// included from the free plugin's own plugins_loaded:10 callback, and
+		// Pro registers wcf_code_snippet_execute_php from ITS plugins_loaded:11
+		// callback -- so the has_action() guard in run_php_code_snippets() was
+		// being asked one priority too early and always answered "no Pro".
+		// Measured with a probe: false at 9/10/11, TRUE at 12.
+		//
+		// Priority 20 keeps snippets as early as they have always been (before
+		// after_setup_theme and init, so a snippet can still hook either) while
+		// being after Pro. The 'wp' pass is for snippets whose visibility asks a
+		// conditional query tag, which is only answerable once the main query
+		// has run; run_php_code_snippets() decides which lane each snippet
+		// belongs to and never repeats one.
+		if ( did_action( 'plugins_loaded' ) && ! doing_action( 'plugins_loaded' ) ) {
+			$this->run_php_code_snippets();
+		} else {
+			add_action( 'plugins_loaded', array( $this, 'run_php_code_snippets' ), 20 );
+		}
+		add_action( 'wp', array( $this, 'run_php_code_snippets' ), 1 );
 		add_action( 'wp_head', array( $this, 'execute_head_snippets' ), 1 );
 		add_action( 'wp_footer', array( $this, 'execute_footer_snippets' ), 999 );
+		// Registered ONCE. It used to be added to wp_body_open three times (a
+		// stray "fallback" that is not one — re-registering the same callback on
+		// the same hook cannot help a theme that never fires the hook, it only
+		// makes themes that DO fire it echo every body-start snippet 3×).
 		add_action( 'wp_body_open', array( $this, 'execute_body_start_snippets' ), 1 );
 		add_action( 'elementor/frontend/before_get_content', array( $this, 'execute_content_before_snippets' ) );
 		add_action( 'elementor/frontend/after_get_content', array( $this, 'execute_content_after_snippets' ) );
-
-		// Fallback hooks for themes that don't support wp_body_open.
-		add_action( 'wp_body_open', array( $this, 'execute_body_start_snippets' ), 1 );
-		add_action( 'wp_body_open', array( $this, 'execute_body_start_snippets' ), 1 );
 
 		// Content hooks.
 		add_action( 'loop_start', array( $this, 'execute_content_before_snippets' ) );
@@ -85,17 +127,70 @@ class CodeSnippetFrontend {
 	/**
 	 * Run PHP code snippets.
 	 *
+	 * Note: PHP code execution requires Animation Addons Pro. The free plugin
+	 * only ever fires wcf_code_snippet_execute_php; it evaluates nothing.
+	 *
+	 * Called twice per request (plugins_loaded:20 and wp:1). Each snippet is
+	 * considered by exactly one of them -- see $php_considered.
+	 *
 	 * @return void
 	 */
 	public function run_php_code_snippets() {
+		// Guard: Do not process PHP snippets unless Pro handler is registered and file editing is allowed.
+		if ( ! has_action( 'aaeaddon_code_snippet_execute_php' ) ) {
+			return;
+		}
+
+		if ( ( defined( 'DISALLOW_FILE_EDIT' ) && DISALLOW_FILE_EDIT ) || ( defined( 'DISALLOW_FILE_MODS' ) && DISALLOW_FILE_MODS ) ) {
+			return;
+		}
+
+		// Conditional query tags are only meaningful once 'wp' has run.
+		$query_ready = did_action( 'wp' ) > 0;
+
 		$snippets = $this->get_active_snippets( 'php' );
 
 		foreach ( $snippets as $snippet ) {
-			$snippet_data = $this->aae_get_code_snippet_settings( $snippet->ID );
+			if ( isset( $this->php_considered[ $snippet->ID ] ) ) {
+				continue;
+			}
+
+			$snippet_data = $this->get_code_snippet_settings( $snippet->ID );
+
+			// Leave a query-dependent snippet for the 'wp' pass rather than
+			// asking is_singular() before there is a query to ask about: that
+			// answers false AND emits _doing_it_wrong.
+			if ( ! $query_ready && ! $this->visibility_is_context_free( $snippet_data ) ) {
+				continue;
+			}
+
+			// Marked before executing, so a snippet that fatals cannot be
+			// retried by the second pass.
+			$this->php_considered[ $snippet->ID ] = true;
+
 			if ( $this->check_visibility_conditions( $snippet_data ) ) {
 				$this->execute_snippet( $snippet_data );
 			}
 		}
+	}
+
+	/**
+	 * Can this snippet's visibility be decided without the main query?
+	 *
+	 * @param array $snippet_data Snippet configuration data.
+	 *
+	 * @return bool
+	 */
+	private function visibility_is_context_free( $snippet_data ) {
+		$page = isset( $snippet_data['visibility_page'] ) ? $snippet_data['visibility_page'] : '';
+		$list = isset( $snippet_data['visibility_page_list'] ) ? $snippet_data['visibility_page_list'] : array();
+
+		// A page list is compared against get_the_ID(), so it needs the query.
+		if ( ! empty( $list ) && is_array( $list ) ) {
+			return false;
+		}
+
+		return in_array( $page, self::CONTEXT_FREE_VISIBILITY, true );
 	}
 
 	/**
@@ -107,45 +202,27 @@ class CodeSnippetFrontend {
 	 * @return array
 	 */
 	private function get_active_snippets( $code_type = null ) {
-		if ( ! empty( $this->active_snippets ) ) {
+		// PHP path: the active posts whose code_type is php, filtered in memory
+		// from the shared fetch. Returns post objects, as run_php expects.
+		if ( 'php' === $code_type ) {
+			$php = array();
+			foreach ( $this->get_all_active_posts() as $snippet ) {
+				$data = $this->get_code_snippet_settings( $snippet->ID );
+				if ( isset( $data['code_type'] ) && 'php' === $data['code_type'] ) {
+					$php[] = $snippet;
+				}
+			}
+			return $php;
+		}
+
+		// Location path: loadable snippet_data, memoised (null = not computed).
+		if ( null !== $this->active_snippets ) {
 			return $this->active_snippets;
 		}
 
-		$meta_query = array(
-			array(
-				'key'     => 'is_active',
-				'value'   => 'yes',
-				'compare' => '=',
-			),
-		);
-
-		if ( 'php' === $code_type ) {
-			$meta_query[] =
-				array(
-					'key'     => 'code_type',
-					'value'   => 'php',
-					'compare' => '=',
-				);
-		}
-
-		$args = array(
-			'post_type'      => 'wcf-code-snippet',
-			'post_status'    => 'publish',
-			'posts_per_page' => -1,
-			'meta_query'     => $meta_query, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-			'meta_key'       => 'priority', // phpcs:ignore
-			'order'          => 'DESC',
-		);
-
-		$snippets        = get_posts( $args );
 		$active_snippets = array();
-
-		if ( 'php' === $code_type ) {
-			return $snippets;
-		}
-
-		foreach ( $snippets as $snippet ) {
-			$snippet_data = $this->aae_get_code_snippet_settings( $snippet->ID );
+		foreach ( $this->get_all_active_posts() as $snippet ) {
+			$snippet_data = $this->get_code_snippet_settings( $snippet->ID );
 			if ( $this->should_load_snippet( $snippet_data ) ) {
 				$active_snippets[] = $snippet_data;
 			}
@@ -154,6 +231,37 @@ class CodeSnippetFrontend {
 		$this->active_snippets = $active_snippets;
 
 		return $active_snippets;
+	}
+
+	/**
+	 * Every published, active snippet post — one query per request, memoised.
+	 *
+	 * @since 2.3.10
+	 * @return \WP_Post[]
+	 */
+	private function get_all_active_posts() {
+		if ( null !== $this->all_active_posts ) {
+			return $this->all_active_posts;
+		}
+
+		$this->all_active_posts = get_posts(
+			array(
+				'post_type'      => 'wcf-code-snippet',
+				'post_status'    => 'publish',
+				'posts_per_page' => -1,
+				'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+					array(
+						'key'     => 'is_active',
+						'value'   => 'yes',
+						'compare' => '=',
+					),
+				),
+				'meta_key'       => 'priority', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'order'          => 'DESC',
+			)
+		);
+
+		return $this->all_active_posts;
 	}
 
 	/**
@@ -180,7 +288,7 @@ class CodeSnippetFrontend {
 		$should_load = $this->check_visibility_conditions( $snippet_data );
 
 		// Allow developers to filter the result.
-		return apply_filters( 'wcf_code_snippet_should_load', $should_load, $snippet_data ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward compatibility with existing wcf hooks.
+		return apply_filters( 'aaeaddon_code_snippet_should_load', $should_load, $snippet_data );
 	}
 
 	/**
@@ -370,8 +478,42 @@ class CodeSnippetFrontend {
 	 * @since 2.3.10
 	 * @return void
 	 */
-	public function execute_content_before_snippets() {
+	public function execute_content_before_snippets( $source = null ) {
+		if ( $this->content_location_done( 'content_before', $source ) ) {
+			return;
+		}
 		$this->execute_snippets_by_location( 'content_before' );
+	}
+
+	/**
+	 * A "before/after content" snippet prints ONCE per request, and only for
+	 * the main loop.
+	 *
+	 * `loop_start` / `loop_end` fire for EVERY WP_Query loop on the page and
+	 * `elementor/frontend/before|after_get_content` for every document
+	 * Elementor renders -- a header, a footer, a popup, and every card of an
+	 * Elementor Pro Loop Grid / Loop Carousel or an AAE Loop Grid, each of
+	 * which is its own loop and (for Pro's) its own document. A snippet
+	 * placed "before content" was therefore printed inside every grid card
+	 * and repeated once per secondary loop, on top of the copy the main loop
+	 * printed. One latch per location, and a secondary WP_Query is skipped
+	 * outright so the copy that lands is the main loop's.
+	 *
+	 * @param string $location content_before | content_after
+	 * @param mixed  $source   the WP_Query or Document the hook handed over
+	 * @return bool true when this call must NOT print
+	 */
+	private function content_location_done( $location, $source ) {
+		static $done = array();
+
+		if ( $source instanceof \WP_Query && ! $source->is_main_query() ) {
+			return true;
+		}
+		if ( ! empty( $done[ $location ] ) ) {
+			return true;
+		}
+		$done[ $location ] = true;
+		return false;
 	}
 
 	/**
@@ -380,7 +522,10 @@ class CodeSnippetFrontend {
 	 * @since 2.3.10
 	 * @return void
 	 */
-	public function execute_content_after_snippets() {
+	public function execute_content_after_snippets( $source = null ) {
+		if ( $this->content_location_done( 'content_after', $source ) ) {
+			return;
+		}
 		$this->execute_snippets_by_location( 'content_after' );
 	}
 
@@ -417,7 +562,7 @@ class CodeSnippetFrontend {
 		}
 
 		// Fire action before snippet execution.
-		do_action( 'wcf_code_snippet_before_execute', $snippet ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward compatibility with existing wcf hooks.
+		do_action( 'aaeaddon_code_snippet_before_execute', $snippet );
 
 		// Sanitize and prepare code content.
 		$code_content = $this->prepare_code_content( $code_content, $code_type );
@@ -437,7 +582,8 @@ class CodeSnippetFrontend {
 				break;
 
 			case 'php':
-				$this->execute_php_snippet( $code_content );
+				// PHP snippet execution is handled by Animation Addons Pro.
+				do_action( 'aaeaddon_code_snippet_execute_php', $code_content, $snippet );
 				break;
 
 			default:
@@ -447,7 +593,7 @@ class CodeSnippetFrontend {
 		}
 
 		// Fire action after snippet execution.
-		do_action( 'wcf_code_snippet_after_execute', $snippet ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward compatibility with existing wcf hooks.
+		do_action( 'aaeaddon_code_snippet_after_execute', $snippet );
 	}
 
 	/**
@@ -515,9 +661,7 @@ class CodeSnippetFrontend {
 	 */
 	private function execute_css_snippet( $content ) {
 		if ( ! empty( $content ) ) {
-			echo '<style type="text/css">' . "\n";
-			echo wp_strip_all_tags( $content ) . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			echo '</style>' . "\n";
+			aaeaddon_print_css( $content );
 		}
 	}
 
@@ -531,39 +675,12 @@ class CodeSnippetFrontend {
 	 */
 	private function execute_javascript_snippet( $content ) {
 		if ( ! empty( $content ) ) {
-			echo '<script type="text/javascript">' . "\n";
-			echo wp_strip_all_tags( $content ) . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			echo '</script>' . "\n";
-		}
-	}
-
-	/**
-	 * Execute PHP snippet
-	 *
-	 * @param string $content PHP content.
-	 *
-	 * @since 2.3.10
-	 * @return void
-	 */
-	private function execute_php_snippet( $content ) {
-		$content = preg_replace( '/^\s*<\?(php|PHP)?/i', '', $content );
-		$content = preg_replace( '/\?>\s*$/', '', $content );
-		if ( ! empty( $content ) ) {
-			ob_start();
-
-			try {
-				$wrapped = 'return function() { ' . $content . ' };';
-				$func    = eval( $wrapped ); // phpcs:ignore WordPress.Security.Eval.Discouraged, Generic.PHP.ForbiddenFunctions.Found
-
-				if ( is_callable( $func ) ) {
-					$func();
-				}
-			} catch ( \Throwable $e ) {
-			}
-
-			$output = ob_get_clean();
-
-			echo wp_kses_post( $output );
+			// Core's inline-script printer. wp_strip_all_tags() used to run over
+			// the code, and strip_tags() eats everything from a `<` to the next
+			// `>` -- so `if ( a < b ) { ... } c > d` lost the middle of the
+			// snippet. The snippet is written by an administrator, on the screen
+			// that exists to run it; the tag around it is what has to be right.
+			wp_print_inline_script_tag( $content . "\n" );
 		}
 	}
 }

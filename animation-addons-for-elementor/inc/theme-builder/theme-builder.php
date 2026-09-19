@@ -1,8 +1,6 @@
 <?php
 
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
-namespace WCF_ADDONS;
-// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
+namespace Wealcoder\AnimationAddons;
 
 use Elementor\Modules\Library\Documents\Library_Document;
 use Elementor\Plugin as ElementorPlugin;
@@ -11,7 +9,7 @@ if (! defined('ABSPATH')) {
 	exit();
 } // Exit if accessed directly
 
-class WCF_Theme_Builder
+class Aaeaddon_Theme_Builder
 {
 
 	const CPTTYPE  = 'wcf-addons-template';
@@ -24,6 +22,39 @@ class WCF_Theme_Builder
 	 * @var null
 	 */
 	public static $_instance = null;
+
+	/**
+	 * Theme-builder documents pulled into this request's asset pass.
+	 *
+	 * Filled by register_builder_template_assets(); read by
+	 * defer_builder_template_styles().
+	 *
+	 * @var int[]
+	 */
+	private $builder_template_ids = array();
+
+	/**
+	 * Theme-builder stylesheets pulled out of <head> for the editor canvas.
+	 *
+	 * Filled by defer_builder_template_styles(); printed by
+	 * print_builder_template_styles().
+	 *
+	 * @var array<int, array{handle: string, src: string, media: string}>
+	 */
+	private $deferred_template_styles = array();
+
+	/**
+	 * Per-request memo of get_current_post_by_condition(), keyed by template
+	 * type. The resolver runs a `-1` scan of the template CPT (plus, for
+	 * slug-based "specific" rules, a query over site content) and is called
+	 * 6–12 times per front-end page — from get_header, get_footer, body_class,
+	 * template_include and the builder-content actions. Within one request the
+	 * conditional tags it branches on do not change, so the answer is a pure
+	 * function of the template type: compute once, reuse.
+	 *
+	 * @var array<string, int|false>
+	 */
+	private $condition_cache = array();
 
 	/**
 	 * [instance] Initializes a singleton instance
@@ -43,41 +74,17 @@ class WCF_Theme_Builder
 
 		add_action('init', array($this, 'init'));
 
-		// Add Menu
-		add_action('admin_menu', array($this, 'admin_menu'), 225);
-
-		// Print template tabs.
-		add_filter('views_edit-' . self::CPTTYPE, array($this, 'print_tabs'));
-
 		// query filter
 		add_filter('parse_query', array($this, 'query_filter'));
-
-		// Template type column.
-		add_action('manage_' . self::CPTTYPE . '_posts_columns', array($this, 'manage_columns'));
-		add_action('manage_' . self::CPTTYPE . '_posts_custom_column', array($this, 'columns_content'), 10, 2);
-
-		// Print template edit popup.
-		add_action('admin_footer', array($this, 'print_popup'));
-
-		// Template store ajax action
-		add_action('wp_ajax_wcf_save_template', array($this, 'save_template_request'));
-
-		// Get template data Ajax action
-		add_action('wp_ajax_wcf_get_template', array($this, 'get_post_By_id'));
-
-		add_action('wp_ajax_wcf_get_posts_by_query', array($this, 'get_posts_by_query'));
-
-		// Load Scripts
-		add_action('admin_enqueue_scripts', array($this, 'enqueue_scripts'));
 
 		// Change Template
 		add_filter('template_include', array($this, 'template_loader'), 30);
 
 		// Archive Page
-		add_action('animation_addons_archive_builder_content', array($this, 'archive_page_builder_content'));
+		add_action('aaeaddon_animation_addons_archive_builder_content', array($this, 'archive_page_builder_content'));
 
 		// single
-		add_action('animation_addons_single_builder_content', array($this, 'single_post_builder_content'));
+		add_action('aaeaddon_animation_addons_single_builder_content', array($this, 'single_post_builder_content'));
 
 		// Body classes
 		add_filter('body_class', array($this, 'body_classes'));
@@ -85,8 +92,319 @@ class WCF_Theme_Builder
 		// header footer
 		add_action('get_header', array($this, 'override_header'));
 		add_action('get_footer', array($this, 'override_footer'));
-		add_action('animation_addons_header_builder_content', array($this, 'header_builder_content'));
-		add_action('animation_addons_footer_builder_content', array($this, 'footer_builder_content'));
+		add_action('aaeaddon_animation_addons_header_builder_content', array($this, 'header_builder_content'));
+		add_action('aaeaddon_animation_addons_footer_builder_content', array($this, 'footer_builder_content'));
+
+		// Must run while wp_head() is still open — see the method docblock.
+		add_action('wp_enqueue_scripts', array($this, 'register_builder_template_assets'), 5);
+
+		// …and must survive the editor canvas — see the method docblocks.
+		add_action('wp_head', array($this, 'defer_builder_template_styles'), 7);
+		add_action('wp_footer', array($this, 'print_builder_template_styles'), 1);
+
+		// The wp-admin half -- the Builder list table, its edit modal, the three
+		// AJAX writers and the admin menu entry -- was 30 KB that a visitor's
+		// request parsed in order to register hooks that can only ever fire in
+		// wp-admin: admin_menu, admin_footer, admin_enqueue_scripts, views_edit-,
+		// manage_<cpt>_* and three wp_ajax_ actions. admin-ajax IS is_admin(), so
+		// the writers still answer.
+		//
+		// The shared helpers that half calls -- get_template_type(),
+		// get_offered_template_type() and the four *_location_selections() -- stay
+		// HERE and stay public static: the front end, Pro's global-elements.php and
+		// the Code Snippet edit screen all read them.
+		if (is_admin()) {
+			require_once __DIR__ . '/theme-builder-admin.php';
+			Aaeaddon_Theme_Builder_Admin::instance();
+		}
+	}
+
+	/**
+	 * Pull theme-builder documents into Elementor's asset registration pass.
+	 *
+	 * WHY THIS EXISTS:
+	 * A header/footer template is an Elementor document rendered OUTSIDE the main
+	 * loop. templates/header.php calls wp_head() first and only then fires
+	 * `aaeaddon_animation_addons_header_builder_content`, so the document renders after the
+	 * stylesheets for the page have already been printed.
+	 *
+	 * Elementor's atomic styles manager only walks the MAIN queried document, so
+	 * `elementor/atomic-widgets/styles/register` never fired for the header. That
+	 * left every atomic style handle it needs (aae-a-nav-css, aae-a-toc-css, …)
+	 * unregistered — and wp_enqueue_style() silently does nothing for an unknown
+	 * handle, which is why the header CSS was missing from the page entirely rather
+	 * than merely arriving late.
+	 *
+	 * Firing `elementor/post/render` for each template makes Elementor treat it like
+	 * any other rendered document, registering its styles while wp_head() is still
+	 * open. This mirrors the Tier-1 fix in the Pro plugin's
+	 * AtomicV4\Popup\Registry, which solves the identical problem for popups
+	 * printed at wp_footer.
+	 *
+	 * The single/archive CONTENT templates need exactly the same treatment: our
+	 * templates/single.php and templates/archive.php also call get_header() (hence
+	 * wp_head()) before firing `animation_addons_*_builder_content`, so their
+	 * documents render just as late as the header does. Elementor only auto-renders
+	 * the MAIN queried post — on a single post that is the post itself, never the
+	 * theme-builder template that draws it — so `local-<template-id>-*.css` was
+	 * never generated or enqueued at all.
+	 *
+	 * @return void
+	 */
+	public function register_builder_template_assets()
+	{
+		if (is_admin()) {
+			return;
+		}
+
+		$this->builder_template_ids = $this->get_rendered_template_ids();
+
+		foreach ($this->builder_template_ids as $template_id) {
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Elementor core hook.
+			do_action('elementor/post/render', (string) $template_id);
+
+			// Registration alone still leaves the widget handles to be enqueued at
+			// render time, i.e. after wp_head() has closed, so the header would
+			// paint unstyled before print_late_styles() catches up at wp_footer.
+			// Enqueue this document's own handles now instead.
+			if (class_exists('\Wealcoder\AnimationAddons\AtomicWidgets\Atomic')) {
+				\Wealcoder\AnimationAddons\AtomicWidgets\Atomic::instance()
+					->enqueue_document_widget_assets($template_id);
+			}
+		}
+	}
+
+	/**
+	 * Take the theme-builder documents' atomic CSS out of <head> in the editor.
+	 *
+	 * WHY THIS EXISTS — two separate things go wrong in the canvas, and printing
+	 * the same stylesheets from wp_footer instead is what fixes both:
+	 *
+	 * 1. THE LINK IS DELETED. register_builder_template_assets() gets the header /
+	 *    footer enqueued in the preview exactly as it does on the front end — the
+	 *    browser really does fetch `local-<template-id>-preview-*.css` — and the
+	 *    editor then removes the <link> again. `document-elements-styles-provider`
+	 *    treats any stylesheet whose id matches
+	 *    `/^local-\d+-(preview|frontend)-[a-zA-Z_-]+-css$/` as a "pregenerated
+	 *    link", and `removeProviderPregeneratedLinks()` drops every one of them
+	 *    from the canvas HEAD once that provider has rendered its own styles. For
+	 *    the document being edited that is correct — the editor re-renders those
+	 *    styles live, so the file is a stale duplicate. But the pattern keys on
+	 *    nothing except the shape of the id, so it matches every post id, including
+	 *    theme-builder documents that the editor never re-renders because they are
+	 *    not in its element tree.
+	 *
+	 * 2. EVEN A SURVIVING LINK LOSES THE CASCADE. The editor re-renders the atomic
+	 *    BASE styles client-side into <style> elements appended to the canvas head,
+	 *    i.e. after everything WordPress printed. `.elementor .e-div-block-base`
+	 *    (padding:10px, display:block) and a local style's
+	 *    `.elementor .e-<id>-<hash>` are both (0,2,0), so the tie is decided purely
+	 *    by document order and the base styles win — the header keeps its markup
+	 *    and silently falls back to default padding/display. Moving our links into
+	 *    the BODY puts them after every head sheet no matter when the editor
+	 *    inserts one, which restores the front end's order.
+	 *
+	 * Elementor still owns the files and their cache invalidation; only where the
+	 * tag is printed changes, and only inside the editor preview.
+	 *
+	 * The document currently being edited is deliberately left alone — there the
+	 * removal is right, and keeping the file would fight the user's live edits with
+	 * stale CSS.
+	 *
+	 * Runs at wp_head:7, i.e. after wp_enqueue_scripts (wp_head:1, where the atomic
+	 * styles manager enqueues) and before wp_print_styles (wp_head:8).
+	 *
+	 * @return void
+	 */
+	public function defer_builder_template_styles()
+	{
+		if (empty($this->builder_template_ids) || ! class_exists('\Elementor\Plugin')) {
+			return;
+		}
+
+		if (! ElementorPlugin::$instance->preview->is_preview_mode()) {
+			return;
+		}
+
+		$edited_id = (int) ElementorPlugin::$instance->preview->get_post_id();
+		$styles    = wp_styles();
+
+		foreach ($this->builder_template_ids as $template_id) {
+			if ($template_id === $edited_id) {
+				continue;
+			}
+
+			foreach ($styles->queue as $handle) {
+				if (! preg_match('/^local-(\d+)-preview-[a-zA-Z_-]+$/', $handle, $matches)) {
+					continue;
+				}
+
+				if ((int) $matches[1] !== $template_id || ! isset($styles->registered[$handle])) {
+					continue;
+				}
+
+				$style = $styles->registered[$handle];
+
+				if (empty($style->src)) {
+					continue;
+				}
+
+				$this->deferred_template_styles[] = array(
+					'handle' => $handle,
+					'src'    => $style->src,
+					'ver'    => ! empty($style->ver) ? $style->ver : null,
+					'media'  => is_string($style->args) && '' !== $style->args ? $style->args : 'all',
+				);
+
+				wp_dequeue_style($handle);
+			}
+		}
+	}
+
+	/**
+	 * Print the stylesheets defer_builder_template_styles() removed from <head>.
+	 *
+	 * The `aae-tb-` id prefix is not cosmetic: it keeps these tags out of the
+	 * pregenerated-link pattern described above, so they survive even if a future
+	 * Elementor version widens that sweep from `head` to the whole document.
+	 *
+	 * @return void
+	 */
+	public function print_builder_template_styles()
+	{
+		foreach ($this->deferred_template_styles as $style) {
+			$handle = 'aae-tb-' . $style['handle'];
+
+			wp_enqueue_style(
+				$handle,
+				$style['src'],
+				array(),
+				$style['ver'],
+				$style['media']
+			);
+			wp_print_styles($handle);
+		}
+
+		$this->deferred_template_styles = array();
+	}
+
+	/**
+	 * Theme-builder documents that will actually be printed on this request.
+	 *
+	 * The content-template branch deliberately mirrors
+	 * get_template_loader_default_file() (including its `aaeid` bail-out in
+	 * template_loader()) rather than just asking has_template() for every type:
+	 * a 'single' template can satisfy get_current_post_by_condition() on a page
+	 * where our single.php is never loaded, and registering a document that is
+	 * never printed would enqueue dead CSS into <head>.
+	 *
+	 * @return int[] Unique template post IDs, header/footer first.
+	 */
+	/**
+	 * Page templates that output neither a header nor a footer.
+	 *
+	 * Elementor's `canvas.php` calls `wp_head()` and `wp_footer()` directly and
+	 * never calls `get_header()` / `get_footer()` — read from
+	 * `elementor/modules/page-templates/templates/canvas.php`, not assumed.
+	 *
+	 * @var string[]
+	 */
+	const HEADLESS_PAGE_TEMPLATES = array('elementor_canvas');
+
+	/**
+	 * Will this request actually output our header/footer templates?
+	 *
+	 * The two answers are reached differently, and only one of them is a guess.
+	 *
+	 * **The header is provable.** `override_header()` is hooked to `get_header`,
+	 * so if `get_header()` is never called our header cannot render — and by the
+	 * time `wp_enqueue_scripts` runs, `get_header` has ALREADY fired in every
+	 * template that calls it: `get_header()` fires the action, loads header.php,
+	 * which calls `wp_head()`, which fires `wp_enqueue_scripts` at priority 1.
+	 * Our own `templates/header.php` follows the same order. So
+	 * `did_action( 'get_header' ) === 0` here is a fact about this request, not
+	 * an inference.
+	 *
+	 * **The footer is not**, because `get_footer()` fires long after enqueueing
+	 * and cannot be observed this early. So when nothing called `get_header()`
+	 * we only skip if the page template is one we KNOW outputs neither — which
+	 * is the case that matters, since a template that skips `get_header()`
+	 * almost always skips `get_footer()` too.
+	 *
+	 * Erring toward keeping the assets is deliberate: a wrong "skip" renders the
+	 * header with no CSS, which is a visibly broken page. A wrong "keep" only
+	 * wastes bytes, which is what happens today anyway.
+	 *
+	 * @return bool
+	 */
+	private function renders_theme_parts()
+	{
+		$renders = true;
+
+		if (0 === did_action('get_header')) {
+			$template = basename((string) get_page_template_slug());
+
+			if (in_array($template, self::HEADLESS_PAGE_TEMPLATES, true)) {
+				$renders = false;
+			}
+		}
+
+		/**
+		 * Override whether header/footer template assets are registered.
+		 *
+		 * For a custom theme whose template also skips get_header()/get_footer()
+		 * — we cannot detect those, so they keep the old behaviour and can opt
+		 * out here.
+		 *
+		 * @param bool $renders Whether the header/footer will be output.
+		 */
+		return (bool) apply_filters('aaeaddon_theme_builder_renders_theme_parts', $renders);
+	}
+
+	private function get_rendered_template_ids()
+	{
+		$template_ids = array();
+
+		// Header and footer are only worth registering if this request will
+		// actually OUTPUT them. On an Elementor Canvas page it never does, and
+		// registering them anyway ships the whole header+footer asset set to a
+		// page that renders neither. Measured on /aae-blank/ (canvas): ~20 dead
+		// files — aae-a-menu-js/css, aae-a-nav-js/css, and every
+		// local-<header id>-* / local-<footer id>-* file
+		// for both templates.
+		if ($this->renders_theme_parts()) {
+			foreach (array('header', 'footer') as $template_type) {
+				$template_id = $this->has_template($template_type);
+
+				if ($template_id) {
+					$template_ids[] = $template_id;
+				}
+			}
+		}
+
+		// Read-only request check for template routing; no nonce applies.
+		$is_routed = ! is_embed()
+			&& ! (isset($_REQUEST['aaeid']) && ! isset($_REQUEST['preview_id'])); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		if ($is_routed) {
+			$content_type = '';
+
+			if (is_singular()) {
+				$content_type = 'single';
+			} elseif (is_archive() || is_home() || is_search() || is_404() || (function_exists('is_shop') && is_shop())) {
+				$content_type = 'archive';
+			}
+
+			if ($content_type) {
+				$template_id = $this->has_template($content_type);
+
+				if ($template_id) {
+					$template_ids[] = $template_id;
+				}
+			}
+		}
+
+		return array_unique(array_map('absint', $template_ids));
 	}
 
 	/**
@@ -124,7 +442,7 @@ class WCF_Theme_Builder
 			return;
 		}
 	
-		require WCF_ADDONS_PATH . '/templates/header.php';
+		require AAEADDON_PATH . '/templates/header.php';
 
 		$templates = array();
 		$name      = (string) $name;
@@ -136,10 +454,20 @@ class WCF_Theme_Builder
 
 		// Avoid running wp_head hooks again
 		remove_all_actions('wp_head');
+		// locate_template() includes a file belonging to the active theme, so
+		// what runs between the two calls is code this plugin does not own.
+		// finally + the level check guarantee the buffer closes even if that
+		// template throws, and that we only ever close our own.
+		$ob_level = ob_get_level();
 		ob_start();
-		// It cause a `require_once` so, in the get_header it self it will not be required again.
-		locate_template($templates, true);
-		ob_get_clean();
+		try {
+			// It cause a `require_once` so, in the get_header it self it will not be required again.
+			locate_template($templates, true);
+		} finally {
+			while (ob_get_level() > $ob_level) {
+				ob_end_clean();
+			}
+		}
 	}
 
 	/**
@@ -172,7 +500,7 @@ class WCF_Theme_Builder
 			return;
 		}
 
-		require WCF_ADDONS_PATH . '/templates/footer.php';
+		require AAEADDON_PATH . '/templates/footer.php';
 
 		$templates = array();
 		$name      = (string) $name;
@@ -184,10 +512,20 @@ class WCF_Theme_Builder
 
 		// Avoid running wp_head hooks again
 		remove_all_actions('wp_footer');
+		// locate_template() includes a file belonging to the active theme, so
+		// what runs between the two calls is code this plugin does not own.
+		// finally + the level check guarantee the buffer closes even if that
+		// template throws, and that we only ever close our own.
+		$ob_level = ob_get_level();
 		ob_start();
-		// It cause a `require_once` so, in the get_header it self it will not be required again.
-		locate_template($templates, true);
-		ob_get_clean();
+		try {
+			// It cause a `require_once` so, in the get_header it self it will not be required again.
+			locate_template($templates, true);
+		} finally {
+			while (ob_get_level() > $ob_level) {
+				ob_end_clean();
+			}
+		}
 	}
 
 	// Set Builder content header footer
@@ -196,9 +534,8 @@ class WCF_Theme_Builder
 
 		$archive_template_id = $this->get_template_id('header');
 		if ($archive_template_id != '0') {
-			// PHPCS - should not be escaped.
 			
-			echo self::render_build_content($archive_template_id); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			aaeaddon_print_builder_html( self::render_build_content( $archive_template_id ) );
 		}
 	}
 
@@ -206,8 +543,7 @@ class WCF_Theme_Builder
 	{
 		$archive_template_id = $this->get_template_id('footer');
 		if ($archive_template_id != '0') {
-			// PHPCS - should not be escaped.
-			echo self::render_build_content($archive_template_id); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			aaeaddon_print_builder_html( self::render_build_content( $archive_template_id ) );
 		}
 	}
 
@@ -247,7 +583,7 @@ class WCF_Theme_Builder
 		$default_file = self::get_template_loader_default_file();
 
 		if ($default_file) {
-			$template = WCF_ADDONS_PATH . '/templates/' . $default_file;
+			$template = AAEADDON_PATH . '/templates/' . $default_file;
 		}
 
 		return $template;
@@ -291,12 +627,12 @@ class WCF_Theme_Builder
 		if ($template_ID) {
 			if($tmpType == 'header'){
 				// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
-				$GLOBALS['aae_header_smoother'] = get_post_meta( $template_ID, 'aae_header_smoother', true ); 
+				$GLOBALS['aaeaddon_header_smoother'] = get_post_meta( $template_ID, 'aae_header_smoother', true ); 
 				$offsetY = get_post_meta( $template_ID, 'aae_header_smoother_offsety', true );
 				$offsetY = preg_replace( '/[^0-9.\-]/', '', $offsetY );
 				if($offsetY && is_numeric($offsetY)){
 					// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
-					$GLOBALS['aae_header_smoother_offsetY'] = $offsetY;
+					$GLOBALS['aaeaddon_header_smoother_offsety'] = $offsetY;
 				}
 				
 			}
@@ -328,30 +664,49 @@ class WCF_Theme_Builder
 
 	function get_ids_from_slugs_any_type($slugs = []) {
 
-		$clean_slugs = array_map('sanitize_title', $slugs);
+		$clean_slugs = array_filter(array_map('sanitize_title', (array) $slugs));
 
-		// Query ALL posts from ALL post types that match these slugs
-		$query = new \WP_Query([
-			'post_type'      => 'any',
-			'post_status'    => 'any',
-			'posts_per_page' => -1,
-		]);
-
-		$results = [];
-
-		if ($query->have_posts()) {
-			foreach ($query->posts as $post) {
-				if (in_array($post->post_name, $clean_slugs)) {
-					$results[] = $post->ID;
-				}
-			}
+		if (empty($clean_slugs)) {
+			return [];
 		}
 
-		return $results;
+		/*
+		 * Target the slugs at the SQL level with post_name__in instead of
+		 * loading every post of every type into memory and filtering with a
+		 * PHP in_array(). The old form hydrated the entire posts table on each
+		 * call — and this runs inside the per-request resolver, so on a large
+		 * site it was tens of thousands of post objects materialised per page.
+		 * fields=ids and no_found_rows keep it to the ids we actually need.
+		 */
+		$query = new \WP_Query([
+			'post_type'           => 'any',
+			'post_status'         => 'any',
+			'post_name__in'       => $clean_slugs,
+			'fields'              => 'ids',
+			'posts_per_page'      => -1,
+			'no_found_rows'       => true,
+			'ignore_sticky_posts' => true,
+		]);
+
+		return $query->posts;
 	}
 
 
+	/**
+	 * Memoising front door — see $condition_cache. The heavy resolution below
+	 * runs at most once per template type per request; every later caller in
+	 * the same request gets the cached answer.
+	 */
 	public function get_current_post_by_condition($tmpType = '')
+	{
+		if (array_key_exists($tmpType, $this->condition_cache)) {
+			return $this->condition_cache[$tmpType];
+		}
+
+		return $this->condition_cache[$tmpType] = $this->resolve_current_post_by_condition($tmpType);
+	}
+
+	private function resolve_current_post_by_condition($tmpType = '')
 	{
 		$query_args         = array(
 			'post_type'      => self::CPTTYPE,
@@ -370,6 +725,12 @@ class WCF_Theme_Builder
 		
 		$query              = new \WP_Query($query_args);
 		$count              = $query->post_count;
+		// fields => ids skips WP_Query's own meta priming, so every
+		// get_post_meta() below was one query per template, per template TYPE,
+		// per request. One query for all of them instead.
+		if ( ! empty( $query->posts ) ) {
+			update_meta_cache( 'post', $query->posts );
+		}
 		$templates          = array();
 		$templates_specific = array('specifics' => array());
 
@@ -637,6 +998,12 @@ class WCF_Theme_Builder
 
 		$query              = new \WP_Query($query_args);
 		$count              = $query->post_count;
+		// fields => ids skips WP_Query's own meta priming, so every
+		// get_post_meta() below was one query per template, per template TYPE,
+		// per request. One query for all of them instead.
+		if ( ! empty( $query->posts ) ) {
+			update_meta_cache( 'post', $query->posts );
+		}
 		$templates          = array();
 		$templates_specific = array('specifics' => array());
 
@@ -875,8 +1242,7 @@ class WCF_Theme_Builder
 	{
 		$archive_template_id = $this->get_template_id('archive');
 		if ($archive_template_id != '0') {
-			// PHPCS - should not be escaped.
-			echo self::render_build_content($archive_template_id); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			aaeaddon_print_builder_html( self::render_build_content( $archive_template_id ) );
 		}
 	}
 
@@ -885,51 +1251,8 @@ class WCF_Theme_Builder
 	{
 		$archive_template_id = $this->get_template_id('single');
 		if ($archive_template_id != '0') {
-			// PHPCS - should not be escaped.
-			echo self::render_build_content($archive_template_id); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			aaeaddon_print_builder_html( self::render_build_content( $archive_template_id ) );
 		}
-	}
-
-	/**
-	 * Print Admin Tab
-	 *
-	 * @param [array] $views
-	 *
-	 * @return array
-	 */
-	public function print_tabs($views)
-	{
-		$active_class = 'nav-tab-active';
-		$current_type = '';
-		// Read-only admin list-table tab filter; no nonce applies.
-		if (isset($_GET['template_type'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			$active_class = '';
-			$current_type = sanitize_key(wp_unslash($_GET['template_type'])); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		}
-?>
-		<div id="wcf-template-tabs-wrapper" class="nav-tab-wrapper">
-			<div class="wcf-menu-area">
-				<a class="nav-tab <?php echo esc_attr($active_class); ?>"
-					href="edit.php?post_type=<?php echo esc_attr(self::CPTTYPE); ?>">
-					<?php echo esc_html__('All', 'animation-addons-for-elementor'); ?>
-				</a>
-				<?php
-				foreach (self::get_template_type() as $tabkey => $tab) {
-					$active_class = ($current_type == $tabkey ? 'nav-tab-active' : '');
-					$url          = 'edit.php?post_type=' . self::CPTTYPE . '&template_type=' . $tabkey;
-
-					printf(
-						'<a class="nav-tab %s" href="%s">%s</a>',
-						esc_attr($active_class),
-						esc_url($url),
-						esc_html($tab['label'])
-					);
-				}
-				?>
-			</div>
-		</div>
-		<?php
-		return $views;
 	}
 
 	/**
@@ -953,58 +1276,6 @@ class WCF_Theme_Builder
 			$query->query_vars['meta_key']     = self::CPT_META . '_type'; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 			$query->query_vars['meta_value']   = $type; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 			$query->query_vars['meta_compare'] = '=';
-		}
-	}
-
-	/**
-	 * Manage Post Table columns
-	 *
-	 * @param [array] $columns
-	 *
-	 * @return array
-	 */
-	public function manage_columns($columns)
-	{
-
-		$column_date = $columns['date'];
-		unset($columns['date']);
-
-		$columns['type']   = esc_html__('Type', 'animation-addons-for-elementor');
-		$columns['status'] = esc_html__('Display', 'animation-addons-for-elementor');
-		$columns['date']   = esc_html($column_date);
-
-		return $columns;
-	}
-
-	/**
-	 * Manage Custom column content
-	 *
-	 * @param [string] $column_name
-	 * @param [int]    $post_id
-	 *
-	 * @return void
-	 */
-	public function columns_content($column_name, $post_id)
-	{
-		$tmpType = get_post_meta($post_id, self::CPT_META . '_type', true);
-
-		if (! array_key_exists($tmpType, self::get_template_type())) {
-			return;
-		}
-
-		if ($column_name === 'type') {
-			// PHPCS - should not be escaped.
-			echo isset(self::get_template_type()[$tmpType]) ? '<div class="column-tmptype">' . self::get_template_type()[$tmpType]['label'] . '</div>' : '-'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		}
-
-		if ($column_name === 'status') {
-			$tmpDisplay = get_post_meta($post_id, self::CPT_META . '_location', true);
-		?>
-			<div class="post-status">
-				<strong>Display: </strong>
-				<?php echo esc_html($tmpDisplay); ?>
-			</div>
-		<?php
 		}
 	}
 
@@ -1036,6 +1307,142 @@ class WCF_Theme_Builder
 		);
         // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward compatibility hook.
 		return apply_filters('wcf_builder_template_types', $template_type);
+	}
+
+	/**
+	 * Template types that belong to the v3 era and should disappear from the
+	 * builder's UI once the legacy surface is switched off.
+	 *
+	 * `popup` is registered by the Pro plugin (inc/hook.php) and `loop-builder`
+	 * by widgets/loop-builder/init.php. Both are listed here rather than being
+	 * dropped at their own registration points ON PURPOSE — see
+	 * get_offered_template_type().
+	 */
+	const LEGACY_V3_TEMPLATE_TYPES = array('popup', 'loop-builder');
+
+	/**
+	 * The template types the UI should OFFER, as opposed to the ones it must be
+	 * able to name.
+	 *
+	 * Legacy entries are marked `hidden => true`, never removed. Two things
+	 * break the moment a type actually leaves get_template_type():
+	 *
+	 * 1. columns_content() bails on `! array_key_exists( $tmpType, … )`, so an
+	 *    existing popup template would lose BOTH its Type and its Display
+	 *    column and render as a blank row.
+	 * 2. The edit modal's type <select> is built from this same list, and
+	 *    theme-builder.js does an unguarded
+	 *    `document.querySelector( "#wcf-addons-template-type option[value='popup']" ).selected`.
+	 *    With the option gone that throws, the success callback dies before it
+	 *    fills in the title or enables "Edit with Elementor" — and because the
+	 *    select then sits on its first entry, saving would silently rewrite the
+	 *    template's type to `header`.
+	 *
+	 * A hidden <option> is still selectable from script and still submits, so
+	 * marking beats removing on both counts: a NEW template is never offered the
+	 * legacy types, while an EXISTING one keeps editing and saving exactly as
+	 * before.
+	 *
+	 * @return array
+	 */
+	public static function get_offered_template_type()
+	{
+		$types = self::get_template_type();
+
+		foreach (self::hidden_legacy_template_types() as $key) {
+			if (isset($types[$key])) {
+				$types[$key]['hidden'] = true;
+			}
+		}
+
+		return $types;
+	}
+
+	/**
+	 * Which legacy types to hide right now.
+	 *
+	 * A type that already has templates behind it is never hidden — the tab is
+	 * the only filtered view of them, and taking it away from someone who has
+	 * four popups is how a feature reads as "my templates are gone". This
+	 * mirrors the ratchet the animation settings use: evidence of v3 keeps the
+	 * v3 surface reachable, and only a site with nothing to show gets the clean
+	 * UI.
+	 *
+	 * @return string[]
+	 */
+	private static function hidden_legacy_template_types()
+	{
+		if (self::legacy_v3_enabled()) {
+			return array();
+		}
+
+		$hidden = array();
+
+		foreach (self::LEGACY_V3_TEMPLATE_TYPES as $key) {
+			if (! in_array($key, self::template_types_in_use(), true)) {
+				$hidden[] = $key;
+			}
+		}
+
+		return $hidden;
+	}
+
+	/**
+	 * Is the v3 UI surface still switched on?
+	 *
+	 * Guarded exactly like the Pro plugin's own callers: an older free plugin
+	 * without the class must fall back to SHOWING the tabs, never to hiding
+	 * them.
+	 *
+	 * @return bool
+	 */
+	private static function legacy_v3_enabled()
+	{
+		$cls = '\Wealcoder\AnimationAddons\AnimationSettings\Animation_Settings';
+
+		if (class_exists($cls) && method_exists($cls, 'legacy_v3_enabled')) {
+			return (bool) $cls::legacy_v3_enabled();
+		}
+
+		return true;
+	}
+
+	/**
+	 * Every template type that at least one non-trashed template is using.
+	 *
+	 * One query, memoised per request: this is asked once for the tab bar and
+	 * once for the modal's localized payload, both on the same admin screen.
+	 *
+	 * @return string[]
+	 */
+	private static function template_types_in_use()
+	{
+		static $types = null;
+
+		if (null !== $types) {
+			return $types;
+		}
+
+		global $wpdb;
+
+		// Direct query: counting DISTINCT meta values across a post type has no
+		// WP_Query equivalent that does not load the posts themselves.
+		$types = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$wpdb->prepare(
+				"SELECT DISTINCT pm.meta_value
+				 FROM {$wpdb->postmeta} pm
+				 INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+				 WHERE pm.meta_key = %s
+				   AND p.post_type = %s
+				   AND p.post_status NOT IN ( 'trash', 'auto-draft' )",
+				self::CPT_META . '_type',
+				self::CPTTYPE
+			)
+		);
+
+		$types = array_map('strval', (array) $types);
+
+		return $types;
 	}
 
 	/**
@@ -1335,701 +1742,6 @@ class WCF_Theme_Builder
 	}
 
 	/**
-	 * Print Template edit popup
-	 *
-	 * @return void
-	 */
-	public function print_popup()
-	{
-		// Read-only admin screen check; no nonce applies.
-		if (isset($_GET['post_type']) && self::CPTTYPE === sanitize_key(wp_unslash($_GET['post_type']))) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		?>
-	<script type="text/template" id="tmpl-wcf-addons-ctppopup">
-		<div class="wcf-addons-template-edit-popup-area">
-			<div class="wcf-addons-body-overlay"></div>
-			<div class="wcf-addons-template-edit-popup">
-
-				<div class="wcf-addons-template-edit-header">
-					<h3 class="wcf-addons-template-edit-setting-title">
-						{{{data.heading.head}}}
-					</h3>
-					<span class="wcf-addons-template-edit-cross">
-						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-							class="bi bi-x-lg" viewBox="0 0 16 16"><path
-									d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/></svg>
-					</span>
-				</div>
-
-				<div class="wcf-addons-template-edit-body">
-
-					<div class="wcf-addons-template-edit-field">
-						<label class="wcf-addons-template-edit-label">{{{ data.heading.fields.name.title}}}</label>
-						<input class="wcf-addons-template-edit-input" id="wcf-addons-template-title" type="text" name="wcf-addons-template-title" placeholder="{{ data.heading.fields.name.placeholder }}"/>
-					</div>
-
-					<div class="wcf-addons-template-edit-field">
-						<label class="wcf-addons-template-edit-label">{{{data.heading.fields.type}}}</label>
-						<select class="wcf-addons-template-edit-input" name="wcf-addons-template-type"
-								id="wcf-addons-template-type">
-							<#
-							_.each( data.templatetype, function( item, key ) {
-
-							#>
-							<option value="{{ key }}">{{{ item.label }}}</option>
-							<#
-
-							} );
-							#>
-						</select>
-					</div>
-
-					<div class="wcf-addons-template-edit-field hf-location hidden">
-						<label class="wcf-addons-template-edit-label">{{{data.heading.fields.display}}}</label>
-						<select class="wcf-addons-template-edit-input" name="wcf-addons-hf-display-type"
-								id="wcf-addons-hf-display-type">
-							<#
-							_.each( data.hflocation, function( items, keys ) {
-							#>
-							<optgroup label="{{{ items.label }}}">
-								<#
-								_.each( items.value, function( item, key ) {
-								#>
-								<option value="{{ key }}">{{{ item }}}</option>
-								<#
-								} );
-								#>
-							</optgroup>
-							<#
-							} );
-							#>
-						</select>
-					</div>
-
-					<div class="wcf-addons-template-edit-field hf-s-location hidden">
-						<label class="wcf-addons-template-edit-label"></label>
-						<select class="wcf-addons-template-edit-input" name="wcf-addons-hf-s-display-type[]"
-								id="wcf-addons-hf-s-display-type" multiple="multiple">
-						</select>
-					</div>
-
-					<div class="wcf-addons-template-edit-field archive-location hidden">
-						<label class="wcf-addons-template-edit-label">{{{data.heading.fields.display}}}</label>
-						<select class="wcf-addons-template-edit-input" name="wcf-addons-archive-display-type"
-								id="wcf-addons-archive-display-type">
-							<#
-							_.each( data.archivelocation, function( items, keys ) {
-							#>
-							<optgroup label="{{{ items.label }}}">
-								<#
-								_.each( items.value, function( item, key ) {
-								#>
-								<option value="{{ key }}">{{{ item }}}</option>
-								<#
-								} );
-								#>
-							</optgroup>
-							<#
-							} );
-							#>
-						</select>
-					</div>
-
-					<div class="wcf-addons-template-edit-field single-location hidden">
-						<label class="wcf-addons-template-edit-label">{{{data.heading.fields.display}}}</label>
-						<select class="wcf-addons-template-edit-input" name="wcf-addons-single-display-type"
-								id="wcf-addons-single-display-type">
-							<#
-							_.each( data.singlelocation, function( items, keys ) {
-							#>
-							<optgroup label="{{{ items.label }}}">
-								<#
-								_.each( items.value, function( item, key ) {
-								#>
-								<option value="{{ key }}">{{{ item }}}</option>
-								<#
-								} );
-								#>
-							</optgroup>
-							<#
-							} );
-							#>
-						</select>
-					</div>
-
-					<div class="wcf-addons-template-edit-field single-category-location hidden">
-						<label class="wcf-addons-template-edit-label">{{{data.heading.fields.category}}}</label>
-						<select class="wcf-addons-template-edit-input" name="wcf-addons-single-category-display-type"
-								id="wcf-addons-single-category-display-type">
-							<#								
-							_.each( data.postcategory, function( items, keys ) {
-							#>                                   
-								<#
-								_.each( items.value, function( item, key ) {
-								#>
-								<option value="{{ key }}">{{{ item }}}</option>
-								<#
-								} );
-								#>                                  
-							<#
-							} );
-							#>
-						</select>
-					</div>
-					
-					<div class="wcf-addons-template-edit-field aae-popup-builder-location hidden">
-						<label class="wcf-addons-template-edit-label">{{{data.heading.fields.trigger}}}</label>
-							<select class="wcf-addons-template-edit-input" name="wcf-addons--popup--builder-trigger"
-								id="wcf-addons--popup--builder-trigger">
-								<option value="click"><?php echo esc_html__('Click', 'animation-addons-for-elementor'); ?></option>
-								<option value="pageloaded"><?php echo esc_html__('Page Loaded', 'animation-addons-for-elementor'); ?></option>
-								<option value="pageexit"><?php echo esc_html__('Page Body Exist', 'animation-addons-for-elementor'); ?></option>
-								<option value="user_inactivity"><?php echo esc_html__('User Inactivity', 'animation-addons-for-elementor'); ?></option>
-								<option value="page_scroll"><?php echo esc_html__('Page Scroll', 'animation-addons-for-elementor'); ?></option>
-								<option value="page_scroll_up"><?php echo esc_html__('Page Scroll Up', 'animation-addons-for-elementor'); ?></option>
-							</select>
-					</div>
-				
-					<div class="wcf-addons-template-edit-field aae-popup-builder-location hidden">
-						<label class="wcf-addons-template-edit-label">{{{data.heading.fields.delay}}}</label>
-						<input class="wcf-addons-template-edit-input" id="aae-popup-builder-delay" type="number"
-								name="aae-popup-builder-delay"
-								placeholder="{{ data.heading.fields.delay.placeholder }}">
-					</div>
-
-					<div class="wcf-addons-template-edit-field aae-popup-builder-location hidden">
-						<label class="wcf-addons-template-edit-label">{{{data.heading.fields.selector}}}</label>
-						<input class="wcf-addons-template-edit-input" id="aae-popup-builder-selector" type="text"
-								name="aae-popup-builder-selector"
-								placeholder=".body">
-					</div>
-					<div class="wcf-addons-template-edit-field aae-popup-builder-location hidden">
-						<label class="wcf-addons-template-edit-label"><?php echo esc_html__('Scroll Postion','animation-addons-for-elementor') ?></label>
-						<input class="wcf-addons-template-edit-input" id="aae-popup-builder-scrollPostion" type="text"
-								name="aae-popup-builder-scrollPostion"
-								placeholder="1500">
-					</div>
-					
-					<div class="wcf-addons-template-edit-field aae-popup-builder-location hidden">
-						<label class="wcf-addons-template-edit-label">Effects</label>
-							<select class="wcf-addons-template-edit-input" name="wcf-addons--popup--builder-effect"
-								id="wcf-addons--popup--builder-effect">
-								<option value="flip"><?php echo esc_html__('Flip', 'animation-addons-for-elementor'); ?></option>
-								<option value="shakeEffect"><?php echo esc_html__('Scale + Shake Effect', 'animation-addons-for-elementor'); ?></option>
-								<option value="slideFromTo"><?php echo esc_html__('Slide From Top', 'animation-addons-for-elementor'); ?></option>
-								<option value="zoomBounce"><?php echo esc_html__('Zoom + Bounce', 'animation-addons-for-elementor'); ?></option>
-								<option value="fadeSlideup"><?php echo esc_html__('Fade + Slide Up', 'animation-addons-for-elementor'); ?></option>
-							</select>
-					</div>
-							<!-- Header Smoother -->
-					<div class="wcf-addons-template-edit-field aae-header-smoother-location hidden">
-						<label class="wcf-addons-template-edit-label"><?php echo esc_html__('Smoother?', 'animation-addons-for-elementor'); ?></label>
-							<select class="wcf-addons-template-edit-input" name="aae-header-smoother-location"
-								id="aae-header-smoother-location">
-								<option value=""><?php echo esc_html__('Default', 'animation-addons-for-elementor'); ?></option>
-								<option value="yes"><?php echo esc_html__('Yes', 'animation-addons-for-elementor'); ?></option>	
-								<option value="no"><?php echo esc_html__('No', 'animation-addons-for-elementor'); ?></option>								
-							</select>
-					</div>
-
-					<div class="wcf-addons-template-edit-field aae-header-smoother-location yoffset hidden">
-						<label class="wcf-addons-template-edit-label"><?php echo esc_html__('OffsetY(px)', 'animation-addons-for-elementor'); ?></label>
-							<input class="wcf-addons-template-edit-input" id="aae-header-smoother-yoffset" type="text"
-								name="aae-header-smoother-yoffset"
-								placeholder="120">
-					</div>
-					
-				</div>
-				
-				<div class="wcf-addons-template-edit-footer">
-					<div class="wcf-addons-template-button-group">
-						<div class="wcf-addons-template-button-item wcf-addons-editor-elementor {{ data.haselementor === 'yes' ? 'button-show' : '' }}">
-							<button class="wcf-addons-tmp-elementor button">{{{
-								data.heading.buttons.elementor.label
-								}}}
-							</button>
-						</div>
-						<div class="wcf-addons-template-button-item">
-							<button class="wcf-addons-tmp-save button button-primary">{{{
-								data.heading.buttons.save.label }}}
-							</button>
-						</div>
-					</div>
-				</div>
-				
-			</div>
-		</div>
-	</script>
-<?php
-		}
-	}
-
-	/**
-	 * Save Template
-	 *
-	 * @return void
-	 */
-	public function save_template_request()
-	{
-		if (isset($_POST)) {
-
-			if (! (current_user_can('manage_options') || current_user_can('edit_others_posts'))) {
-				$errormessage = array(
-					'message' => esc_html__('You are unauthorize to adding template!', 'animation-addons-for-elementor'),
-				);
-				wp_send_json_error($errormessage);
-			}
-
-			$nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
-
-			if (! wp_verify_nonce($nonce, 'wcf_tmp_nonce')) {
-				$errormessage = array(
-					'message' => esc_html__('Nonce Varification Faild !', 'animation-addons-for-elementor'),
-				);
-				wp_send_json_error($errormessage);
-			}
-
-			$title            = ! empty($_POST['title']) ? sanitize_text_field(wp_unslash($_POST['title'])) : '';
-			$tmpid            = ! empty($_POST['tmpId']) ? sanitize_text_field(wp_unslash($_POST['tmpId'])) : '';
-			$tmpType          = ! empty($_POST['tmpType']) ? sanitize_text_field(wp_unslash($_POST['tmpType'])) : 'single';
-			$tmplocation      = ! empty($_POST['tmpDisplay']) ? sanitize_text_field(wp_unslash($_POST['tmpDisplay'])) : '';
-			$specificsDisplay = ! empty($_POST['specificsDisplay']) ? sanitize_text_field(wp_unslash($_POST['specificsDisplay'])) : '';
-			$popupDelay       = ! empty($_POST['tmpDelay']) ? sanitize_text_field(wp_unslash($_POST['tmpDelay'])) : 0;
-			$popuptrigger     = ! empty($_POST['tmpTrigger']) ? sanitize_text_field(wp_unslash($_POST['tmpTrigger'])) : 'pageloaded';
-			$popupEffect     = ! empty($_POST['tmpEffect']) ? sanitize_text_field(wp_unslash($_POST['tmpEffect'])) : 'flip';
-			$selector     = ! empty($_POST['tmpSelector']) ? sanitize_text_field(wp_unslash($_POST['tmpSelector'])) : '';
-			$scrollPostion     = ! empty($_POST['tmpScrollPostion']) ? sanitize_text_field(wp_unslash($_POST['tmpScrollPostion'])) : 0;
-			$headerSmoother     = ! empty($_POST['tmpHeaderSmoother']) ? sanitize_text_field(wp_unslash($_POST['tmpHeaderSmoother'])) : '';
-			$headerSmootheroffset     = ! empty($_POST['tmpHeaderSmootherOffsetY']) ? sanitize_text_field(wp_unslash($_POST['tmpHeaderSmootherOffsetY'])) : '';
-
-			$data = array(
-				'title'         => $title,
-				'id'            => $tmpid,
-				'tmptype'       => $tmpType,
-				'tmplocation'   => $tmplocation,
-				'tmpSpLocation' => $specificsDisplay,
-				'tmpDelay'      => $popupDelay,
-				'tmpTrigger'    => $popuptrigger,
-				'tmpSelector'    => $selector,
-				'tmpScrollPostion'    => $scrollPostion,
-				'tmpEffect' => $popupEffect,
-				'tmpHeaderSmoother' => $headerSmoother,
-				'tmpHeaderSmootherOffsetY' => $headerSmootheroffset
-			);
-
-			if ($tmpid) {
-				$this->update($data);
-			} else {
-				$this->insert($data);
-			}
-		} else {
-			$errormessage = array(
-				'message' => esc_html__('Post request dose not found', 'animation-addons-for-elementor'),
-			);
-			wp_send_json_error($errormessage);
-		}
-	}
-
-	/**
-	 * Get Template data by id
-	 *
-	 * @return void
-	 */
-	public function get_post_By_id()
-	{
-		if (isset($_POST)) {
-
-			if (! (current_user_can('manage_options') || current_user_can('edit_others_posts'))) {
-				$errormessage = array(
-					'message' => esc_html__('You are unauthorize to adding template!', 'animation-addons-for-elementor'),
-				);
-				wp_send_json_error($errormessage);
-			}
-
-			$nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
-
-			if (! wp_verify_nonce($nonce, 'wcf_tmp_nonce')) {
-				$errormessage = array(
-					'message' => esc_html__('Nonce Varification Failed !', 'animation-addons-for-elementor'),
-				);
-				wp_send_json_error($errormessage);
-			}
-
-			$tmpid            = ! empty($_POST['tmpId']) ? sanitize_text_field(wp_unslash($_POST['tmpId'])) : '';
-			$postdata         = get_post($tmpid);
-			$tmpType          = ! empty(get_post_meta($tmpid, self::CPT_META . '_type', true)) ? get_post_meta($tmpid, self::CPT_META . '_type', true) : 'single';
-			$tmpLocation      = ! empty(get_post_meta($tmpid, self::CPT_META . '_location', true)) ? get_post_meta($tmpid, self::CPT_META . '_location', true) : '';
-			$specificsDisplay = ! empty(get_post_meta($tmpid, self::CPT_META . '_splocation', true)) ? get_post_meta($tmpid, self::CPT_META . '_splocation', true) : '';
-			$tmpDelay         = ! empty(get_post_meta($tmpid, 'delayTime', true)) ? get_post_meta($tmpid, 'delayTime', true) : 0;
-			$popupTrigger     = ! empty(get_post_meta($tmpid, 'popup_trigger', true)) ? get_post_meta($tmpid, 'popup_trigger', true) : 'pageloaded';
-			$popupEffect     = ! empty(get_post_meta($tmpid, 'effect', true)) ? get_post_meta($tmpid, 'effect', true) : 'flip';
-			$popup_selector     = ! empty(get_post_meta($tmpid, 'popup_selector', true)) ? get_post_meta($tmpid, 'popup_selector', true) : '';
-			$scrollPostion     = ! empty(get_post_meta($tmpid, 'scrollPostion', true)) ? get_post_meta($tmpid, 'scrollPostion', true) : '';
-			$aae_header_smoother     = ! empty(get_post_meta($tmpid, 'aae_header_smoother', true)) ? get_post_meta($tmpid, 'aae_header_smoother', true) : '';
-			$header_smootheroffsety     = ! empty(get_post_meta($tmpid, 'aae_header_smoother_offsety', true)) ? get_post_meta($tmpid, 'aae_header_smoother_offsety', true) : '';
-			$spLocations      = array();
-
-			if (! empty($specificsDisplay)) {
-
-				foreach (json_decode($specificsDisplay) as $item) {
-
-					// If it's an ID
-					if (is_numeric($item)) {
-
-						$post = get_post(intval($item));
-
-						$spLocations[$item] = $post ? $post->post_title : '';
-
-					}
-
-					// If it's a slug or string
-					elseif (is_string($item) && ! is_numeric($item)) {
-
-						$slug  = sanitize_text_field($item);
-						$post  = get_page_by_path($slug, OBJECT);
-
-						if ($post) {
-							$spLocations[$item] = $post->post_title; // Real title
-						} else {
-							// fallback title if page not found
-							$spLocations[$item] = ucwords(str_replace('-', ' ', $slug));
-						}
-					}
-				}
-			}
-
-			$data = array(
-				'tmpTitle'      => $postdata->post_title,
-				'tmpType'       => $tmpType,
-				'tmpLocation'   => $tmpLocation,
-				'tmpSpLocation' => $spLocations,
-				'tmpDelay'      => $tmpDelay,
-				'tmpTrigger'    => $popupTrigger,
-				'tmpSelector' => $popup_selector,
-				'tmpEffect' => $popupEffect,
-				'tmpScrollPostion' => $scrollPostion,
-				'tmpHeaderSmoother' => $aae_header_smoother,
-				'tmpHeaderSmootherOffsetY' => $header_smootheroffsety,
-			);
-			wp_send_json_success($data);
-		} else {
-			$errormessage = array(
-				'message' => esc_html__('Some thing is worng !', 'animation-addons-for-elementor'),
-			);
-			wp_send_json_error($errormessage);
-		}
-	}
-
-	/**
-	 * Ajax handeler to return the posts based on the search query.
-	 * When searching for the post/pages only titles are searched for.
-	 *
-	 * @since  1.0.0
-	 */
-	function get_posts_by_query()
-	{
-
-		if (isset($_POST)) {
-
-			$nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
-
-			if (! wp_verify_nonce($nonce, 'wcf_tmp_nonce')) {
-				$errormessage = array(
-					'message' => esc_html__('Nonce Varification Faild !', 'animation-addons-for-elementor'),
-				);
-				wp_send_json_error($errormessage);
-			}
-
-			$search_string = isset($_POST['q']) ? sanitize_text_field(wp_unslash($_POST['q'])) : '';
-			$data          = array();
-			$result        = array();
-
-			$args = array(
-				'public'   => true,
-				'_builtin' => false,
-			);
-
-			$output     = 'names'; // names or objects, note names is the default.
-			$operator   = 'and'; // also supports 'or'.
-			$post_types = get_post_types($args, $output, $operator);
-
-			unset($post_types[self::CPTTYPE]); // Exclude wcf post type templates.
-			unset($post_types['elementor_library']); // Exclude wcf elementor_library templates.
-
-			$post_types['Posts'] = 'post';
-			$post_types['Pages'] = 'page';
-
-			foreach ($post_types as $key => $post_type) {
-				$data = array();
-
-				add_filter('posts_search', array($this, 'search_only_titles'), 10, 2);
-
-				$query = new \WP_Query(
-					array(
-						's'              => $search_string,
-						'post_type'      => $post_type,
-						'posts_per_page' => -1,
-					)
-				);
-
-				if ($query->have_posts()) {
-					while ($query->have_posts()) {
-						$query->the_post();
-						$title  = get_the_title();
-						$title .= (0 != $query->post->post_parent) ? ' (' . get_the_title($query->post->post_parent) . ')' : '';
-						$id     = get_the_id();
-						
-						$data[] = array(
-							'id' => get_post_field('post_name', $id),
-							//'id'   => $id,
-							'text' => $title,
-						);
-					}
-				}
-
-				if (is_array($data) && ! empty($data)) {
-					$result[] = array(
-						'text'     => $key,
-						'children' => $data,
-					);
-				}
-			}
-
-			$data = array();
-
-			wp_reset_postdata();
-
-			// return the result in json.
-			wp_send_json($result);
-		} else {
-			$errormessage = array(
-				'message' => esc_html__('Some thing is worng !', 'animation-addons-for-elementor'),
-			);
-			wp_send_json_error($errormessage);
-		}
-	}
-
-	/**
-	 * Return search results only by post title.
-	 * This is only run from hfe_get_posts_by_query()
-	 *
-	 * @param  (string)   $search   Search SQL for WHERE clause.
-	 * @param  (WP_Query) $wp_query The current WP_Query object.
-	 *
-	 * @return (string) The Modified Search SQL for WHERE clause.
-	 */
-	function search_only_titles($search, $wp_query)
-	{
-		if (! empty($search) && ! empty($wp_query->query_vars['search_terms'])) {
-			global $wpdb;
-
-			$q = $wp_query->query_vars;
-			$n = ! empty($q['exact']) ? '' : '%';
-
-			$search = array();
-
-			foreach ((array) $q['search_terms'] as $term) {
-				$search[] = $wpdb->prepare("$wpdb->posts.post_title LIKE %s", $n . $wpdb->esc_like($term) . $n);
-			}
-
-			if (! is_user_logged_in()) {
-				$search[] = "$wpdb->posts.post_password = ''";
-			}
-
-			$search = ' AND ' . implode(' AND ', $search);
-		}
-
-		return $search;
-	}
-
-	/**
-	 * Template Insert
-	 *
-	 * @param [array] $data
-	 *
-	 * @return void
-	 */
-	public function insert($data)
-	{
-
-		$args        = array(
-			'post_type'   => self::CPTTYPE,
-			'post_status' => $data['tmptype'] == 'popup' ? 'draft' : 'publish',
-			'post_title'  => $data['title'],
-		);
-		$new_post_id = wp_insert_post($args);
-
-		if ($new_post_id) {
-			$return = array(
-				'message' => esc_html__('Template has been inserted', 'animation-addons-for-elementor'),
-				'id'      => $new_post_id,
-			);
-
-			// Meta data
-			update_post_meta($new_post_id, self::CPT_META . '_type', $data['tmptype']);
-			update_post_meta($new_post_id, self::CPT_META . '_location', $data['tmplocation']);
-			update_post_meta($new_post_id, '_elementor_edit_mode', 'builder');
-			update_post_meta($new_post_id, '_wp_page_template', 'elementor_canvas');
-
-			// specific page and post template header footer
-			if ('header' === $data['tmptype'] || 'footer' === $data['tmptype']) {
-				update_post_meta($new_post_id, self::CPT_META . '_splocation', $data['tmpSpLocation']);
-				update_post_meta($new_post_id, 'aae_header_smoother', $data['tmpHeaderSmoother']);
-				update_post_meta($new_post_id, 'aae_header_smoother_offsety', $data['tmpHeaderSmootherOffsetY']);
-
-			}
-
-			if ('archive' === $data['tmptype'] && 'specifics_cat' === $data['tmplocation']) {
-				update_post_meta($new_post_id, self::CPT_META . '_splocation', $data['tmpSpLocation']);
-			}
-
-			if ('post-singular' === $data['tmplocation'] && 'single' === $data['tmptype']) {
-				update_post_meta($new_post_id, self::CPT_META . '_splocation', $data['tmpSpLocation']);
-			}
-
-			if ('popup' === $data['tmptype']) {
-				update_post_meta($new_post_id, 'delayTime', $data['tmpDelay']);
-				update_post_meta($new_post_id, 'popup_trigger', $data['tmpTrigger']);
-				update_post_meta($new_post_id, 'popup_selector', $data['tmpEffect']);
-				update_post_meta($new_post_id, 'effect', $data['tmpEffect']);
-				update_post_meta($new_post_id, 'scrollPostion', $data['tmpScrollPostion']);
-
-				update_post_meta($new_post_id, self::CPT_META . '_splocation', $data['tmpSpLocation']);
-			}
-
-			wp_send_json_success($return);
-		} else {
-			$errormessage = array(
-				'message' => esc_html__('Some thing is worng !', 'animation-addons-for-elementor'),
-			);
-			wp_send_json_error($errormessage);
-		}
-	}
-
-	/**
-	 * Template Update
-	 *
-	 * @param [array] $data
-	 *
-	 * @return void
-	 */
-	public function update($data)
-	{
-
-		$update_post_args = array(
-			'ID'         => $data['id'],
-			'post_title' => $data['title'],
-		);
-		wp_update_post($update_post_args);
-
-		// Update Meta data
-		update_post_meta($data['id'], self::CPT_META . '_type', $data['tmptype']);
-		update_post_meta($data['id'], self::CPT_META . '_location', $data['tmplocation']);
-
-		// specific page and post template header footer
-		if ('header' === $data['tmptype'] || 'footer' === $data['tmptype']) {
-			update_post_meta($data['id'], self::CPT_META . '_splocation', $data['tmpSpLocation']);
-			update_post_meta($data['id'], 'aae_header_smoother', $data['tmpHeaderSmoother']);
-			update_post_meta($data['id'], 'aae_header_smoother_offsety', $data['tmpHeaderSmootherOffsetY']);
-		} else {
-			delete_post_meta($data['id'], self::CPT_META . '_splocation');
-		}
-
-		if ('archive' === $data['tmptype'] && 'specifics_cat' === $data['tmplocation']) {
-			update_post_meta($data['id'], self::CPT_META . '_splocation', $data['tmpSpLocation']);
-		}
-
-		if ('post-singular' === $data['tmplocation'] && 'single' === $data['tmptype']) {
-			update_post_meta($data['id'], self::CPT_META . '_splocation', $data['tmpSpLocation']);
-		}
-
-		if ('popup' === $data['tmptype']) {
-			update_post_meta($data['id'], 'delayTime', $data['tmpDelay']);
-			update_post_meta($data['id'], 'popup_trigger', $data['tmpTrigger']);
-			update_post_meta($data['id'], 'popup_selector', $data['tmpSelector']);
-			update_post_meta($data['id'], 'effect', $data['tmpEffect']);
-			update_post_meta($data['id'], 'scrollPostion', $data['tmpScrollPostion']);
-
-			update_post_meta($data['id'], self::CPT_META . '_splocation', $data['tmpSpLocation']);
-		}
-
-		$return = array(
-			'message' => esc_html__('Template has been updated', 'animation-addons-for-elementor'),
-		);
-		wp_send_json_success($return);
-	}
-
-	/**
-	 * Manage Scripts
-	 *
-	 * @param [string] $hook
-	 *
-	 * @return void
-	 */
-	public function enqueue_scripts($hook)
-	{
-
-		// Read-only admin screen check; no nonce applies.
-		if (isset($_GET['post_type']) && self::CPTTYPE === sanitize_key(wp_unslash($_GET['post_type']))) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-
-			// CSS
-			wp_enqueue_style('select2', WCF_ADDONS_URL . '/assets/css/select2.min.css', array(), WCF_ADDONS_VERSION);
-			wp_enqueue_style('wcf-theme-builder', WCF_ADDONS_URL . '/assets/css/theme-builder.min.css', array(), WCF_ADDONS_VERSION);
-
-			// JS
-			wp_enqueue_script('select2', WCF_ADDONS_URL . '/assets/js/select2.min.js', array('jquery'), WCF_ADDONS_VERSION, true);
-			wp_enqueue_script(
-				'wcf-theme-builder',
-				WCF_ADDONS_URL . '/assets/js/theme-builder.js',
-				array(
-					'jquery',
-					'wp-util',
-				),
-				WCF_ADDONS_VERSION,
-				true
-			);
-
-			$localize_data = array(
-				'ajaxurl'         => admin_url('admin-ajax.php'),
-				'nonce'           => wp_create_nonce('wcf_tmp_nonce'),
-				'adminURL'        => admin_url(),
-				'hflocation'      => self::get_hf_location_selections(),
-				'archivelocation' => self::get_archive_location_selections(),
-				'singlelocation'  => self::get_single_location_selections(),
-				'postcategory'    => self::get_category_location_selections(),
-				'templatetype'    => self::get_template_type(),
-				'labels'          => array(
-					'fields'  => array(
-						'name'     => array(
-							'title'       => esc_html__('Name', 'animation-addons-for-elementor'),
-							'placeholder' => esc_html__('Enter a template name', 'animation-addons-for-elementor'),
-						),
-						'type'     => esc_html__('Type', 'animation-addons-for-elementor'),
-						'display'  => esc_html__('Display', 'animation-addons-for-elementor'),
-						'category' => esc_html__('Category', 'animation-addons-for-elementor'),
-						'delay'    => esc_html__('Delay', 'animation-addons-for-elementor'),
-						'trigger'  => esc_html__('Trigger', 'animation-addons-for-elementor'),
-						'selector' => esc_html__('Selector', 'animation-addons-for-elementor'),
-					),
-					'head'    => esc_html__('Template Settings', 'animation-addons-for-elementor'),
-					'buttons' => array(
-						'elementor' => array(
-							'label' => esc_html__('Edit With Elementor', 'animation-addons-for-elementor'),
-							'link'  => '#',
-						),
-						'save'      => array(
-							'label'  => esc_html__('Save Settings', 'animation-addons-for-elementor'),
-							'saving' => esc_html__('Saving...', 'animation-addons-for-elementor'),
-							'saved'  => esc_html__('All Data Saved', 'animation-addons-for-elementor'),
-							'link'   => '#',
-						),
-					),
-				),
-			);
-			wp_localize_script('wcf-theme-builder', 'WCF_Theme_Builder', $localize_data);
-		}
-	}
-
-	/**
 	 * [init] Assets Initializes
 	 *
 	 * @return [void]
@@ -2039,24 +1751,6 @@ class WCF_Theme_Builder
 		// Register Custom Post Type
 		$this->register_custom_post_type();
 	}
-
-	/**
-	 * [admin_menu] Add Post type Submenu
-	 *
-	 * @return void
-	 */
-	public function admin_menu()
-	{
-		$link_custom_post = 'edit.php?post_type=' . self::CPTTYPE;
-		add_submenu_page(
-			'wcf_addons_page',
-			esc_html__('Theme Builder', 'animation-addons-for-elementor'),
-			esc_html__('Theme Builder', 'animation-addons-for-elementor'),
-			'manage_options',
-			$link_custom_post,
-			null
-		);
-	}
 }
 
-WCF_Theme_Builder::instance();
+Aaeaddon_Theme_Builder::instance();

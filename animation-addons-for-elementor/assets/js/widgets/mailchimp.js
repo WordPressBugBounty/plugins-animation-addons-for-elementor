@@ -17,7 +17,7 @@
 
             const data = {};
             $.extend(data, elFormDataAttr, {
-                action: 'wcf_mailchimp_ajax',
+                action: 'aaeaddon_mailchimp_ajax',
                 nonce: WCF_ADDONS_JS._wpnonce,
                 subscriber_info: elForm.serialize(),
             });
@@ -57,7 +57,6 @@
             });
         });
 
-        elForm.removeAttr('data-key');
         // E-News
         const radios = document.querySelectorAll('.enews');
         const slider = document.createElement('span');
@@ -89,3 +88,4 @@
         elementorFrontend.hooks.addAction( 'frontend/element_ready/aae--advanced-mailchimp.default', MailChimp );
     } );
 } )( jQuery );
+//# sourceMappingURL=mailchimp.js.map

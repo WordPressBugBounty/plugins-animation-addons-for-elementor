@@ -1,8 +1,6 @@
 <?php
 
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
-namespace WCF_ADDONS\Widgets;
-// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
+namespace Wealcoder\AnimationAddons\Widgets;
 
 use Elementor\Group_Control_Background;
 use Elementor\Group_Control_Border;
@@ -13,7 +11,7 @@ use Elementor\Icons_Manager;
 use Elementor\Utils;
 use Elementor\Widget_Base;
 use Elementor\Controls_Manager;
-use WCF_ADDONS\WCF_Post_Query_Trait;
+use Wealcoder\AnimationAddons\Aaeaddon_Post_Query_Trait;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly
@@ -28,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Posts extends Widget_Base {
 
-	use WCF_Post_Query_Trait;
+	use Aaeaddon_Post_Query_Trait;
 
 	/**
 	 * @var \WP_Query
@@ -2459,7 +2457,7 @@ class Posts extends Widget_Base {
 		<?php
 	}
 
-	public static function wcf_wrap_first_n_words( $text, $n, $class = 'highlight' ) {
+	public static function wrap_first_n_words( $text, $n, $class = 'highlight' ) {
 		// Split the text into an array of words
 		$words = explode( ' ', $text );
 		// Check if the text has enough words to wrap
@@ -2496,7 +2494,7 @@ class Posts extends Widget_Base {
 
 				$highlight_title_length = (int) $this->get_settings( 'highlight_title_length' );
 
-				echo wp_kses_post( $this->wcf_wrap_first_n_words( $title, $highlight_title_length ) ); // Wrap first 2 words
+				echo wp_kses_post( $this->wrap_first_n_words( $title, $highlight_title_length ) ); // Wrap first 2 words
 
 			} else {
 				the_title();
@@ -2561,8 +2559,7 @@ class Posts extends Widget_Base {
 					$date = get_the_date();
 			endswitch;
 			/** This filter is documented in wp-includes/general-template.php */
-			// PHPCS - The date is safe.
-			echo apply_filters( 'the_date', $date, get_option( 'date_format' ), '', '' ); // phpcs:ignore
+			echo wp_kses_post( apply_filters( 'the_date', $date, get_option( 'date_format' ), '', '' ) ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- core filter.
 			?>
 		</span>
         </li>

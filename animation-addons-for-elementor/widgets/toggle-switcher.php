@@ -1,8 +1,6 @@
 <?php
 
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
-namespace WCF_ADDONS\Widgets;
-// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
+namespace Wealcoder\AnimationAddons\Widgets;
 
 use Elementor\Group_Control_Background;
 use Elementor\Group_Control_Border;
@@ -154,7 +152,7 @@ class Toggle_Switcher extends Widget_Base {
 				'type'        => Controls_Manager::SELECT2,
 				'label_block' => false,
 				'multiple'    => false,
-				'options'     => wcf_addons_get_saved_template_list(),
+				'options'     => aaeaddon_get_saved_template_list(),
 				'condition'   => array(
 					'content_type' => 'template',
 				),
@@ -584,7 +582,7 @@ class Toggle_Switcher extends Widget_Base {
 						if ( 'content' === $item['content_type'] ) {
 							$this->print_text_editor( $item['switch_content'] );
 						} elseif ( ! empty( $item['elementor_templates'] ) ) {
-								echo Plugin::$instance->frontend->get_builder_content( $item['elementor_templates'], true ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+								aaeaddon_print_builder_html( Plugin::$instance->frontend->get_builder_content( $item['elementor_templates'], true ) );
 
 						}
 						?>

@@ -33,7 +33,6 @@
 
         try {
             await $e.internal('document/save'); // save current edits
-            console.log('Document saved successfully!');
         } finally {
             $e.internal('panel/state-ready'); // hide spinner
         }
@@ -65,3 +64,5 @@
 
 })(jQuery);
 
+
+//# sourceMappingURL=loop-builder.js.map

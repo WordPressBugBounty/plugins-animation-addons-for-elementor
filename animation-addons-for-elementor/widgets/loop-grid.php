@@ -1,13 +1,13 @@
 <?php
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
-namespace WCF_ADDONS\Widgets;
-// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
+namespace Wealcoder\AnimationAddons\Widgets;
+
+use Wealcoder\AnimationAddons\Nonce;
 
 use Elementor\Group_Control_Background;
-use WCF_ADDONS\WCF_Post_Query_Trait;
-use WCF_ADDONS\AAE_Post_Handler_Trait;
-use WCF_ADDONS\Widgets\Loop_Builder\Template_Manager;
-use WCF_ADDONS\Widgets\Loop_Builder\Query_Manager;
+use Wealcoder\AnimationAddons\Aaeaddon_Post_Query_Trait;
+use Wealcoder\AnimationAddons\Aaeaddon_Post_Handler_Trait;
+use Wealcoder\AnimationAddons\Widgets\Loop_Builder\Template_Manager;
+use Wealcoder\AnimationAddons\Widgets\Loop_Builder\Query_Manager;
 use Elementor\Controls_Manager;
 use Elementor\Group_Control_Typography;
 use Elementor\Group_Control_Border;
@@ -23,8 +23,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Displays posts in a customizable grid layout using loop item templates.
  */
 class Loop_Grid extends \Elementor\Widget_Base {
-	use WCF_Post_Query_Trait;
-	use AAE_Post_Handler_Trait;
+	use Aaeaddon_Post_Query_Trait;
+	use Aaeaddon_Post_Handler_Trait;
 
 	/**
 	 * Query object.
@@ -112,7 +112,7 @@ class Loop_Grid extends \Elementor\Widget_Base {
 	 * @return array
 	 */
 	public function get_script_depends() {
-		return array( 'custom-loop-builder-frontend', 'advanced--adv-posts-pro', 'advanced--aae--features--posts', 'wcf--posts' );
+		return array( 'aaeaddon-loop-builder-frontend', 'advanced--adv-posts-pro', 'advanced--aae--features--posts', 'wcf--posts' );
 	}
 
 	/**
@@ -1231,6 +1231,19 @@ class Loop_Grid extends \Elementor\Widget_Base {
 			return;
 		}
 
+		// The Loop Builder module (Template_Manager / Query_Manager / the AJAX
+		// handler) stands down when Elementor Pro is active — its document type
+		// is also called `loop-item`, and registering it twice hands every
+		// Elementor Pro loop template to the wrong class. This widget stays
+		// registered, so a page saved with it used to FATAL on the first render
+		// after Elementor Pro was activated: "Class Query_Manager not found",
+		// a white page. Render nothing (the editor gets the usual notice) and
+		// leave the saved settings intact for when the module is back.
+		if ( ! class_exists( Query_Manager::class ) || ! class_exists( Template_Manager::class ) ) {
+			$this->render_empty_view();
+			return;
+		}
+
 		// Get the current page for pagination.
 		$paged             = $this->get_current_page();
 		$settings['paged'] = $paged;
@@ -1268,7 +1281,7 @@ class Loop_Grid extends \Elementor\Widget_Base {
 					'orderby'              => isset( $settings['orderby'] ) ? $settings['orderby'] : 'date',
 					'order'                => isset( $settings['order'] ) ? $settings['order'] : 'DESC',
 					'widget_id'            => $this->get_id(),
-					'nonce'                => wp_create_nonce( 'aae_loop_builder_nonce' ),
+					'nonce'                => Nonce::create( Nonce::LOOP_BUILDER ),
 				)
 			),
 		);
@@ -1286,10 +1299,7 @@ class Loop_Grid extends \Elementor\Widget_Base {
 
 		?>
 		<div class="custom-loop-wrapper aae-loop-builder wcf__posts-pro" data-widget-id="<?php echo esc_attr( $this->get_id() ); ?>">
-			<div <?php 
-			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			echo $this->get_render_attribute_string( 'wrapper' ); 
-			?>>
+			<div <?php $this->print_render_attribute_string( 'wrapper' ); ?>>
 				<?php
 				if ( $query->have_posts() ) {
 					while ( $query->have_posts() ) {
@@ -1350,7 +1360,7 @@ class Loop_Grid extends \Elementor\Widget_Base {
 		if ( ! empty( $template_output ) ) :
 			?>
 			<article class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>" data-elementor-type="loop-item">
-				<?php echo $template_output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				<?php aaeaddon_print_builder_html( $template_output ); ?>
 			</article>
 			<?php
 		endif;

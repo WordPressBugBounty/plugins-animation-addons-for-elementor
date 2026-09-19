@@ -1,8 +1,6 @@
 <?php
 
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
-namespace WCF_ADDONS\Widgets;
-// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
+namespace Wealcoder\AnimationAddons\Widgets;
 
 use Elementor\Controls_Manager;
 use Elementor\Core\Kits\Documents\Tabs\Global_Colors;
@@ -10,7 +8,7 @@ use Elementor\Core\Kits\Documents\Tabs\Global_Typography;
 use Elementor\Group_Control_Typography;
 use Elementor\Widget_Base;
 use Elementor\Plugin;
-use WCF_ADDONS\WCF_Theme_Builder;
+use Wealcoder\AnimationAddons\Aaeaddon_Theme_Builder;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly
@@ -76,9 +74,14 @@ class Post_Content extends Widget_Base {
 			$post = get_post( $post_id );
 		}
 
+		// No post to read (a 404 template, an empty archive, a bare preview):
+		// every line below reads $post->ID, so there is nothing to render.
+		if ( ! $post instanceof \WP_Post ) {
+			return;
+		}
+
 		if ( post_password_required( $post->ID ) ) {
-			// PHPCS - `get_the_password_form`. is safe.
-			echo get_the_password_form( $post->ID ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			aaeaddon_print_builder_html( get_the_password_form( $post->ID ) );
 
 			return;
 		}
@@ -102,7 +105,7 @@ class Post_Content extends Widget_Base {
 			/**
 			 * ThemeBuilder
 			 */
-			$document = WCF_Theme_Builder::get_document( $post->ID );
+			$document = Aaeaddon_Theme_Builder::get_document( $post->ID );
 			// On view theme document show it's preview content.
 			if ( $document ) {
 				$preview_type = $document->get_settings( 'preview_type' );
@@ -132,8 +135,7 @@ class Post_Content extends Widget_Base {
 				setup_postdata( $post );
 
 				/** This filter is documented in wp-includes/post-template.php */
-				// PHPCS - `get_the_content` is safe.
-				echo apply_filters( 'the_content', get_the_content() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
+				aaeaddon_print_builder_html( apply_filters( 'the_content', get_the_content() ) ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- core filter.
 
 				wp_link_pages( [
 					'before'      => '<div class="page-links elementor-page-links"><span class="page-links-title elementor-page-links-title">' . esc_html__( 'Pages:', 'animation-addons-for-elementor' ) . '</span>',
@@ -163,10 +165,11 @@ class Post_Content extends Widget_Base {
 		Plugin::$instance->editor->set_edit_mode( $is_edit_mode );
 
 		if ( $with_wrapper ) {
-			// PHPCS - should not be escaped.
-			echo '<div class="elementor-post__content">' . balanceTags( $content, true ) . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			echo '<div class="elementor-post__content">';
+			aaeaddon_print_builder_html( balanceTags( $content, true ) );
+			echo '</div>';
 		} else {
-			echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			aaeaddon_print_builder_html( $content );
 		}
 
 		$level --;

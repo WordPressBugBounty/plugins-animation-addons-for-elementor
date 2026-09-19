@@ -1,18 +1,16 @@
 <?php
-/**
- * @phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
- */
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
-if(defined('WCF_ADDONS_PRO_WIDGETS_PATH')) {
+if(aaeaddon_pro_defined( 'WIDGETS_PATH' )) {
     return; // Prevents redeclaration if already defined
 }
 
-add_action('category_add_form_fields', 'aae_add_category_light_custom_fields');
-add_action('category_edit_form_fields', 'aae_edit_category_light_custom_fields');
+add_action('category_add_form_fields', 'aaeaddon_add_category_light_custom_fields');
+add_action('category_edit_form_fields', 'aaeaddon_edit_category_light_custom_fields');
 
-function aae_add_category_light_custom_fields($taxonomy)
+if ( ! function_exists( 'aaeaddon_add_category_light_custom_fields' ) ) :
+function aaeaddon_add_category_light_custom_fields($taxonomy)
 {
 ?>
     <div class="form-field">
@@ -53,8 +51,10 @@ function aae_add_category_light_custom_fields($taxonomy)
     </div>
 <?php
 }
+endif;
 
-function aae_edit_category_light_custom_fields($term)
+if ( ! function_exists( 'aaeaddon_edit_category_light_custom_fields' ) ) :
+function aaeaddon_edit_category_light_custom_fields($term)
 {
     $category_text    = get_term_meta($term->term_id, 'aae_cate_additional_text', true);
     $category_image   = get_term_meta($term->term_id, 'aae_category_image', true);
@@ -123,30 +123,34 @@ function aae_edit_category_light_custom_fields($term)
     </tr>
 <?php
 }
+endif;
  
 
 // Print nonce field in the category forms (add + edit).
-add_action('category_add_form_fields', 'aae_category_meta_nonce_field');
-add_action('category_edit_form_fields', 'aae_category_meta_nonce_field');
+add_action('category_add_form_fields', 'aaeaddon_category_meta_nonce_field');
+add_action('category_edit_form_fields', 'aaeaddon_category_meta_nonce_field');
 
-function aae_category_meta_nonce_field( $term = null ) {
-    wp_nonce_field( 'aae_category_meta_action', 'aae_category_meta_nonce' );
+if ( ! function_exists( 'aaeaddon_category_meta_nonce_field' ) ) :
+function aaeaddon_category_meta_nonce_field( $term = null ) {
+    wp_nonce_field( \Wealcoder\AnimationAddons\Nonce::CATEGORY_META, 'aaeaddon_category_meta_nonce' );
 }
+endif;
 
 
-add_action( 'edited_category', 'aae_save_category_light_custom_fields', 10, 2 );
-add_action( 'create_category', 'aae_save_category_light_custom_fields', 10, 2 );
+add_action( 'edited_category', 'aaeaddon_save_category_light_custom_fields', 10, 2 );
+add_action( 'create_category', 'aaeaddon_save_category_light_custom_fields', 10, 2 );
 
-function aae_save_category_light_custom_fields( $term_id, $tt_id = null ) {
+if ( ! function_exists( 'aaeaddon_save_category_light_custom_fields' ) ) :
+function aaeaddon_save_category_light_custom_fields( $term_id, $tt_id = null ) {
     // 1) Nonce check
     // phpcs:ignore WordPress.Security.NonceVerification.Missing
-    if ( ! isset( $_POST['aae_category_meta_nonce'] ) ) {
+    if ( ! isset( $_POST['aaeaddon_category_meta_nonce'] ) ) {
         return;
     }
 
-    $nonce =  sanitize_text_field( wp_unslash( $_POST['aae_category_meta_nonce'] ) ); // Input comes from $_POST, so unslash
+    $nonce =  sanitize_text_field( wp_unslash( $_POST['aaeaddon_category_meta_nonce'] ) ); // Input comes from $_POST, so unslash
 
-    if ( ! wp_verify_nonce( $nonce, 'aae_category_meta_action' ) ) {
+    if ( ! wp_verify_nonce( $nonce, \Wealcoder\AnimationAddons\Nonce::action_for( $nonce, \Wealcoder\AnimationAddons\Nonce::CATEGORY_META ) ) ) {
         return;
     }
 
@@ -191,10 +195,12 @@ function aae_save_category_light_custom_fields( $term_id, $tt_id = null ) {
     $color      !== '' ? update_term_meta( $term_id, 'aae_cat_color', $color )                  : delete_term_meta( $term_id, 'aae_cat_color' );
     $bg_color   !== '' ? update_term_meta( $term_id, 'aae_cat_bg_color', $bg_color )            : delete_term_meta( $term_id, 'aae_cat_bg_color' );
 }
+endif;
 
-add_action( 'admin_enqueue_scripts', 'aae_inline_category_light_media_uploader', 10, 1 );
+add_action( 'admin_enqueue_scripts', 'aaeaddon_inline_category_light_media_uploader', 10, 1 );
 
-function aae_inline_category_light_media_uploader( $hook_suffix ) {
+if ( ! function_exists( 'aaeaddon_inline_category_light_media_uploader' ) ) :
+function aaeaddon_inline_category_light_media_uploader( $hook_suffix ) {
     // Only load on term screens.
     if ( ! in_array( $hook_suffix, [ 'edit-tags.php', 'term.php' ], true ) ) {
         return;
@@ -211,10 +217,10 @@ function aae_inline_category_light_media_uploader( $hook_suffix ) {
     // Enqueue your script
     wp_enqueue_script(
         'aae-category-media',
-        WCF_ADDONS_URL . 'assets/js/category-filter.js',
+        AAEADDON_URL . 'assets/js/category-filter.js',
         [ 'jquery' ],
-        file_exists( WCF_ADDONS_PATH . 'assets/js/category-filter.js' )
-            ? filemtime( WCF_ADDONS_PATH . 'assets/js/category-filter.js' )
+        file_exists( AAEADDON_PATH . 'assets/js/category-filter.js' )
+            ? filemtime( AAEADDON_PATH . 'assets/js/category-filter.js' )
             : '1.1',
         true
     );
@@ -222,7 +228,7 @@ function aae_inline_category_light_media_uploader( $hook_suffix ) {
     // (Optional) Pass data / i18n / nonce to JS
     wp_localize_script( 'aae-category-media', 'AAECategoryMedia', [
         'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-        'nonce'   => wp_create_nonce( 'aae_category_media' ),
+        'nonce'   => \Wealcoder\AnimationAddons\Nonce::create( \Wealcoder\AnimationAddons\Nonce::CATEGORY_MEDIA ),
         'i18n'    => [
             'choose' => __( 'Choose image', 'animation-addons-for-elementor' ),
             'use'    => __( 'Use this image', 'animation-addons-for-elementor' ),
@@ -230,11 +236,36 @@ function aae_inline_category_light_media_uploader( $hook_suffix ) {
         ],
     ] );
 }
+endif;
 
 
 
-function aae_addon_tax_category_light_styles()
+if ( ! function_exists( 'aaeaddon_build_cat_badge_css' ) ) :
+/**
+ * Build the `.aae-cat-<slug>` badge CSS, cached in a transient.
+ *
+ * This used to walk every category (`hide_empty => false`) and read two term
+ * metas each, on EVERY front-end request, only to produce a string that is
+ * empty unless a term has a badge colour set. The result changes only when a
+ * category's badge colour changes, so it is cached and rebuilt on those term
+ * events (see aaeaddon_flush_cat_badge_css). Returns '' when nothing is
+ * styled — stored as-is, so the walk does not repeat on a site that uses no
+ * badge colours.
+ *
+ * @return string
+ */
+function aaeaddon_build_cat_badge_css()
 {
+    // String literal, not a top-level const: this file returns early (line ~9)
+    // when the Pro plugin is present, so a const there would never be defined,
+    // yet the function declarations below are hoisted and could still be called.
+    $transient = 'aaeaddon_cat_badge_css';
+
+    $cached = get_transient($transient);
+    if (false !== $cached) {
+        return $cached;
+    }
+
     $custom_css = '';
     $categories = get_terms(array(
         'taxonomy'   => 'category',
@@ -255,9 +286,42 @@ function aae_addon_tax_category_light_styles()
         }
     }
 
+    set_transient($transient, $custom_css, WEEK_IN_SECONDS);
+
+    return $custom_css;
+}
+endif;
+
+if ( ! function_exists( 'aaeaddon_flush_cat_badge_css' ) ) :
+/** Drop the cache when a category's badge colour is added/changed/removed. */
+function aaeaddon_flush_cat_badge_css($meta_id = 0, $object_id = 0, $meta_key = '')
+{
+    // Called both directly (category save hooks) and from *_term_meta hooks,
+    // where the third arg is the meta key — only ours matter.
+    if ('' !== $meta_key && ! in_array($meta_key, array('aae_cat_bg_color', 'aae_cat_color'), true)) {
+        return;
+    }
+    delete_transient('aaeaddon_cat_badge_css');
+}
+endif;
+add_action('added_term_meta', 'aaeaddon_flush_cat_badge_css', 10, 3);
+add_action('updated_term_meta', 'aaeaddon_flush_cat_badge_css', 10, 3);
+add_action('deleted_term_meta', 'aaeaddon_flush_cat_badge_css', 10, 3);
+add_action('edited_category', 'aaeaddon_flush_cat_badge_css');
+add_action('delete_category', 'aaeaddon_flush_cat_badge_css');
+
+if ( ! function_exists( 'aaeaddon_tax_category_light_styles' ) ) :
+function aaeaddon_tax_category_light_styles()
+{
+    $custom_css = aaeaddon_build_cat_badge_css();
+
     if ($custom_css != '') {
-        wp_add_inline_style('wcf--addons', $custom_css);
+        // Attached to the always-enqueued inline carrier, not the legacy
+        // wcf--addons stylesheet — that one only loads when v3 is in use, and
+        // WordPress drops inline CSS whose parent handle isn't enqueued.
+        wp_add_inline_style(\Wealcoder\AnimationAddons\Plugin::INLINE_STYLE_HANDLE, $custom_css);
     }
 }
+endif;
 
-add_action('wp_enqueue_scripts', 'aae_addon_tax_category_light_styles', 20);
+add_action('wp_enqueue_scripts', 'aaeaddon_tax_category_light_styles', 20);

@@ -1,0 +1,688 @@
+<?php
+
+namespace Wealcoder\AnimationAddons\Atomic;
+
+use Wealcoder\AnimationAddons\Nonce;
+if (! defined('ABSPATH')) {
+	exit;
+}
+
+final class Assets
+{
+
+	/**
+	 * Handle for the always-loaded core runtime (common.js). Every effect
+	 * bundle declares this as a dependency so enqueueing any effect pulls
+	 * the core in automatically.
+	 */
+	const HANDLE      = 'aae-atomic-common';
+	const BUILD_DIR   = 'assets/build/modules/atomic/';
+
+	/**
+	 * Catalogue of per-effect JS bundles that belong to THIS plugin. Each entry
+	 * maps a stable handle to the build-time entry path (relative to BUILD_DIR).
+	 * Render.php calls wp_enqueue_script( $handle ) for the effects a widget
+	 * actually uses.
+	 *
+	 * Custom CSS is here because it never moved to Pro (two bundled free presets
+	 * depend on it); nested-slider is here because it is a WIDGET runtime, not an
+	 * extension effect — the Nested Slider and Loop Grid Slider both enqueue it.
+	 * Image animation stays free (its Schema/Controls/Render never moved to Pro),
+	 * so its bundle is registered here too.
+	 */
+	const EFFECT_BUNDLES = [
+		'aae-effect-custom-css'      => 'effects/custom-css.js',
+		'aae-effect-nested-slider'   => 'effects/nested-slider.js',
+		'aae-effect-image-animation' => 'effects/image-animation.js',
+		// No GSAP dependency — a muted looping <video> needs none, so this one
+		// costs only its own ~2KB on pages that use it.
+		'aae-effect-background-video' => 'effects/background-video.js',
+		// No GSAP dependency either — a plain background + mix-blend-mode
+		// application, not an animation. See ImageOverlay/Render.php.
+		'aae-effect-image-overlay'    => 'effects/image-overlay.js',
+	];
+
+	public function register(): void
+	{
+		// Public frontend: register only. Render.php triggers wp_enqueue_script()
+		// per-widget when an animation actually applies. Editor preview keeps the
+		// blanket enqueue because the user may toggle effects on/off live and the
+		// runtime must already be loaded.
+		add_action('wp_enqueue_scripts',                     [$this, 'register_common'], 100);
+		add_action('elementor/preview/enqueue_scripts',      [$this, 'enqueue_all_in_editor'], 100);
+		add_action('elementor/editor/after_enqueue_scripts', [$this, 'enqueue_editor_bridge'], 100);
+
+		// Preset interaction CSS is handled by StyleManager\Preset_Styles (a
+		// keyed CSS map printed inline on demand), not enqueued here.
+	}
+
+	/**
+	 * Stable handle so other code can pass it to wp_enqueue_script() if it
+	 * specifically wants only the core runtime (rare — usually you enqueue an
+	 * effect bundle and the core comes along as a dependency).
+	 */
+	public static function common_handle(): string
+	{
+		return self::HANDLE;
+	}
+
+	/**
+	 * Public-frontend path: register the core runtime AND every effect bundle.
+	 * Enqueue is deferred to render time — Render.php picks the bundles a
+	 * widget needs and calls wp_enqueue_script() with their handles.
+	 */
+	public function register_common(): void
+	{
+		$core = $this->load_asset('common');
+
+		$deps = $this->frontend_deps($core['dependencies']);
+
+		wp_register_script(
+			self::HANDLE,
+			AAEADDON_URL . self::BUILD_DIR . 'common.js',
+			$deps,
+			$core['version'],
+			true
+		);
+
+		if (
+			class_exists('\Elementor\Plugin')
+			&& isset(\Elementor\Plugin::$instance->breakpoints)
+			&& method_exists(\Elementor\Plugin::$instance->breakpoints, 'get_active_breakpoints')
+		) {
+
+			$breakpoints = \Elementor\Plugin::$instance->breakpoints->get_active_breakpoints();
+			$config = [];
+			foreach ($breakpoints as $key => $breakpoint) {
+				if (is_object($breakpoint) && method_exists($breakpoint, 'get_value')) {
+					$config[$key] = $breakpoint->get_value();
+				}
+			}
+			wp_localize_script(
+				self::HANDLE,
+				'AAE_CONFIG',
+				[
+					'breakpoints' => $config,
+					'tooltip_css_url' => AAEADDON_URL . 'assets/build/modules/atomic/effects/advance-tooltip.css',
+				]
+			);
+		}
+
+		// Register every effect bundle with the core runtime as a dep, so
+		// enqueueing an effect automatically pulls in the runtime.
+		foreach (self::EFFECT_BUNDLES as $handle => $config) {
+			$relative = is_array($config) ? $config['file'] : $config;
+			$manual_deps = is_array($config) && isset($config['deps']) ? $config['deps'] : [];
+
+			// Path uses the same .asset.php sidecar as the core runtime; the
+			// webpack entry name (without .js) matches the relative path.
+			$entry_key = preg_replace('/\\.js$/', '', $relative);
+			$asset     = $this->load_asset($entry_key, $manual_deps);		
+			wp_register_script(
+				$handle,
+				AAEADDON_URL . self::BUILD_DIR . $relative,
+				array_merge([self::HANDLE], $asset['dependencies']),
+				$asset['version'],
+				true
+			);
+		}
+	}
+
+	/**
+	 * Editor preview path: load the runtime AND every effect bundle blanket,
+	 * since the user can toggle any effect on/off without a server round-trip.
+	 */
+	public function enqueue_all_in_editor(): void
+	{
+		// Re-use the public registration path so handles + deps are set up
+		// identically, then upgrade each to enqueued.
+		$this->register_common();
+
+		wp_enqueue_script(self::HANDLE);
+		foreach (array_keys(self::EFFECT_BUNDLES) as $handle) {
+			wp_enqueue_script($handle);
+		}
+	}
+
+	/**
+	 * Merge GSAP / ScrollTrigger into the dep list. Falls back to the Pro
+	 * plugin's bundled copies when nobody else has registered them — Pro
+	 * gates its own registration behind a dashboard setting, so on a plain
+	 * install our atomic widgets would otherwise tween-less.
+	 *
+	 * Deliberately NOT here: SplitText and ScrollToPlugin. Those belong to
+	 * single effects, and the bundles that need them declare them — those
+	 * bundles now live in Pro (inc/AtomicV4/Extensions/Assets.php:
+	 * aae-effect-animation -> SplitText, aae-effect-scroll-to ->
+	 * ScrollToPlugin), which is why ensure_gsap_registered() below still
+	 * REGISTERS both handles even though nothing here depends on them: Pro
+	 * declares the dependency, this plugin owns the file. WordPress then pulls
+	 * each one in exactly on the pages where Pro's Render enqueues that effect.
+	 * Listing them on the shared core handle shipped ~70KB of unused JS to every
+	 * page with ANY animation — flagged by Lighthouse as unused JavaScript
+	 * on pages with no text-animation / scroll-to at all. common.js itself
+	 * only reads window.SplitText lazily at play time (getSplitText), so it
+	 * has no load-order dependency on either plugin.
+	 */
+	private function frontend_deps(array $deps): array
+	{
+		$this->ensure_gsap_registered();
+		if (wp_script_is('gsap', 'registered')) {
+			$deps[] = 'gsap';
+		}
+		if (wp_script_is('ScrollTrigger', 'registered')) {
+			$deps[] = 'ScrollTrigger';
+		}
+		return $deps;
+	}
+
+	/**
+	 * Register gsap / ScrollTrigger from the Pro plugin's lib folder if no
+	 * one else has registered them yet. No-op when already registered, or
+	 * when Pro isn't installed (no fallback source).
+	 */
+	private function ensure_gsap_registered(): void
+	{
+		if (! aaeaddon_pro_defined( 'URL' )) {
+			return;
+		}
+		if (! wp_script_is('gsap', 'registered')) {
+			wp_register_script(
+				'gsap',
+				aaeaddon_pro_constant( 'URL' ) . 'assets/lib/gsap.min.js',
+				[], aaeaddon_pro_defined( 'VERSION' ) ? aaeaddon_pro_constant( 'VERSION' ) : AAEADDON_VERSION,
+				true
+			);
+		}
+		if (! wp_script_is('ScrollTrigger', 'registered')) {
+			wp_register_script(
+				'ScrollTrigger',
+				aaeaddon_pro_constant( 'URL' ) . 'assets/lib/ScrollTrigger.min.js',
+				['gsap'], aaeaddon_pro_defined( 'VERSION' ) ? aaeaddon_pro_constant( 'VERSION' ) : AAEADDON_VERSION,
+				true
+			);
+		}
+		if (! wp_script_is('SplitText', 'registered')) {
+			wp_register_script(
+				'SplitText',
+				aaeaddon_pro_constant( 'URL' ) . 'assets/lib/SplitText.min.js',
+				['gsap'], aaeaddon_pro_defined( 'VERSION' ) ? aaeaddon_pro_constant( 'VERSION' ) : AAEADDON_VERSION,
+				true
+			);
+		}
+		if (! wp_script_is('ScrollToPlugin', 'registered')) {
+			wp_register_script(
+				'ScrollToPlugin',
+				aaeaddon_pro_constant( 'URL' ) . 'assets/lib/ScrollToPlugin.min.js',
+				['gsap'], aaeaddon_pro_defined( 'VERSION' ) ? aaeaddon_pro_constant( 'VERSION' ) : AAEADDON_VERSION,
+				true
+			);
+		}
+		// DrawSVG + MotionPath: needed by the DrawSVG atomic widget. Pro only
+		// registers these when its GSAP-library dashboard toggle is on, so
+		// register them here too (no-op if already registered).
+		if (! wp_script_is('DrawSVGPlugin', 'registered')) {
+			wp_register_script(
+				'DrawSVGPlugin',
+				aaeaddon_pro_constant( 'URL' ) . 'assets/lib/DrawSVGPlugin.min.js',
+				['gsap'], aaeaddon_pro_defined( 'VERSION' ) ? aaeaddon_pro_constant( 'VERSION' ) : AAEADDON_VERSION,
+				true
+			);
+		}
+		if (! wp_script_is('MotionPathPlugin', 'registered')) {
+			wp_register_script(
+				'MotionPathPlugin',
+				aaeaddon_pro_constant( 'URL' ) . 'assets/lib/MotionPathPlugin.min.js',
+				['gsap'], aaeaddon_pro_defined( 'VERSION' ) ? aaeaddon_pro_constant( 'VERSION' ) : AAEADDON_VERSION,
+				true
+			);
+		}
+	}
+
+	/**
+	 * Script handles that the editor-bridge needs but @wordpress/scripts'
+	 * dependency-extraction-webpack-plugin cannot auto-detect (it only knows
+	 * about @wordpress/* packages, not @elementor/*). Listed here manually so
+	 * Elementor's editor packages are loaded before our bundle runs and the
+	 * `window.elementorV2.editorControls` global is available for the webpack
+	 * externals mapping to resolve at runtime.
+	 *
+	 * SPLIT IN TWO, because Elementor registers the halves under different
+	 * conditions and only one half decides whether this bundle can work at all.
+	 * Verified against Elementor 4.x's own source rather than assumed:
+	 *
+	 *  - The six below come from `Atomic_Widgets\Module::PACKAGES`, added to the
+	 *    `elementor/editor/v2/packages` filter by a constructor that returns early
+	 *    unless `Module::is_active()`. No atomic editor, no handles.
+	 *  - The five in the next constant are in `Editor_V2_Loader::LIBS`, which is
+	 *    unconditional — they exist in every Elementor editor.
+	 *
+	 * That split is exactly what the reported notice listed as unregistered, which
+	 * is the confirmation that this is the real boundary and not a guess.
+	 */
+	const EDITOR_BRIDGE_ATOMIC_DEPS = [
+		'elementor-v2-editor-canvas',
+		'elementor-v2-editor-controls',
+		'elementor-v2-editor-editing-panel',
+		'elementor-v2-editor-elements',
+		'elementor-v2-editor-props',
+		'elementor-v2-editor-styles',
+		// Read by editor-bridge/hook-classes-provider.js. Also an atomic PACKAGE
+		// (Atomic_Widgets Module::PACKAGES), so it belongs in this half of the
+		// deps rather than the always-present one.
+		'elementor-v2-editor-styles-repository',
+	];
+
+	/**
+	 * The always-present half — Elementor's `Editor_V2_Loader::LIBS`.
+	 *
+	 * Still tested rather than trusted: "unconditional today" is a fact about one
+	 * release, and a handle that quietly moves out of LIBS should cost us a
+	 * feature and a debug line, not a notice across the top of every editor load.
+	 */
+	const EDITOR_BRIDGE_CORE_DEPS = [
+		'elementor-v2-editor-responsive',
+		'elementor-v2-editor-ui',
+		'elementor-v2-editor-v1-adapters',
+		'elementor-v2-schema',
+		'elementor-v2-ui',
+	];
+
+	/**
+	 * Editor-only: enqueues the live-edit bridge that mirrors settings to the
+	 * preview iframe.
+	 *
+	 * DOES NOTHING WHEN THE EDITOR HAS NO ATOMIC LAYER, which is every V3-era
+	 * site. This hook fires on EVERY editor load, so the bundle was being
+	 * enqueued against six handles Elementor had never registered, and WordPress
+	 * printed this across the top of the editor each time:
+	 *
+	 *   Function WP_Scripts::add was called incorrectly. The script with the
+	 *   handle "aae-atomic-common-editor-bridge" was enqueued with dependencies
+	 *   that are not registered: elementor-v2-editor-canvas, …
+	 *
+	 * The notice was the visible half. The real problem is that the bundle exists
+	 * solely to bridge to `window.elementorV2.editorControls` and friends, which
+	 * are not there either — so ~700 KB was being shipped into an editor that had
+	 * nothing for it to attach to.
+	 *
+	 * TESTED BY ASKING WORDPRESS, not by asking whether OUR atomic registry is on.
+	 * Those are different questions: a site can have AAE's atomic widgets switched
+	 * off while Elementor's atomic editor is loaded, and vice versa. The literal
+	 * precondition is "do the handles this script declares exist", and
+	 * `wp_script_is()` answers exactly that — so a future Elementor that renames a
+	 * package degrades to a missing feature with a debug line rather than to a
+	 * notice on every editor load. Priority 100 on
+	 * `elementor/editor/after_enqueue_scripts` is late enough for Elementor to
+	 * have registered them if it is going to.
+	 */
+	public function enqueue_editor_bridge(): void
+	{
+		// Independent of both gates below: the hot paths these speed up are
+		// Elementor's own, and they are just as slow on a site with none of our
+		// atomic widgets switched on.
+		$this->patch_editor_props();
+		$this->patch_editor_lookup();
+
+		// GATE ONE — is there anything of OURS for it to drive?
+		//
+		// The bundle powers panel controls, the preset picker, the mask picker and
+		// the responsive rows for AAE's atomic widgets and extensions. With every
+		// one of them switched off in the dashboard there is nothing on screen it
+		// could attach to, so shipping it is pure weight — and on a V3-era site
+		// that is the normal state, not an edge case.
+		//
+		// Extensions count as well as widgets: an extension adds sections to
+		// Elementor's OWN atomic widgets, so a site with every AAE atomic widget
+		// off but one extension on still needs the bridge.
+		if (! class_exists('\\Wealcoder\\AnimationAddons\\AtomicWidgets\\Atomic')) {
+			return;
+		}
+
+		$atomic = \Wealcoder\AnimationAddons\AtomicWidgets\Atomic::instance();
+
+		if (! method_exists($atomic, 'has_active_atomic') || ! $atomic->has_active_atomic()) {
+			return;
+		}
+
+		// GATE TWO — does the editor it bridges TO exist?
+		$missing_atomic = array_values(array_filter(
+			self::EDITOR_BRIDGE_ATOMIC_DEPS,
+			static fn($handle) => ! wp_script_is($handle, 'registered')
+		));
+
+		// ANY of the atomic packages missing and the bridge cannot function: its
+		// webpack externals resolve against globals those packages define, so it
+		// would load and then do nothing. Enqueue nothing at all.
+		if ($missing_atomic) {
+			return;
+		}
+
+		// The core half is present in every Elementor editor today, so anything
+		// missing here is a rename rather than a switched-off feature. Drop it from
+		// the list — a stale handle must not cost the whole bridge — and say so
+		// where a developer will see it, because the symptom otherwise is one panel
+		// section quietly absent with nothing on screen to explain it.
+		$core = array_values(array_filter(
+			self::EDITOR_BRIDGE_CORE_DEPS,
+			static fn($handle) => wp_script_is($handle, 'registered')
+		));
+
+		$missing_core = array_diff(self::EDITOR_BRIDGE_CORE_DEPS, $core);
+
+		if ($missing_core) {
+			// wp_trigger_error() is a no-op unless WP_DEBUG is on.
+			wp_trigger_error(__METHOD__, sprintf(
+				'AAE: editor-bridge enqueued without %d unregistered Elementor package(s): %s',
+				count($missing_core),
+				implode(', ', $missing_core)
+			));
+		}
+
+		$asset = $this->load_asset('editor-bridge');
+
+		// Merge the auto-detected deps (@wordpress/*) with the Elementor packages
+		// that are actually REGISTERED. dedup just in case future @wordpress/scripts
+		// versions start auto-detecting @elementor/* too.
+		$deps = array_values(array_unique(array_merge(
+			$asset['dependencies'],
+			self::EDITOR_BRIDGE_ATOMIC_DEPS,
+			$core
+		)));
+
+		wp_enqueue_script(
+			self::HANDLE . '-editor-bridge',
+			AAEADDON_URL . self::BUILD_DIR . 'editor-bridge.js',
+			$deps,
+			$asset['version'],
+			true
+		);
+
+		wp_localize_script(
+			self::HANDLE . '-editor-bridge',
+			'aaeAtomicBridge',
+			[
+				'is_pro' => aaeaddon_pro_defined( 'FILE' ),
+
+				// Mask shape catalogue for the Style-tab section's picker.
+				// Sent from PHP rather than rebuilt in JS so the panel and the
+				// renderer can never disagree about which shapes exist or where
+				// their SVGs live — Shapes::all() is the single source of truth,
+				// filter included.
+				'mask_shapes' => class_exists( '\Wealcoder\AnimationAddons\Atomic\Mask\Shapes' )
+					? \Wealcoder\AnimationAddons\Atomic\Mask\Shapes::all()
+					: [],
+			]
+		);
+
+		// Remote preset system config — read by PresetPickerControl.jsx /
+		// preset-apply.js's ensurePresetsLoaded(), both of which ship inside
+		// THIS bundle (src/modules/atomic/editor-bridge.js). Must be
+		// localized onto this handle, not 'aae-atomic-editor' (a separate,
+		// unrelated small bundle — see class-atomic.php's
+		// enqueue_atomic_editor_scripts()).
+		wp_localize_script(
+			self::HANDLE . '-editor-bridge',
+			'AAE_PRESET_CONFIG',
+			[
+				'restUrl'          => esc_url_raw( rest_url( 'aae/v1/presets' ) ),
+				'nonce'            => wp_create_nonce( 'wp_rest' ),
+				'proActive'        => aaeaddon_pro_defined( 'VERSION' ),
+
+				// What a preset is WIRED TO, and who may set it up.
+				//
+				// `canInstall` mirrors the endpoint's own capability check, and
+				// it is deliberately NOT the `edit_posts` that opens the preset
+				// picker: a contributor who could make this site install a
+				// plugin the remote preset server named would be remote code
+				// execution by proxy. The panel only PAINTS a button on this —
+				// Presets\Requires::ajax_install() re-checks it, and Pro
+				// re-checks `install_plugins` on top per plugin — so nothing is
+				// gated by the value being here. What it buys is an editor
+				// seeing the requirement with an honest explanation instead of
+				// a button that would 403.
+				//
+				// The nonce is withheld from everyone else for the same reason
+				// a UI must never offer a control the server would refuse.
+				'canInstall'       => current_user_can( 'manage_options' ),
+				'adminNonce'       => current_user_can( 'manage_options' )
+					? Nonce::create( Nonce::ADMIN )
+					: '',
+				'ajaxUrl'          => esc_url_raw( admin_url( 'admin-ajax.php' ) ),
+				'requiresAction'   => \Wealcoder\AnimationAddons\Atomic\Presets\Requires::ACTION,
+
+				// proActive says a Pro plugin is INSTALLED; this says its licence
+				// is valid, i.e. whether the customer has actually paid. The
+				// slide limit below is gated on this one — an expired licence
+				// must stop authoring new slides even though Pro's files are
+				// still sitting on disk.
+				'proLicensed'      => \Wealcoder\AnimationAddons\AtomicWidgets\Atomic::pro_licensed(),
+
+				// Slides an unlicensed site may author, shared with the PHP
+				// constant Atomic::FREE_SLIDE_LIMIT so the Nested
+				// Slider's JS control and the Loop Grid Slider's panel cap cannot
+				// drift apart. PANEL ONLY — nothing here reaches the renderer, so
+				// existing sliders keep every slide they were built with.
+				'freeSlideLimit'   => \Wealcoder\AnimationAddons\AtomicWidgets\Atomic::FREE_SLIDE_LIMIT,
+				'placeholderThumb' => AAEADDON_URL . 'assets/images/preset-placeholder.png',
+
+				// The `$$type` tag the INSTALLED core registers for the
+				// border-width object prop. Elementor renamed it
+				// `border-width` -> `border-width-v2`, and prop validation
+				// demands an exact match: a style carrying the other build's
+				// tag renders fine in the editor, then gets dropped WHOLE on
+				// save (has-atomic-base.php::parse_atomic_styles() skips the
+				// entire style definition on any prop error), so the design
+				// vanishes on reload and never reaches the frontend.
+				// preset-apply.js's sanitizeBorderWidthType() rewrites either
+				// alias to this value, so presets stay portable across cores
+				// instead of hard-coding one build's spelling.
+				'borderWidthKey'   => class_exists( '\Elementor\Modules\AtomicWidgets\PropTypes\Border_Width_Prop_Type' )
+					? \Elementor\Modules\AtomicWidgets\PropTypes\Border_Width_Prop_Type::get_key()
+					: 'border-width-v2',
+			]
+		);
+	}
+
+	/**
+	 * Replaces `isTransformable()` in Elementor's `editor-props` package with a
+	 * plain shape check for the life of the editor session.
+	 *
+	 * WHY. Every style change in the V4 editor re-resolves the props of every
+	 * element on the canvas, and the first thing each resolution does is
+	 * `isTransformable(value)` — implemented upstream as a Zod `safeParse` used
+	 * as a type guard. About two thirds of the values it sees are NOT
+	 * transformable (plain strings, numbers, nulls), and on that failure path
+	 * Zod builds a full error object: measured 79× slower than testing the
+	 * shape directly, ~300,000 calls and a third of all GC time per edit on a
+	 * 1,000-element page. With this patch in place a burst of ten quick edits
+	 * settled in 25 s instead of 47 s, and a style change in mobile mode in
+	 * 7 s instead of 12.5 s. It is a stand-in until the same change lands
+	 * upstream (packages/libs/editor-props/src/utils/is-transformable.ts).
+	 *
+	 * HOW. The function is exported through a non-configurable webpack getter,
+	 * so it cannot be redefined in place — but `window.elementorV2.editorProps`
+	 * is an ordinary writable slot, and every package that consumes it reads
+	 * the property live on each call. Printing this right after the
+	 * `editor-props` file (inline `after`) and BEFORE `editor-canvas` means the
+	 * canvas binds to the replacement object. The replacement is a shallow
+	 * copy carrying every original export except the one function.
+	 *
+	 * WHAT KEEPS IT SAFE. Nothing is swapped unless the original function is
+	 * there, the slot is writable, and the replacement agrees with the
+	 * original on twenty probe values covering every branch of the Zod schema
+	 * (`{ $$type: string, value: any, disabled?: boolean }`). A future
+	 * Elementor that changes any of that degrades to "no patch" — never to a
+	 * broken editor. `window.__aaeFastProps` is true when it applied, and the
+	 * `aaeaddon/atomic/editor_fast_props` filter switches it off.
+	 */
+	private function patch_editor_props(): void
+	{
+		if (! apply_filters('aaeaddon/atomic/editor_fast_props', true)) {
+			return;
+		}
+
+		if (! wp_script_is('elementor-v2-editor-props', 'registered')) {
+			return;
+		}
+
+		$js = <<<'JS'
+(function(){try{
+var v2=window.elementorV2;if(!v2)return;
+var d=Object.getOwnPropertyDescriptor(v2,'editorProps');
+if(!d||!('value' in d)||!d.writable||!d.configurable)return;
+var o=d.value;if(!o||typeof o.isTransformable!=='function')return;
+var orig=o.isTransformable;
+var fast=function(v){return typeof v==='object'&&v!==null&&!Array.isArray(v)&&typeof v.$$type==='string'&&(v.disabled===undefined||typeof v.disabled==='boolean');};
+var probes=[null,undefined,0,1,'','x',true,false,[],{},{$$type:'a'},{$$type:'a',value:1},{$$type:'a',value:null},{$$type:1},{$$type:''},{$$type:'a',disabled:true},{$$type:'a',disabled:false},{$$type:'a',disabled:'x'},{$$type:'a',disabled:null},{value:1},[{$$type:'a'}],function(){},new Date()];
+for(var i=0;i<probes.length;i++){if(!!orig(probes[i])!==fast(probes[i]))return;}
+var n=Object.create(Object.getPrototypeOf(o));
+Object.getOwnPropertyNames(o).forEach(function(k){var pd=Object.getOwnPropertyDescriptor(o,k);if(k==='isTransformable')pd={value:fast,writable:true,configurable:true,enumerable:true};Object.defineProperty(n,k,pd);});
+Object.getOwnPropertySymbols(o).forEach(function(s){Object.defineProperty(n,s,Object.getOwnPropertyDescriptor(o,s));});
+v2.editorProps=n;
+window.__aaeFastProps=(v2.editorProps===n);
+}catch(e){}})();
+JS;
+
+		wp_add_inline_script('elementor-v2-editor-props', $js, 'after');
+	}
+
+	/**
+	 * Gives `$e.components.get('document').utils.findViewById()` an id -> view
+	 * index, for the life of one synchronous turn.
+	 *
+	 * WHY. `elementor.getContainer( id )` resolves through `findContainerById`
+	 * -> `findViewById` -> `findViewRecursive`, and `findViewRecursive` is a
+	 * full depth-first walk of the element tree with no index at all
+	 * (editor/document/component.js). So one container lookup is O(n) — and
+	 * `getElements()` in `@elementor/editor-elements` calls `getContainer()`
+	 * once per element, which makes the whole enumeration O(n^2).
+	 *
+	 * Measured in the editor on a 960-element document: ONE `getElements()`
+	 * call visits 475,991 views and takes 105 ms. Over a boot that is 90 of
+	 * the 174 seconds of sampled JS — 51.7%, the single largest cost in the
+	 * editor by a wide margin. The callers are all Elementor's own: 52.6%
+	 * editor-canvas reacting to a v1-adapters state dispatch, 47% the styles
+	 * repository's `all()` via `transformClassId` and `createItems`. With the
+	 * index the same call is 2 ms and returns the identical 960 containers in
+	 * the identical order.
+	 *
+	 * HOW. The index is built ONCE per synchronous turn and dropped on the
+	 * next microtask. That scope is the whole safety argument: nothing can
+	 * mutate the element tree in the middle of a synchronous walk, so the
+	 * index cannot go stale while it exists, and there is no structure-change
+	 * invalidation to get wrong. It is built by the SAME traversal
+	 * `findViewRecursive` performs, keeping the FIRST id seen in DFS order, so
+	 * it returns what the original returns by construction.
+	 *
+	 * WHAT KEEPS IT SAFE. Three fallbacks, all landing on the original:
+	 *  - A MISS defers to the original search. An element created after the
+	 *    index was built in the same turn is therefore still found.
+	 *  - A hit on a view that has since been DESTROYED is treated as a miss —
+	 *    that is the dangerous direction, where a stale index would hand back
+	 *    a detached view and the caller would edit the wrong element.
+	 *  - The first hit of the session is checked against the original's own
+	 *    answer for that same id; on any disagreement the patch disables
+	 *    itself permanently and the original serves every later call.
+	 * A future Elementor that reshapes any of this degrades to "no index",
+	 * never to a wrong element. `window.__aaeFastLookup` is true when it
+	 * applied, and `aaeaddon/atomic/editor_fast_lookup` switches it off.
+	 *
+	 * The install polls because the document component does not exist until
+	 * `elementor.start()` runs `initComponents()`, which is long after this
+	 * inline script evaluates. It stops on the first success.
+	 */
+	private function patch_editor_lookup(): void
+	{
+		if (! apply_filters('aaeaddon/atomic/editor_fast_lookup', true)) {
+			return;
+		}
+
+		if (! wp_script_is('elementor-editor', 'registered') && ! wp_script_is('elementor-editor', 'enqueued')) {
+			return;
+		}
+
+		$js = <<<'JS'
+(function(){
+var tries=0;
+function alive(v){
+	if(!v||!v.model)return false;
+	if(v.isDestroyed===true)return false;
+	if(typeof v.isDestroyed==='function'&&v.isDestroyed())return false;
+	return true;
+}
+function install(utils){
+	var orig=utils.findViewById;
+	if(typeof orig!=='function')return false;
+	var index=null,verified=false,disabled=false;
+	function build(){
+		var root;
+		try{root=window.elementor&&window.elementor.getPreviewView&&window.elementor.getPreviewView();}catch(e){return null;}
+		if(!root||!root.children)return null;
+		var map=new Map();
+		(function walk(coll){
+			if(!coll||!coll._views)return;
+			for(var x in coll._views){
+				var v=coll._views[x];
+				if(!v||!v.model)continue;
+				var id=v.model.get('id');
+				if(!map.has(id))map.set(id,v);
+				if(v.children)walk(v.children);
+			}
+		})(root.children);
+		return map;
+	}
+	utils.findViewById=function(id){
+		if(disabled)return orig(id);
+		if(!index){
+			index=build();
+			if(!index)return orig(id);
+			queueMicrotask(function(){index=null;});
+		}
+		var hit=index.get(id);
+		if(hit&&alive(hit)){
+			if(!verified){
+				verified=true;
+				var real=orig(id);
+				if(real!==hit){disabled=true;index=null;window.__aaeFastLookup=false;return real;}
+			}
+			return hit;
+		}
+		return orig(id);
+	};
+	window.__aaeFastLookup=true;
+	return true;
+}
+(function attempt(){
+	var c=null;
+	try{c=window.$e&&window.$e.components&&window.$e.components.get&&window.$e.components.get('document');}catch(e){}
+	if(c&&c.utils&&install(c.utils))return;
+	if(++tries>4800)return;
+	setTimeout(attempt,25);
+})();
+})();
+JS;
+
+		wp_add_inline_script('elementor-editor', $js, 'after');
+	}
+
+	private function load_asset(string $entry, array $manual_deps = []): array
+	{
+		$file = AAEADDON_PATH . self::BUILD_DIR . $entry . '.asset.php';
+
+		if (! file_exists($file)) {
+			return [
+				'dependencies' => $manual_deps,
+				'version'      => AAEADDON_VERSION,
+			];
+		}
+
+		$asset = require $file;
+		$merged_deps = array_unique(array_merge($asset['dependencies'] ?? [], $manual_deps));
+
+		return [
+			'dependencies' => array_values($merged_deps),
+			'version'      => $asset['version']      ?? AAEADDON_VERSION,
+		];
+	}
+}

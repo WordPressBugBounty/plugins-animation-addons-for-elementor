@@ -3,7 +3,7 @@
  * 
  * Handles all AJAX operations for the CodeSnippet list page
  * 
- * @package WCF_ADDONS\CodeSnippet
+ * @package Wealcoder\AnimationAddons\CodeSnippet
  * @since 2.3.10
  */
 
@@ -319,7 +319,6 @@
                     $('#wcf-code-loading').show();
                 },
                 success: function(response) {
-                    console.log(response);
                     if (response.success) {
                         setTimeout(function() {
                             CodeSnippetAjax.showErrorMessage(response.data.message);
@@ -594,6 +593,8 @@
     });
 
     // Make it globally available
-    window.CodeSnippetAjax = CodeSnippetAjax;
+    window.aaeaddonCodeSnippetAjax = CodeSnippetAjax;
 
 })(jQuery);
+
+//# sourceMappingURL=code-snippet-ajax.js.map

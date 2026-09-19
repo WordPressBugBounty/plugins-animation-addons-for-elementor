@@ -1,10 +1,5 @@
 <?php
-/**
- * @phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
- */
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
-namespace WCF_ADDONS\CodeSnippet;
-// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
+namespace Wealcoder\AnimationAddons\CodeSnippet;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -15,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Provides helper method to get snippet settings by snippet ID.
  *
- * @package WCF_ADDONS\CodeSnippet
+ * @package Wealcoder\AnimationAddons\CodeSnippet
  */
 trait CodeSnippetSettingsTrait {
 	/**
@@ -26,7 +21,7 @@ trait CodeSnippetSettingsTrait {
 	 * @since 2.3.10
 	 * @return array
 	 */
-	public function aae_get_code_snippet_settings( $id = null ) {
+	public function get_code_snippet_settings( $id = null ) {
 		$defaults = array(
 			'code_type'            => '',
 			'load_location'        => '',
@@ -44,7 +39,7 @@ trait CodeSnippetSettingsTrait {
 		 *
 		 * @param array $defaults The default settings.
 		 */
-		$defaults = apply_filters( 'wcf_code_snippet_default_settings', $defaults ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward compatibility with existing wcf hooks.
+		$defaults = apply_filters( 'aaeaddon_code_snippet_default_settings', $defaults );
 
 		$settings = array();
 		if ( ! empty( $id ) ) {
@@ -74,6 +69,6 @@ trait CodeSnippetSettingsTrait {
 		 * @param array $settings The code snippet settings.
 		 * @param array $defaults The default settings.
 		 */
-		return apply_filters( 'wcf_code_snippet_settings', $settings, $defaults ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward compatibility with existing wcf hooks.
+		return apply_filters( 'aaeaddon_code_snippet_settings', $settings, $defaults );
 	}
 }

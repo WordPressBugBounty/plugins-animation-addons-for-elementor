@@ -1,8 +1,6 @@
 <?php
 
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
-namespace WCF_ADDONS\Widgets;
-// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
+namespace Wealcoder\AnimationAddons\Widgets;
 
 use Elementor\Group_Control_Background;
 use Elementor\Group_Control_Text_Shadow;
@@ -519,11 +517,14 @@ class Animated_Title extends Widget_Base
   {
     $settings = $this->get_settings_for_display();
 
-    if ('' === $settings['title']) {
+    // Loose check on purpose: `'' === $settings['title']` lets a null through,
+    // and null then reaches preg_match_all()/sprintf() below.
+    $title = isset($settings['title']) ? (string) $settings['title'] : '';
+
+    if ('' === $title) {
       return;
     }
 
-    $title = $settings['title'];
     preg_match_all('/\[([^\]]*)\]/', $title, $matches);
     foreach ($matches[0] as $key => $value) {
       $title = str_replace($value, '<span class="highlight">' . $matches[1][$key] . '</span>', $title,);

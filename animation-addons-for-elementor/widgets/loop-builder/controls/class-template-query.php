@@ -1,7 +1,7 @@
 <?php
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
-namespace WCF_ADDONS\Widgets\Loop_Builder\Controls;
-// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
+namespace Wealcoder\AnimationAddons\Widgets\Loop_Builder\Controls;
+
+use Wealcoder\AnimationAddons\Nonce;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
@@ -116,9 +116,9 @@ class Template_Query extends \Elementor\Base_Data_Control {
 	public function enqueue() {
 		wp_enqueue_script(
 			'aae-loop-builder-template-query',
-			WCF_ADDONS_URL . 'assets/js/loop-builder/controls/template-query.js',
+			AAEADDON_URL . 'assets/js/loop-builder/controls/template-query.js',
 			array( 'elementor-editor', 'elementor-common' ),
-			WCF_ADDONS_VERSION,
+			AAEADDON_VERSION,
 			true
 		);
 
@@ -127,7 +127,7 @@ class Template_Query extends \Elementor\Base_Data_Control {
 			'aaeLoopBuilderTemplateQuery',
 			array(
 				'ajax_url'            => admin_url( 'admin-ajax.php' ),
-				'nonce'               => wp_create_nonce( 'aae_loop_builder_nonce' ),
+				'nonce'               => Nonce::create( Nonce::LOOP_BUILDER ),
 				'create_template_url' => admin_url( 'post-new.php?post_type=elementor_library&template_type=loop-item' ),
 			)
 		);

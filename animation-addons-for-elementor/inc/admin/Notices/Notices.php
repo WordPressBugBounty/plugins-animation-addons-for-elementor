@@ -1,8 +1,6 @@
 <?php
 
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
-namespace WCF_ADDONS\Admin\Notices;
-// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
+namespace Wealcoder\AnimationAddons\Admin\Notices;
 
 defined( 'ABSPATH' ) || exit();
 /**
@@ -57,7 +55,7 @@ class Notices {
 		add_action( 'admin_init', array( $this, 'add_admin_notices' ) );
 		
 
-		$this->plugin_prefix = 'aae_notice_';
+		$this->plugin_prefix = 'aaeaddon_notice';
 		add_action( 'wp_ajax_' . $this->plugin_prefix . '_dismiss_notice', array( $this, 'ajax_dismiss_notice' ) );
 		add_action( 'admin_notices', array( $this, 'admin_notices' ) );
 	}
@@ -69,9 +67,18 @@ class Notices {
 	 * @return void
 	 */
 	public function enqueue_scripts() {
-		wp_register_style( 'aae-notice', WCF_ADDONS_URL . 'assets/css/css/notice.css', array(), WCF_ADDONS_VERSION );
-		wp_register_style( 'aae-notice-halloween', WCF_ADDONS_URL . 'assets/css/css/halloween-2025.css', array(), WCF_ADDONS_VERSION );
-		wp_register_script( 'aae-notice', WCF_ADDONS_URL . 'assets/js/js/notice.js', array( 'jquery' ), WCF_ADDONS_VERSION, true );
+		// `Aaeaddon_Fonts` lives in inc/admin/class-fonts.php, which is NOT
+		// PSR-4 loadable and is required from Plugin::include_files() — a path
+		// that never runs without Elementor. This class, however, is booted by
+		// the storage-name Migration on every admin request whether Elementor
+		// is active or not (the bridge serves options either way), so on a site
+		// with Elementor deactivated every wp-admin screen fataled here. Measured
+		// over real HTTP (verify-plugin-cases.mjs, case elementor-off).
+		if ( ! class_exists( '\Wealcoder\AnimationAddons\Aaeaddon_Fonts', false ) ) {
+			require_once AAEADDON_PATH . 'inc/admin/class-fonts.php';
+		}
+		wp_register_style( 'aae-notice', AAEADDON_URL . 'assets/css/css/notice.css', array( \Wealcoder\AnimationAddons\Aaeaddon_Fonts::ensure() ), AAEADDON_VERSION );
+		wp_register_script( 'aae-notice', AAEADDON_URL . 'assets/js/js/notice.js', array( 'jquery' ), AAEADDON_VERSION, true );
 	}
 
 	/**
@@ -80,21 +87,10 @@ class Notices {
 	 * @since 2.4.16
 	 */
 	public function add_admin_notices() {
-		$installed_time = absint( get_option( 'aae_installed' ) );
-		$current_time   = absint( wp_date( 'U' ) );
-		$plugin_file = WP_PLUGIN_DIR . '/animation-addons-for-elementor-pro/animation-addons-for-elementor-pro.php';
-		if ( !file_exists( $plugin_file ) ) {
-			wp_enqueue_style( 'aae-notice-halloween' );
-			// $this->add(
-			// 	array(
-			// 		'message'     => __DIR__ . '/views/halloween-2025.php',
-			// 		'notice_id'   => 'aae_halloween',
-			// 		'style'       => 'border-left-color: #FC6848; border-radius: 6px; overflow: hidden;',
-			// 		'dismissible' => false,
-			// 	)
-			// );
-		}
-		
+		// No notice is registered here at present. The seasonal promotion this
+		// method used to carry is switched off, and its stylesheet is no longer
+		// enqueued -- it was still loading on every admin page for a notice that
+		// never rendered.
 	}
 
 	/**
@@ -118,7 +114,21 @@ class Notices {
 			} else {
 				$this->dismiss( $notice_id );
 			}
-			wp_cache_flush();
+			/*
+			 * No wp_cache_flush() here.
+			 *
+			 * It used to sit on this line, almost certainly to fight the
+			 * "dismissed notice comes back" symptom that is_dismissed() above
+			 * was actually causing. It could never have fixed that — under a
+			 * persistent object cache the row it was looking for does not exist,
+			 * so emptying the cache just makes the next read miss and find
+			 * nothing again.
+			 *
+			 * What it DID do was throw away the entire site's object cache —
+			 * every option, query and term — because someone closed a notice.
+			 * update_option() and set_transient() both maintain their own cache
+			 * entries, so there was nothing to invalidate by hand.
+			 */
 			wp_send_json_success();
 			exit;
 		}
@@ -149,9 +159,15 @@ class Notices {
 					wp_enqueue_style( 'aae-notice' );
 					$path = wp_normalize_path( $message );
 					if ( file_exists( $path ) ) {
+						$ob_level = ob_get_level();
 						ob_start();
-						include $path;
-						$message = ob_get_clean();
+						try {
+							include $path;
+						} finally {
+							while ( ob_get_level() > $ob_level ) {
+								$message = (string) ob_get_clean();
+							}
+						}
 					}
 				}
 
@@ -247,7 +263,21 @@ class Notices {
 	 * @return bool
 	 */
 	public function is_dismissed( $id ) {
-		if ( 'yes' === get_option( $id ) || 'yes' === get_option( '_transient_' . $id ) ) {
+		/*
+		 * get_transient(), NOT get_option( '_transient_' . $id ).
+		 *
+		 * snooze() stores this with set_transient(). Reading the transient's
+		 * underlying option row only works while transients happen to live in
+		 * wp_options — which stops being true the moment the site has a
+		 * persistent object cache: set_transient() then writes to Redis or
+		 * Memcached and creates NO row at all. The read returned false forever,
+		 * so snoozing silently did nothing and the notice reappeared on the very
+		 * next page load.
+		 *
+		 * get_transient() is correct in both storage modes, and it also honours
+		 * the expiry, which the raw option read did not.
+		 */
+		if ( 'yes' === get_option( $id ) || 'yes' === get_transient( $id ) ) {
 			return true;
 		} else {
 			return false;
@@ -263,6 +293,17 @@ class Notices {
 	 * @return bool
 	 */
 	public function should_display( $notice ) {
+		// WordPress.org Guideline 11: Display notices only on plugin-related screens unless it is an error.
+		if ( function_exists( 'get_current_screen' ) ) {
+			$screen = get_current_screen();
+			if ( $screen ) {
+				$is_plugin_screen = ( false !== strpos( $screen->id, 'animation-addons' ) || false !== strpos( $screen->id, 'wcf' ) );
+				if ( ! $is_plugin_screen && ( empty( $notice['type'] ) || 'error' !== $notice['type'] ) ) {
+					return false;
+				}
+			}
+		}
+
 		if ( ( $notice['notice_id'] && $this->is_dismissed( $notice['notice_id'] ) ) || ( $notice['capability'] && ! current_user_can( $notice['capability'] ) ) ) {
 			return false;
 		}

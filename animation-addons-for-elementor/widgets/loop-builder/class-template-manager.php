@@ -1,7 +1,9 @@
 <?php
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
-namespace WCF_ADDONS\Widgets\Loop_Builder;
-// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
+namespace Wealcoder\AnimationAddons\Widgets\Loop_Builder;
+
+use Wealcoder\AnimationAddons\Nonce;
+
+use Wealcoder\AnimationAddons\Ajax_Alias;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
@@ -51,9 +53,11 @@ class Template_Manager {
 	public function __construct() {
 		add_action( 'elementor/template-library/create_new_dialog_fields', array( $this, 'add_template_fields' ) );
 		add_filter( 'elementor/finder/categories', array( $this, 'add_finder_items' ) );
-		add_action( 'wp_ajax_create_loop_template', array( $this, 'ajax_create_template' ) );
-		add_action( 'wp_ajax_clb_duplicate_template', array( $this, 'ajax_duplicate_template' ) );
-		add_action( 'wp_ajax_clb_delete_template', array( $this, 'ajax_delete_template' ) );
+		// Editor-only; the old unprefixed name is kept for one release for a
+		// stale editor bundle -- remove the alias in 4.3.
+		// (`clb_duplicate_template` / `clb_delete_template` had no caller in
+		// either plugin and were removed in 4.2.)
+		Ajax_Alias::register( 'create_loop_template', 'aaeaddon_clb_create_template', array( $this, 'ajax_create_template' ) );
 	}
 
 	/**
@@ -140,7 +144,7 @@ class Template_Manager {
 	 * @return void
 	 */
 	public function ajax_create_template() {
-		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'aae_loop_builder_nonce' ) ) {
+		if ( ! isset( $_POST['nonce'] ) || ! check_ajax_referer( Nonce::action( Nonce::LOOP_BUILDER, 'nonce' ), 'nonce', false ) ) {
 			wp_send_json_error( array( 'message' => 'Security check failed' ) );
 		}
 
@@ -195,78 +199,31 @@ class Template_Manager {
 		);
 	}
 
-	/**
-	 * Duplicate template via AJAX.
-	 *
-	 * @since 2.4.16
-	 * @return void
-	 */
-	public function ajax_duplicate_template() {
-		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'aae_loop_builder_nonce' ) ) {
-			wp_send_json_error( array( 'message' => 'Security check failed' ) );
-		}
-
-		if ( ! current_user_can( 'edit_posts' ) ) {
-			wp_send_json_error( array( 'message' => 'Insufficient permissions' ) );
-		}
-
-		$template_id   = isset( $_POST['template_id'] ) ? intval( wp_unslash( $_POST['template_id'] ) ) : '';
-		$original_post = get_post( $template_id );
-
-		if ( ! $original_post ) {
-			wp_send_json_error( 'Template not found' );
-		}
-
-		$new_template_id = wp_insert_post(
-			array(
-				'post_title'   => $original_post->post_title . ' (Copy)',
-				'post_type'    => $original_post->post_type,
-				'post_status'  => 'publish',
-				'post_content' => $original_post->post_content,
-			)
-		);
-
-		if ( is_wp_error( $new_template_id ) ) {
-			wp_send_json_error( 'Failed to duplicate template' );
-		}
-
-		$meta_data = get_post_meta( $template_id );
-		foreach ( $meta_data as $key => $values ) {
-			foreach ( $values as $value ) {
-				add_post_meta( $new_template_id, $key, maybe_unserialize( $value ) );
-			}
-		}
-
-		wp_send_json_success(
-			array(
-				'template_id' => $new_template_id,
-				'title'       => get_the_title( $new_template_id ),
-			)
-		);
-	}
 
 	/**
-	 * Delete template via AJAX.
+	 * May a public (unauthenticated) request render this document as a loop
+	 * template?
 	 *
-	 * @since 2.4.16
-	 * @return void
+	 * The load-more / load-page endpoints are wp_ajax_nopriv and take the
+	 * template id from the request. Unchecked, that id reached
+	 * get_builder_content_for_display() as any post at all -- a draft, a
+	 * private page, a password-protected post, another plugin's private CPT --
+	 * so a visitor could read any Elementor document on the site by number.
+	 * A loop template is a published `wcf-addons-template` of the loop-builder
+	 * type, and that is the only thing this endpoint exists to render.
+	 *
+	 * @param int $template_id Requested template id.
+	 * @return bool
 	 */
-	public function ajax_delete_template() {
-		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'aae_loop_builder_nonce' ) ) {
-			wp_send_json_error( array( 'message' => 'Security check failed' ) );
+	public static function is_public_loop_template( $template_id ) {
+		$template = get_post( (int) $template_id );
+		if ( ! $template instanceof \WP_Post ) {
+			return false;
 		}
-
-		if ( ! current_user_can( 'delete_posts' ) ) {
-			wp_send_json_error( array( 'message' => 'Insufficient permissions' ) );
+		if ( self::TEMPLATE_POST_TYPE !== $template->post_type || 'publish' !== $template->post_status || post_password_required( $template ) ) {
+			return false;
 		}
-
-		$template_id = isset( $_POST['template_id'] ) ? intval( wp_unslash( $_POST['template_id'] ) ) : '';
-
-		if ( wp_delete_post( $template_id, true ) ) {
-			wp_send_json_success( 'Template deleted successfully' );
-		} else {
-			wp_send_json_error( 'Failed to delete template' );
-		}
+		return self::LOOP_ITEM_TYPE === get_post_meta( $template->ID, 'wcf-addons-template-meta_type', true );
 	}
 
 	/**
@@ -288,8 +245,16 @@ class Template_Manager {
 		$original_post = $post;
 
 		if ( $post_id ) {
+			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- deliberate post switch; $original_post is restored on every exit path below.
 			$post = get_post( $post_id );
+
+			// Restore before bailing. Returning here used to leave the global
+			// $post as null for the rest of the request, which is the failure
+			// documented under "switch_to_post() nulls the global post" -- every
+			// later reader warns on a null it did not cause.
 			if ( ! $post ) {
+				// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- restoring the value saved above.
+				$post = $original_post;
 				return '';
 			}
 			setup_postdata( $post );
@@ -299,6 +264,7 @@ class Template_Manager {
 		$content = \Elementor\Plugin::$instance->frontend->get_builder_content_for_display( $template_id, true );
 
 		// Restore the global post.
+		// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- restoring the value saved above.
 		$post = $original_post;
 		wp_reset_postdata();
 

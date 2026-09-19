@@ -1,8 +1,6 @@
 <?php
 
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
-namespace WCF_ADDONS\Admin;
-// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
+namespace Wealcoder\AnimationAddons\Admin;
 
 use WP_Error;
 
@@ -10,7 +8,7 @@ if (!defined('ABSPATH')) {
     exit();
 } // Exit if accessed directly
 
-class AAEAddon_Row_Actions {
+class Aaeaddon_Row_Actions {
 
     /**
 	 * [$_instance]
@@ -20,7 +18,7 @@ class AAEAddon_Row_Actions {
 
 	/**
 	 * [instance] Initializes a singleton instance
-	 * @return [AAEAddon_Row_Actions]
+	 * @return [Aaeaddon_Row_Actions]
 	 */
 	public static function instance() {
 		if ( is_null( self::$_instance ) ) {
@@ -34,82 +32,19 @@ class AAEAddon_Row_Actions {
 		add_filter( 'plugin_action_links', [ $this , 'add_plugin_link' ] , 10, 2 );		
         add_filter( 'plugin_row_meta', [ $this, '_plugin_row_meta' ], 10, 2 ); 
         add_action( 'admin_enqueue_scripts', [ $this , '_enqueue_admin_scripts' ] );    	
-        add_action( 'wp_ajax_aae_deactivate_feedback', [ $this, 'handle_deactivate_feedback' ] );
+      
     }
     
-    function _enqueue_admin_scripts($hook) {        
+    function _enqueue_admin_scripts($hook) {
         if ($hook === 'plugins.php') {
-            wp_enqueue_script('aaeaddon-plugin-deactivate', WCF_ADDONS_URL . 'assets/build/modules/dashboard/opt-out.js', [], time(), true);
-            wp_enqueue_script('wcf-admin', WCF_ADDONS_URL . 'assets/js/wcf-admin.js', ['jquery'], WCF_ADDONS_VERSION, true);
-            wp_localize_script('aaeaddon-plugin-deactivate', 'aae_ajax', array(
-                'ajax_url' => admin_url('admin-ajax.php'),
-                'nonce' => wp_create_nonce('aae_deactivate_feedback_nonce'),
-                'logo_url' => WCF_ADDONS_URL . 'assets/images/aae-logo.png'
-            ));          
-            wp_enqueue_style('aae-plugins-styles', WCF_ADDONS_URL . 'assets/css/plugins.css', [], time(), 'all');
+            wp_enqueue_script('wcf-admin', AAEADDON_URL . 'assets/js/wcf-admin.js', ['jquery'], AAEADDON_VERSION, true);
         }
     }
-
-   
-
-    /**
-     * Handle deactivation feedback submission
-     */
-    public function handle_deactivate_feedback() {
-        if (!isset($_POST['reason']) || !isset($_POST['other_text']) || !isset($_POST['nonce'])) {
-            wp_send_json_error('Missing parameters');
-        }
-        $nonce = sanitize_text_field(wp_unslash( $_POST['nonce'] ));
-        // Verify nonce
-        if (!wp_verify_nonce($nonce, 'aae_deactivate_feedback_nonce')) {
-            wp_send_json_error('Invalid nonce');
-        }
-
-        // Check user permissions
-        if (!current_user_can('activate_plugins')) {
-            wp_send_json_error('Permission denied');
-        }
-
-        $reason = sanitize_text_field(wp_unslash( $_POST['reason'] ));
-        $other_text = sanitize_textarea_field(wp_unslash( $_POST['other_text'] ));
-
-        // Log the feedback
-        $feedback_data = array(
-            'reason' => $reason,
-            'other_text' => $other_text,
-            'user_id' => get_current_user_id(),
-            'site_url' => get_site_url(),
-            'timestamp' => current_time('mysql'),
-            'plugin_version' => WCF_ADDONS_VERSION
-        );
-
-        // Store feedback in options
-        $existing_feedback = get_option('aae_deactivation_feedback', array());
-        $existing_feedback[] = $feedback_data;
-        update_option('aae_deactivation_feedback', $existing_feedback);
-
-        // Send feedback to external service (optional)
-        $this->send_feedback_to_server($feedback_data);
-
-        wp_send_json_success('Feedback submitted successfully');
-    }
-
-    /**
-     * Send feedback to external server
-     */
-    private function send_feedback_to_server($feedback_data) {
-        $api_url = 'https://data.animation-addons.com/wp-json/wmd/v1/feedback/deactivation';
-        
-        wp_remote_post($api_url, array(
-            'timeout' => 5,
-            'blocking' => false,
-            'headers' => array('Content-Type' => 'application/json'),
-            'body' => json_encode($feedback_data)
-        ));
-    }
+    
+  
 
     function _plugin_row_meta( $meta, $plugin_file ) {
-        if ( basename(WCF_ADDONS_BASE) !== basename($plugin_file) ) {
+        if ( basename(AAEADDON_BASE) !== basename($plugin_file) ) {
 			return $meta;
 		}
         
@@ -133,10 +68,10 @@ class AAEAddon_Row_Actions {
 	function add_plugin_link( $plugin_actions, $plugin_file ) {
 	
 	    $new_actions = array();	   
-	    if ( basename(WCF_ADDONS_BASE) === basename($plugin_file) ) {
+	    if ( basename(AAEADDON_BASE) === basename($plugin_file) ) {
 			$new_actions['aaeaddon-dsb-settings'] = sprintf(
 				'<a href="%s">%s</a>',
-				esc_url( admin_url( 'admin.php?page=wcf_addons_settings' ) ),
+				esc_url( admin_url( 'admin.php?page=aaeaddon_settings' ) ),
 				esc_html__('Settings', 'animation-addons-for-elementor' )
 			);
 			
@@ -147,4 +82,4 @@ class AAEAddon_Row_Actions {
 
 }
 
-new AAEAddon_Row_Actions();
+new Aaeaddon_Row_Actions();

@@ -1,8 +1,6 @@
 <?php
 
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
-namespace WCF_ADDONS\Admin\Base;
-// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
+namespace Wealcoder\AnimationAddons\Admin\Base;
 
 defined( 'ABSPATH' ) || die();
 /**
@@ -120,7 +118,10 @@ class WPImporterLogger {
 	 * @return null
 	 */
 	public function log( $level, $message, array $context = array() ) {
-		update_option('aaeaddon_template_import_state', (string) $message);
+		// Never autoload this row -- see Helpers::set_import_state(). Note the
+		// Logger this plugin actually runs the import with overrides log()
+		// entirely, so nothing reaches this line during a demo import.
+		Helpers::set_import_state( $message );
 		$this->messages[] = array(
 			'timestamp' => time(),
 			'level'     => $level,

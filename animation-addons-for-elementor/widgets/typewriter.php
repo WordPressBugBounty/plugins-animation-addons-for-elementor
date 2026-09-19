@@ -1,8 +1,6 @@
 <?php
 
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
-namespace WCF_ADDONS\Widgets;
-// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
+namespace Wealcoder\AnimationAddons\Widgets;
 
 use Elementor\Group_Control_Text_Shadow;
 use Elementor\Group_Control_Text_Stroke;
@@ -321,7 +319,7 @@ class Typewriter extends Widget_Base {
         <div <?php $this->print_render_attribute_string( 'typewriter-attr' ); ?>>
             <<?php Utils::print_validated_html_tag( $settings['html_tag'] ); ?> class="typed_title">
                 <?php echo wp_kses_post( $typewriter_text ); ?>
-                <span class="typed_list" data-text='<?php echo json_encode($typewriter_animated_text); ?>'></span>
+                <span class="typed_list" data-text='<?php echo esc_attr( wp_json_encode( $typewriter_animated_text ) ); ?>'></span>
             </<?php Utils::print_validated_html_tag( $settings['html_tag'] ); ?>>
         </div>
 

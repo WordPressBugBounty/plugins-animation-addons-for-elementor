@@ -1,8 +1,8 @@
 <?php
 
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
-namespace WCF_ADDONS\CodeSnippet;
-// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
+namespace Wealcoder\AnimationAddons\CodeSnippet;
+
+use Wealcoder\AnimationAddons\Nonce;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit();
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Handles all AJAX operations for the CodeSnippet module
  *
- * @package WCF_ADDONS\CodeSnippet
+ * @package Wealcoder\AnimationAddons\CodeSnippet
  * @since 2.3.10
  */
 class CodeSnippetAjax {
@@ -56,10 +56,14 @@ class CodeSnippetAjax {
 	 */
 	private function init_hooks() {
 		// AJAX handlers for list table operations.
-		add_action( 'wp_ajax_wcf_search_snippets', array( $this, 'ajax_search_snippets' ) );
-		add_action( 'wp_ajax_wcf_delete_snippet', array( $this, 'ajax_delete_snippet' ) );
-		add_action( 'wp_ajax_wcf_bulk_action_snippets', array( $this, 'ajax_bulk_action_snippets' ) );
-		add_action( 'wp_ajax_wcf_toggle_snippet_status', array( $this, 'ajax_toggle_snippet_status' ) );
+		// 'wcf_search_snippets' is a deprecated alias (a cached admin bundle) -- remove in 4.3.
+		\Wealcoder\AnimationAddons\Ajax_Alias::register( 'wcf_search_snippets', 'aaeaddon_search_snippets', array( $this, 'ajax_search_snippets' ) );
+		// 'wcf_delete_snippet' is a deprecated alias (a cached admin bundle) -- remove in 4.3.
+		\Wealcoder\AnimationAddons\Ajax_Alias::register( 'wcf_delete_snippet', 'aaeaddon_delete_snippet', array( $this, 'ajax_delete_snippet' ) );
+		// 'wcf_bulk_action_snippets' is a deprecated alias (a cached admin bundle) -- remove in 4.3.
+		\Wealcoder\AnimationAddons\Ajax_Alias::register( 'wcf_bulk_action_snippets', 'aaeaddon_bulk_action_snippets', array( $this, 'ajax_bulk_action_snippets' ) );
+		// 'wcf_toggle_snippet_status' is a deprecated alias (a cached admin bundle) -- remove in 4.3.
+		\Wealcoder\AnimationAddons\Ajax_Alias::register( 'wcf_toggle_snippet_status', 'aaeaddon_toggle_snippet_status', array( $this, 'ajax_toggle_snippet_status' ) );
 	}
 
 	/**
@@ -72,18 +76,49 @@ class CodeSnippetAjax {
 		// Verify nonce.
 		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
 
-		if ( ! wp_verify_nonce( $nonce, 'wcf_custom_code_security' ) ) {
+		if ( ! wp_verify_nonce( $nonce, Nonce::action_for( $nonce, Nonce::CODE_SNIPPET ) ) ) {
 			wp_send_json_error( array( 'message' => __( 'Security check failed.', 'animation-addons-for-elementor' ) ) );
 			return false;
 		}
 
 		// Check permissions.
-		if ( ! current_user_can( 'edit_posts' ) ) {
+		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( array( 'message' => __( 'You do not have permission to perform this action.', 'animation-addons-for-elementor' ) ) );
 			return false;
 		}
 
 		return true;
+	}
+
+	/**
+	 * A PHP snippet is executable code, so switching one ON is the same
+	 * privilege as editing plugin files -- which is why AUTHORING one
+	 * already goes through CodeSnippet::can_manage_php(). These list-table
+	 * endpoints ask only for `manage_options`, and the two diverge exactly
+	 * where it matters: a Multisite site administrator has manage_options
+	 * without edit_plugins, and a site that declares DISALLOW_FILE_EDIT has
+	 * said its administrators may not run code at all. Without this, a PHP
+	 * snippet that already exists could be switched back on from a screen
+	 * that applied neither rule.
+	 *
+	 * Only ACTIVATION is gated. Deactivating or deleting a snippet removes
+	 * code rather than runs it, and stays available to anyone who can reach
+	 * the screen.
+	 *
+	 * @param int $snippet_id Snippet post id.
+	 * @since 2.4.0
+	 * @return bool
+	 */
+	private function can_activate( $snippet_id ) {
+		if ( 'php' !== get_post_meta( $snippet_id, 'code_type', true ) ) {
+			return true;
+		}
+
+		if ( ! CodeSnippet::php_snippets_allowed() ) {
+			return false;
+		}
+
+		return CodeSnippet::can_manage_php();
 	}
 
 	/**
@@ -157,7 +192,7 @@ class CodeSnippetAjax {
 						esc_attr( mysql2date( 'c', get_the_modified_date( 'Y-m-d H:i:s' ) ) ),
 						esc_html( human_time_diff( strtotime( get_the_modified_date( 'Y-m-d H:i:s' ) ), current_time( 'timestamp' ) ) . ' ago' ) // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 					),
-					'edit_url'        => admin_url( 'admin.php?page=wcf-code-snippet&edit=' . $snippet_id ),
+					'edit_url'        => admin_url( 'admin.php?page=' . CodeSnippet::PAGE_SLUG . '&edit=' . $snippet_id ),
 				);
 			}
 		}
@@ -279,7 +314,7 @@ class CodeSnippetAjax {
 			case 'activate':
 				foreach ( $ids as $snippet_id ) {
 					$snippet = get_post( $snippet_id );
-					if ( $snippet && CodeSnippet::CPTTYPE === $snippet->post_type ) {
+					if ( $snippet && CodeSnippet::CPTTYPE === $snippet->post_type && $this->can_activate( $snippet_id ) ) {
 						if ( update_post_meta( $snippet_id, 'is_active', 'yes' ) ) {
 							++$processed_count;
 						}
@@ -340,10 +375,23 @@ class CodeSnippetAjax {
 		$snippet_id = isset( $_POST['snippet_id'] ) ? intval( $_POST['snippet_id'] ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
 		$status     = isset( $_POST['status'] ) ? sanitize_text_field( wp_unslash( $_POST['status'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
 
+		// The column is a two-state switch; anything else is not a state this
+		// screen can produce.
+		if ( 'yes' !== $status && 'no' !== $status ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid status.', 'animation-addons-for-elementor' ) ) );
+		}
+
 		// Validate snippet exists and is of correct post-type.
 		$snippet = get_post( $snippet_id );
 		if ( ! $snippet || CodeSnippet::CPTTYPE !== $snippet->post_type ) {
 			wp_send_json_error( array( 'message' => __( 'Invalid snippet.', 'animation-addons-for-elementor' ) ) );
+		}
+
+		if ( 'yes' === $status && ! $this->can_activate( $snippet_id ) ) {
+			wp_send_json_error(
+				array( 'message' => __( 'You are not allowed to activate PHP snippets on this site.', 'animation-addons-for-elementor' ) ),
+				403
+			);
 		}
 
 		// Update the status.

@@ -1,8 +1,6 @@
 <?php
 
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
-namespace WCF_ADDONS\CodeSnippet;
-// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
+namespace Wealcoder\AnimationAddons\CodeSnippet;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -10,7 +8,7 @@ defined( 'ABSPATH' ) || exit;
  * Helpers class for CodeSnippet.
  *
  * @since 1.0.0
- * @package WCF_ADDONS
+ * @package Wealcoder\AnimationAddons
  */
 class Helpers {
 
@@ -58,11 +56,11 @@ class Helpers {
 	 * @since 2.3.10
 	 * @return object
 	 */
-	public static function aae_get_list_table( $type ) {
+	public static function get_list_table( $type ) {
 		switch ( $type ) {
 			case 'wcf-code-snippet':
 			default:
-				$list_table = new \WCF_ADDONS\CodeSnippet\listTables\CodeSnippetListTable();
+				$list_table = new \Wealcoder\AnimationAddons\CodeSnippet\listTables\CodeSnippetListTable();
 				break;
 		}
 
@@ -79,11 +77,10 @@ class Helpers {
 		$code_type_list = array(
 			'html'       => __( 'HTML', 'animation-addons-for-elementor' ),
 			'css'        => __( 'CSS', 'animation-addons-for-elementor' ),
-			'php'        => __( 'PHP', 'animation-addons-for-elementor' ),
 			'javascript' => __( 'JavaScript', 'animation-addons-for-elementor' ),
 		);
 
-		return apply_filters( 'wcf_code_type_list', $code_type_list ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward compatibility with existing wcf hooks.
+		return apply_filters( 'aaeaddon_code_type_list', $code_type_list );
 	}
 
 	/**
@@ -93,7 +90,7 @@ class Helpers {
 	 * @return array
 	 */
 	public static function get_load_location_list() {
-		$load_loaction_list = array(
+		$load_location_list = array(
 			'head'           => __( 'Head Section', 'animation-addons-for-elementor' ),
 			'footer'         => __( 'Footer', 'animation-addons-for-elementor' ),
 			'body_start'     => __( 'After Body Open', 'animation-addons-for-elementor' ),
@@ -101,6 +98,6 @@ class Helpers {
 			'content_after'  => __( 'After Content', 'animation-addons-for-elementor' ),
 		);
 
-		return apply_filters( 'wcf_load_location_list', $load_loaction_list ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Backward compatibility with existing wcf hooks.
+		return apply_filters( 'aaeaddon_load_location_list', $load_location_list );
 	}
 }

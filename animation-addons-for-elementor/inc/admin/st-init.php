@@ -1,9 +1,7 @@
 <?php
-// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
-namespace WCF_ADDONS\Admin\Base;
-// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
+namespace Wealcoder\AnimationAddons\Admin\Base;
 
+use Wealcoder\AnimationAddons\Nonce;
 use WP_Error;
 
 if (! defined('ABSPATH')) {
@@ -25,7 +23,7 @@ class OneClickImport
 	 *
 	 * @var array
 	 */
-	public $import_files;
+	public $import_files = array();
 
 	/**
 	 * The path of the log file.
@@ -99,14 +97,22 @@ class OneClickImport
 	protected function __construct()
 	{
 		add_action('wp_ajax_aaeaddon_upload_manual_import_file', [$this, 'import_demo_data_ajax_callback']);
-		add_action('admin_init', [$this, 'setup_st_importer']);
+
+		// setup_st_importer() is deliberately NOT on admin_init. Building the
+		// importer pulls in the whole WXR engine, and admin_init fires on
+		// every wp-admin page AND every admin-ajax request -- heartbeat,
+		// another plugin's dashboard widget, all of it -- so hooking it there
+		// loaded ~99 KB of import machinery on requests that have nothing to
+		// do with importing. The two places that touch $this->importer call
+		// setup_st_importer() themselves; it is idempotent.
 		add_action('set_object_terms', array($this, 'add_imported_terms'), 10, 6);
 		add_filter('wxr_importer.pre_process.post', [$this, 'skip_failed_attachment_import']);
 		add_action('wxr_importer.process_failed.post', [$this, 'handle_failed_attachment_import'], 10, 5);
 		add_action('wp_import_insert_post', [$this, 'save_wp_navigation_import_mapping'], 10, 4);
 		add_action('wp_import_insert_post', [$this, 'save_wp_page_import_track'], 10, 4);
 		add_action('aaeaddon/after_import', [$this, 'fix_imported_wp_navigation']);
-		add_action('wp_ajax_aae_lite_get_latest_imported_pages', [$this,'aae_get_latest_imported_pages']);	
+		// 'aae_lite_get_latest_imported_pages' is a deprecated alias (a cached admin bundle) -- remove in 4.3.
+		\Wealcoder\AnimationAddons\Ajax_Alias::register( 'aae_lite_get_latest_imported_pages', 'aaeaddon_lite_get_latest_imported_pages', [$this,'get_latest_imported_pages'] );
 			
 	}
 
@@ -131,23 +137,30 @@ class OneClickImport
 
 		if ($postdata['post_type'] == 'page') {
 			$batch_id = 'wxr_' . gmdate('Ymd_His'); 
-			update_option('aae_last_import_batch', $batch_id);
+			update_option('aaeaddon_last_import_batch', $batch_id);
 			add_post_meta($post_id, 'aae_import_batch', $batch_id, true);			
 			add_post_meta($post_id, 'aae_imported', 1, true);
 		}
 	}
 
-	function aae_get_latest_imported_pages() {
+	function get_latest_imported_pages() {
 		// phpcs:disable WordPress.Security.NonceVerification.Missing
 		if (
 			! isset( $_POST['nonce'] ) ||
-			! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'wcf_admin_nonce' )
+			! check_ajax_referer( Nonce::action( Nonce::ADMIN, 'nonce' ), 'nonce', false )
 		) {
 			wp_send_json_error( [ 'message' => 'Invalid or missing nonce' ], 403 );
 		}
 
+		// A nonce proves where the request came from, not what the user is
+		// allowed to do. This reports what the last import wrote, so it is
+		// gated on the same authority the importer itself needs.
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			wp_send_json_error( [ 'message' => 'Access denied.' ], 403 );
+		}
+
 		$per_page = isset($_POST['per_page']) ? max(1, (int) $_POST['per_page']) : 1; // latest one by default
-		$batch_id = get_option('aae_last_import_batch');
+		$batch_id = get_option('aaeaddon_last_import_batch');
 
 		// If batch not found, gracefully fall back to any page marked imported
 		$meta_query = [];
@@ -203,7 +216,7 @@ class OneClickImport
 	{
 		// Try to update PHP memory limit (so that it does not run out of it).
 		// phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
-		ini_set('memory_limit', Helpers::apply_filters('aadaddon/st/import_memory_limit', '1024M'));
+		ini_set('memory_limit', Helpers::apply_filters('aaeaddon/st/import_memory_limit', '1024M'));
 
 		// Verify if the AJAX call is valid (checks nonce and current_user_can).
 		Helpers::verify_ajax_call();
@@ -215,13 +228,28 @@ class OneClickImport
 			// Create a date and time string to use for demo and log file names.
 			Helpers::set_demo_import_start_time();
 
+			// A NEW content import (not a chunk continuation): let per-import
+			// trackers drop the previous run's state. `import_start` cannot be
+			// used for this -- AaeaddonWXRImporter fires it on every chunk.
+			do_action('aaeaddon/content_import/fresh_start'); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- slash-namespaced plugin hook, same family as aaeaddon/after_import.
+
+			// Start from a clean progress reading. report_progress() carries the
+			// previous chunk's figure forward as a floor, so a leftover row from
+			// an earlier demo would make this import's bar open part-filled.
+			Helpers::clear_import_status();
+
+			// Collect the content files of imports that never reached the end.
+			// Age-gated, so a download belonging to an import running in another
+			// tab is never pulled out from under it.
+			Helpers::sweep_stale_import_files();
+
 			// Define log file path.
 			$this->log_file_path = Helpers::get_log_path();
 
 			// Get selected file index or set it to 0.
 			$this->selected_index = 0;
 			$template_data = [];
-			check_ajax_referer('wcf_admin_nonce', 'nonce');
+			check_ajax_referer( Nonce::action( Nonce::ADMIN, 'nonce' ), 'nonce' );
 			if (isset($_POST['template_data'])) {
 
 				$json_data     = sanitize_text_field(wp_unslash($_POST['template_data']));  // Remove slashes if added by WP		
@@ -282,6 +310,7 @@ class OneClickImport
 		 * Returns any errors greater then the "warning" logger level, that will be displayed on front page.
 		 */
 		if (! empty($this->selected_import_files['content'])) {
+			$this->setup_st_importer();
 			$this->append_to_frontend_error_messages($this->importer->import_content($this->selected_import_files['content']));
 		}
 
@@ -335,15 +364,37 @@ class OneClickImport
 	 */
 	private function final_response()
 	{
+		// The content file is a complete copy of the demo sitting in uploads,
+		// readable by anyone who guesses its URL, and every later step of the
+		// import works from the database rather than from it. Nothing removed
+		// it before: 36 of them, 81 MB, had collected on the dev site.
+		if (! empty($this->selected_import_files['content'])) {
+			Helpers::cleanup_import_file($this->selected_import_files['content']);
+		}
+
 		// Delete importer data transient for current import.
-		delete_transient('aadaddon_st_importer_data');
-		delete_transient('aadaddon_st_mporter_data_failed_attachment_imports');
-		delete_transient('aadaddon_import_menu_mapping');
+		delete_transient('aaeaddon_st_importer_data');
+		// Was misspelled twice over ('aad' for 'aae', 'mporter' for 'importer'),
+		// so this had never deleted anything and the real row -- 7 KB of failed
+		// attachment URLs -- outlived every import. Helpers owns the name now.
+		delete_transient(Helpers::FAILED_ATTACHMENT_TRANSIENT);
+		delete_transient('aaeaddon_import_menu_mapping');
 		delete_transient('aaeaddon_import_posts_with_nav_block');
+
+		// The CPT Builder caches its registrations in these two options and
+		// returns early while the cache is non-empty. The content just
+		// imported may carry new post-type and taxonomy definitions; a cache
+		// built before they existed would keep them unregistered on every
+		// later request until someone opened the CPT Builder screen. The
+		// template importer clears them BEFORE the content step, which is the
+		// wrong side of it; this is the right one. Plain deletes, because the
+		// builder's class is only loaded while its extension is switched on.
+		\Wealcoder\AnimationAddons\Compat\Key_Bridge::delete_option( 'aaeaddon_cpts_cache' );
+		\Wealcoder\AnimationAddons\Compat\Key_Bridge::delete_option( 'aaeaddon_taxs_cache' );
 
 		$response['msg'] = esc_html__('Congrats, your demo has been imported.', 'animation-addons-for-elementor');
 		$response['progress'] = 80;
-		check_ajax_referer('wcf_admin_nonce', 'nonce');
+		check_ajax_referer( Nonce::action( Nonce::ADMIN, 'nonce' ), 'nonce' );
 		if (isset($_POST['template_data'])) {
 			if (isset($template_data['local_path'])) {
 				unset($template_data['local_path']);
@@ -365,7 +416,15 @@ class OneClickImport
 	 */
 	private function use_existing_importer_data()
 	{
-		if ($data = get_transient('aadaddon_st_importer_data')) {
+		if ($data = get_transient('aaeaddon_st_importer_data')) {
+
+			// FIRST -- setup_st_importer() clears $this->import_files, so
+			// building the importer after restoring the transient would wipe
+			// the value this method exists to restore. Reached only when a
+			// previous chunk left importer data behind, i.e. an import really
+			// is in progress.
+			$this->setup_st_importer();
+
 			$this->frontend_error_messages = empty($data['frontend_error_messages']) ? array() : $data['frontend_error_messages'];
 			$this->log_file_path           = empty($data['log_file_path']) ? '' : $data['log_file_path'];
 			$this->selected_index          = empty($data['selected_index']) ? 0 : $data['selected_index'];
@@ -373,6 +432,7 @@ class OneClickImport
 			$this->import_files            = empty($data['import_files']) ? array() : $data['import_files'];
 			$this->before_import_executed  = empty($data['before_import_executed']) ? false : $data['before_import_executed'];
 			$this->imported_terms          = empty($data['imported_terms']) ? [] : $data['imported_terms'];
+
 			$this->importer->set_importer_data($data);
 
 			return true;
@@ -454,10 +514,19 @@ class OneClickImport
 
 
 	/**
-	 * Get data from filters, after the theme has loaded and instantiate the importer.
+	 * Build the importer, once, at the point something needs it.
+	 *
+	 * Called from the import flow rather than from admin_init -- see the
+	 * note beside the removed hook in __construct(). Idempotent, so the
+	 * call sites do not have to know whether it has already run.
 	 */
 	public function setup_st_importer()
 	{
+		// Null check, not `instanceof Importer` -- naming the class here
+		// would be asking about a class this method has not required yet.
+		if (null !== $this->importer) {
+			return;
+		}
 
 		// Get info of import data files and filter it.
 		$this->import_files = array();
@@ -472,6 +541,15 @@ class OneClickImport
 		$logger_options = array(
 			'logger_min_level' => 'warning',
 		);
+
+		// This method is the only code in either plugin that names Importer,
+		// so its file is required here rather than on every admin request.
+		// load_engine() then brings in the rest -- it has to run before the
+		// Logger line below, not inside Importer's own constructor, because
+		// Logger extends WPImporterLoggerCLI. Everything is require_once, so
+		// a second import step asking again costs nothing.
+		require_once __DIR__ . '/Importer.php';
+		Importer::load_engine();
 
 		// Configure logger instance and set it to the importer.
 		$logger            = new Logger();
@@ -592,7 +670,7 @@ class OneClickImport
 			 * Save the `wp_navigation` post type mapping of the original menu ID and the new menu ID
 			 * in transient.
 			 */
-			$wcfio_menu_mapping = get_transient('aadaddon_import_menu_mapping');
+			$wcfio_menu_mapping = get_transient('aaeaddon_import_menu_mapping');
 
 			if (empty($wcfio_menu_mapping)) {
 				$wcfio_menu_mapping = [];
@@ -604,7 +682,7 @@ class OneClickImport
 				'new_menu_id'      => $post_id,
 			];
 
-			set_transient('aadaddon_import_menu_mapping', $wcfio_menu_mapping, HOUR_IN_SECONDS);
+			set_transient('aaeaddon_import_menu_mapping', $wcfio_menu_mapping, HOUR_IN_SECONDS);
 		}
 	}
 
@@ -620,7 +698,7 @@ class OneClickImport
 	{
 
 		// Get the `wp_navigation` import mapping.
-		$nav_import_mapping = get_transient('aadaddon_import_menu_mapping');
+		$nav_import_mapping = get_transient('aaeaddon_import_menu_mapping');
 
 		// Get the post IDs that needs to be updated.
 		$posts_nav_block = get_transient('aaeaddon_import_posts_with_nav_block');

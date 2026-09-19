@@ -1,8 +1,6 @@
 <?php
 
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
-namespace WCF_ADDONS\Widgets;
-// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
+namespace Wealcoder\AnimationAddons\Widgets;
 
 use Elementor\Control_Media;
 use Elementor\Group_Control_Background;
@@ -15,7 +13,7 @@ use Elementor\Repeater;
 use Elementor\Utils;
 use Elementor\Widget_Base;
 use Elementor\Controls_Manager;
-use WCF_ADDONS\WCF_Slider_Trait;
+use Wealcoder\AnimationAddons\Aaeaddon_Slider_Trait;
 
 if (! defined('ABSPATH')) {
 	exit;
@@ -31,7 +29,7 @@ if (! defined('ABSPATH')) {
 class Filterable_Slider extends Widget_Base
 {
 
-	use WCF_Slider_Trait;
+	use Aaeaddon_Slider_Trait;
 
 	/**
 	 * Retrieve the widget name.
@@ -1056,9 +1054,10 @@ class Filterable_Slider extends Widget_Base
 				</li>
 			<?php endif; ?>
 
-			<?php foreach ($settings['filter_items'] as $item): ?>
-				<li data-filter=".<?php echo esc_attr(str_replace(' ', '', $item['filter_title'])); ?>">
-					<?php echo esc_html($item['filter_title']) ?>
+			<?php foreach ((array) ($settings['filter_items'] ?? []) as $item): ?>
+				<?php $filter_title = isset($item['filter_title']) ? (string) $item['filter_title'] : ''; ?>
+				<li data-filter=".<?php echo esc_attr(str_replace(' ', '', $filter_title)); ?>">
+					<?php echo esc_html($filter_title) ?>
 
 					<?php if (! empty($item['filter_count'])) { ?>
 						<span class="count"><?php echo esc_html($item['filter_count']); ?></span>
@@ -1108,9 +1107,9 @@ class Filterable_Slider extends Widget_Base
 	protected function render_project_slide($settings, $item, $index)
 	{
 		$filter_class = '';
-		$filter_items = explode(',', $item['project_item_filter_name']);
-		if (count($filter_items)) {
-			foreach ($filter_items as $filter_item) {
+		$filter_name  = isset($item['project_item_filter_name']) ? (string) $item['project_item_filter_name'] : '';
+		if ('' !== $filter_name) {
+			foreach (explode(',', $filter_name) as $filter_item) {
 				$filter_class = $filter_class . ' ' . str_replace(' ', '', $filter_item);
 			}
 		}

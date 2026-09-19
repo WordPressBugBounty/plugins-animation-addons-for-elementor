@@ -1,15 +1,15 @@
 === Animation Addons for Elementor – GSAP Motion Elementor Addons & Website Templates ===
-Contributors: wealcoder, wcrayhan, jhshakil, ahsanriad, hamimbepari
+Contributors: wealcoder, wcrayhan, jhshakil, ahsanriad, hamimbepari, raselsec
 Donate link: https://buy.stripe.com/3cs3dI7DQauI0py9AC
 Tags: animation, elementor, elementor addons, elementor templates, elementor widgets
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 3.0.0
+Stable tag: 4.2.1
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-GSAP-powered free Elementor addons with motion effects, templates, widgets, extensions, and a header & footer builder.
+GSAP-powered animation addons for Elementor: motion effects, 100+ widgets, extensions, ready-made templates and a header and footer builder.
 
 == Description ==
 
@@ -481,15 +481,11 @@ https://youtu.be/ml_irWYVam0
 - have more questions? [contact support](https://crowdyflow.ticksy.com/).
 - For more information [Animation Addons](https://animation-addons.com/).
 
-### Happy User of Animation Addons?
- - Join our [Facebook Group](https://www.facebook.com/groups/animationaddons/).
- - Learn from our [YouTube channel tutorials](https://www.youtube.com/@AnimationAddons). 
-
 == Installation ==
 
 = Minimum Requirements =
 
-* WordPress 6.7 or greater
+* WordPress 6.6 or greater
 * PHP version 7.4 or greater
 * MySQL version 5.7 or greater
 
@@ -509,6 +505,10 @@ Note: This plugin requires Elementor to function. Please ensure Elementor is ins
 For any questions, visit our FAQ page or reach out via our Contact Form. 🚀
 
 == Frequently Asked Questions ==
+
+= What snippet types are supported in Code Snippets? =
+
+The free version of Animation Addons supports custom CSS, JavaScript, and HTML code snippets directly. Custom PHP code snippet execution is an advanced feature supported in Animation Addons Pro.
 
 = What is Animation Addons for Elementor? =
 
@@ -592,45 +592,164 @@ You don’t need to know the code to use the widgets and modules of Animation Ad
 7. **Section Import (Live Copy)* One-click live copy & import of pre-designed animation sections directly into your projects.
 
 
+== Code Snippets ==
+
+The Code Snippet feature lets a site administrator store small pieces of CSS,
+JavaScript, and HTML and have the plugin output them on the site.
+
+What runs, and when:
+
+* CSS, JavaScript, and HTML snippets are printed into the page at the location
+  you choose (Header, Footer, Body Open, Content). Only snippets you have marked
+  active are output.
+* HTML snippets are where a tracking tag such as Google Tag Manager or Meta Pixel
+  goes, or any other markup you want in the head, the body, or the footer.
+* CSS snippets add stylesheet rules without editing theme files, and JavaScript
+  snippets run on the front end.
+
+Who may create one:
+
+* CSS, JavaScript, and HTML snippets require the "manage_options" capability,
+  i.e. an administrator.
+
+
 == External Services ==
-We use the Themecrowdy API for one-click import of Elementor sites and section templates.
-Our Mailchimp widget connects to Mailchimp’s API.
-Subscribing is optional—no data is collected unless you opt in.
+
+Each service is contacted only when you use the feature it belongs to. Nothing
+is sent on activation, in the background, or on a schedule. Only the Feature
+Request form sends personal data, and only what you type into it. No service is
+sent your site address or your account details.
+
+= 1. AAE Feature Requests (animation-addons.com) =
+The "Request a feature" form on the plugin dashboard. Operated by us.
+Sent, only when an administrator submits that form: the name, email and
+description typed into it. Nothing is read from your site.
+Terms: https://animation-addons.com/terms-and-conditions/
+Privacy: https://animation-addons.com/privacy-policy/
+
+= 2. AAE Template Library (block.animation-addons.com) =
+The templates offered inside the Elementor editor. Operated by us.
+Sent, while the library is open: the template or category being viewed, the
+plugin API version, and your site language.
+Terms: https://animation-addons.com/terms-and-conditions/
+Privacy: https://animation-addons.com/privacy-policy/
+
+= 3. AAE Starter Templates (themecrowdy.com) =
+The website templates on the Starter Templates screen. Operated by Theme
+Crowdy, run by this plugin's developer -- not an unrelated third party.
+Sent, on that screen: your search term, and the identifier of the template you
+import. An import then also downloads that template's content, media and
+design-system files from the addresses this service returns.
+Terms: https://animation-addons.com/terms-and-conditions/
+Privacy: https://animation-addons.com/privacy-policy/
+
+= 4. AAE Preset Server (crowdytheme.com) =
+Ready-made design presets for the plugin's widgets. Operated by Crowdytheme,
+also run by this plugin's developer.
+Sent, when you open the "Presets" control: the widget type you are editing.
+Nothing else.
+Terms: https://crowdytheme.com/terms-and-conditions/
+Privacy: https://crowdytheme.com/privacy-policy/
+
+= 5. OpenWeatherMap (api.openweathermap.org) =
+Forecasts for the Weather widget. Needs your own API key; without one nothing
+is requested.
+Sent, on pages carrying the widget: the location you configure, and that key.
+Terms: https://openweathermap.org/terms
+Privacy: https://openweathermap.org/privacy-policy
+
+= 6. Mailchimp (api.mailchimp.com) =
+Adds subscribers to your own Mailchimp audience. Needs your own API key.
+Sent, when a visitor submits the widget's form: their email address and any
+fields you have mapped, to your own account.
+Terms: https://mailchimp.com/legal/terms/
+Privacy: https://mailchimp.com/legal/privacy/
+
+= 7. Video thumbnails (YouTube, Vimeo, Dailymotion, VideoPress) =
+The poster image for a video in the Video widget. Only the platform whose URL
+you entered is contacted; the others are not.
+Sent, when you add the URL: that public video URL.
+YouTube: https://www.youtube.com/t/terms + https://policies.google.com/privacy
+Vimeo: https://vimeo.com/terms + https://vimeo.com/privacy
+Dailymotion: https://legal.dailymotion.com/en/terms-of-use/ +
+https://legal.dailymotion.com/en/privacy-policy/
+VideoPress (Automattic): https://wordpress.com/tos/ +
+https://automattic.com/privacy/
+
+= 8. Google Maps (maps.google.com) =
+Renders the map placed by the Google Maps widget, as an iframe in the visitor's
+browser -- the plugin makes no server-side request.
+Sent: the address or coordinates you configure and, because the visitor's
+browser loads the frame, whatever Google receives from that browser.
+Terms: https://policies.google.com/terms
+Privacy: https://policies.google.com/privacy
+
+The Form widget can also post submissions to a webhook and send email through
+your site. Both go only where you configure them.
 
 == Source Code ==
 
-See the unminified JS and CSS in our public repo: [GitHub Repository](https://github.com/Wealcoder/animation-addons-for-elementor/tree/dashboard/assets/src). 
+Every compiled file ships with its human-readable source inside the plugin, and
+the build tooling ships too, so the build can be reproduced from the plugin as
+distributed:
+
+  npm install
+  npm run build
+
+* /src -- React and JavaScript for the dashboard, page importer and editor
+  bundles, compiled by webpack into /assets/build (see webpack.config.js)
+* /inc/AtomicWidgets/Widgets/<Widget>/assets/js and .../assets/scss -- the
+  atomic widgets' front-end scripts and styles, bundled by webpack into
+  /assets/atomic/js and /assets/atomic/css; each .min file there is the
+  gulp minification of the file of the same name beside it
+* /assets/src -- SCSS, compiled by gulp into /assets/css (see gulpfile.js)
+* /assets/js and /assets/js/widgets -- front-end scripts; each .min.js is the
+  build of the .js of the same name beside it
+
+Every npm dependency is listed in package.json. The same sources are also at
+https://github.com/Wealcoder/animation-addons-for-elementor
+
+Two libraries are vendored directly rather than through npm and are minified
+upstream, so their projects are the source:
+
+* CodeMirror 5.65.16 (Code Snippet editor), in /assets/js/cs-js and
+  /assets/css/cs-css -- https://github.com/codemirror/codemirror5
+* Select2 4.1.0 (admin select control) -- https://github.com/select2/select2
 
 == Changelog ==
 
+= 🌀 Animation Addons for Elementor v4.2.1 – 17th September 2026 =
 
-= 🌀 Animation Addons for Elementor 3.0.0 – 30 August 2026 =
+  - **Changed:** Every function, class, constant and namespace this plugin defines now carries a unique `aaeaddon` prefix, which is what WordPress.org asks of every plugin. The previous names still resolve, so a site running the Pro add-on keeps working while both are updated.
+  - **Changed:** Settings are moving to matching storage names, and nothing happens on its own. A new **Migration** screen shows exactly what will be copied, per category, and copies it only when you press Start — with a progress report you can leave and come back to. Your existing data is **copied, never deleted**, so the previous version can be reinstalled at any time and finds everything where it left it.
+  - **Fixed:** Security. Three endpoints a visitor can reach checked a nonce but not what they were being asked to act on: a loop template could be rendered by number, a newsletter signup could be pointed at a different mailing list, and an icon-pack id could carry a file path. All three now resolve what they are given against the saved page, and the public counters and searches carry a per-visitor rate limit.
+  - **Changed:** Faster for visitors. A page view now parses about 440 KB less PHP than 4.1.0 — roughly a quarter of the plugin — because the dashboard, importer, editor and admin halves are loaded only where they can actually run. Nothing about what renders has changed.
+  - **Fixed:** The plugin now passes WordPress.org's Plugin Check with no errors reported.
+  - **Fixed:** The admin screens moved to the new prefixed addresses; a bookmark or a link to an old one redirects to the right screen instead of showing an empty page.
+  - **Fixed:** The settings screens no longer produce a fatal error when Elementor is deactivated.
+  - **Fixed:** The Post Rating widget's sample review and its "/5" line can now be translated.
 
-  - **Improved:** Added compatibility with WordPress 7.1.
-  - **Improved:** Added compatibility with Elementor 4.2.3.
-  - **Improved:** Added compatibility with PHP 8.5.
-  - **Improved:** General performance improvements and minor bug fixes.
+= 🌀 Animation Addons for Elementor v4.1.0 – 8th September 2026 =
 
+  - **Changed:** This plugin no longer installs, activates, deactivates or switches any plugin or theme on your site. Elementor is declared through the "Requires Plugins" header, and WordPress handles the dependency. The only installer left is the one-click Elementor install, which runs from WordPress.org, only on a click, behind a nonce and the "install_plugins" capability.
+  - **Removed:** Activation and deactivation tracking, the deactivation feedback modal, and the setup wizard's email sign-up. The plugin sends nothing to data.animation-addons.com from anywhere, and collects nothing on activation or deactivation.
+  - **Removed:** The remote changelog fetch and the remote starter-template menu fetch. The dashboard now reads its own bundled menu instead of contacting a remote site on every load.
+  - **Removed:** Two unused libraries, typed.js and chroma.js, that visitors were downloading and nothing ever called. Select2 upgraded from the 4.1.0 release candidate to 4.1.0 final.
+  - **Added:** A complete "External Services" section in this readme. Every service the plugin can contact is listed with what it is for, when the request happens, exactly what is sent, its endpoints, and that service's terms and privacy policy.
+  - **Changed:** PHP code snippets are no longer evaluated by the free plugin. CSS, JavaScript and HTML snippets are unchanged.
+  - **Changed:** The admin menu moved from position 8 to 81, below Settings, where plugin menus belong.
+  - **Removed:** The promotional WordPress Dashboard widget that reordered the Dashboard to put itself on top, and a seasonal notice stylesheet that loaded on every admin screen for a notice that never rendered.
+  - **Fixed:** Every translatable string now passes a literal text domain, so all 9,326 of them are extractable by translators. Previously 481 call sites passed a wrapper or a class constant and were invisible to the parser, including the entire ISO country list.
+  - **Fixed:** Security pass across the whole plugin. Every AJAX action and REST route now checks both a nonce and a capability; an uploaded icon pack can no longer leave an executable file in a public folder; the two public share and reaction counters validate their values against a fixed list; and every output buffer is closed in the function that opened it.
+  - **Fixed:** Admin styles no longer load on every admin screen, only on the plugin's own screens.
+  - **Fixed:** readme.txt and the plugin header now state the same minimum WordPress version.
 
-= 🌀 Animation Addons for Elementor v2.7.5 – 25 August 2026 =
+= 🌀 Animation Addons for Elementor v4.0.0 – August 2026 =
 
-  - **Security:** Enhanced Post Rating Form validation, authorization, server-side moderation enforcement, and review count synchronization.
-  - **Security:** Hardened AJAX handlers and autocomplete endpoints with strict capability and nonce checks.
-  - **Improved:** General stability and compatibility improvements.
-
-= 🌀 Animation Addons for Elementor v2.7.4 – 20 August 2026 =
-
-  - ** Improved compatibility with WordPress 7.1.
-  - ** Improved overall plugin stability and performance.
-  - ** Fixed minor compatibility issues and bugs.
-
-= 🌀 Animation Addons for Elementor v2.7.3 – 9th August 2026 =
-
-  - **Improved:** General performance improvements and minor bug fixes.
-
-= 🌀 Animation Addons for Elementor v2.7.2 – 9th August 2026 =
-
-  - **Fixed:** Mailchimp security issue fixed.
+  - **Added:** Support for Elementor's V4 atomic elements: an atomic widget set, atomic animation extensions, and a dashboard for switching each widget and extension on or off.
+  - **Added:** Starter template and page import that carries an Elementor V4 design system (global classes and global variables), with an option to copy linked template images into your own Media Library.
+  - **Added:** Form Builder, Code Snippets, Custom Fonts, Custom Icons and Post Type Builder screens under a single Animation Addons menu.
+  - **Improved:** Performance options for how the animation runtime is delivered, including lazy loading and a reduced-motion mode.
 
 = 🌀 Animation Addons for Elementor v2.7.1 – 21th July 2026 =
 

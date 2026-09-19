@@ -1,58 +1,25 @@
 <?php
-/**
- * @phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
- */
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 } // Exit if accessed directly
 
-/**
- * Retrieves an array of the elementor save template.
- *
- * For more information on the accepted arguments, see the
- * {@link https://developer.wordpress.org/reference/classes/wp_query/
- * WP_Query} documentation in the Developer Handbook.
- *
- * @param array $args
- *
- * @return WP_Post[]|int[] Array of post objects or post IDs.
- * @see WP_Query::parse_query()
- *
- * @since 1.0.0
- *
- * @see WP_Query
- */
-// if ( ! function_exists( 'wcf_addons_get_saved_template_list' ) ) : // remove this function at 2.6.0 version
-// 	function wcf_addons_get_saved_template_list( $args = null ) {
 
-// 		$post_list     = array();
-// 		$user          = wp_get_current_user();
-// 		$allowed_roles = array( 'editor', 'administrator', 'author' );
-
-// 		if ( array_intersect( $allowed_roles, $user->roles ) || is_super_admin() ) {
-
-// 			$defaults = array(
-// 				'post_type'   => 'elementor_library',
-// 				'post_status' => 'publish',
-// 				'numberposts' => -1,
-// 			);
-
-// 			$parsed_args              = wp_parse_args( $args, $defaults );
-// 			$parsed_args['post_type'] = 'elementor_library'; // don't overwrite post type
-// 			$posts                    = get_posts( $parsed_args );
-// 			if ( $posts ) {
-// 				foreach ( $posts as $post ) {
-// 					$post_list[ $post->ID ] = esc_html( $post->post_title );
-// 				}
-// 			}
-// 		}
-
-// 		return $post_list;
-// 	}
-// endif;
-
-if ( ! function_exists( 'wcf_addons_get_saved_template_list' ) ) :
-	function wcf_addons_get_saved_template_list( $args = null ) {
+if ( ! function_exists( 'aaeaddon_get_saved_template_list' ) ) :
+	/**
+	 * Every Elementor library template, as id => title, for a widget's
+	 * template picker.
+	 *
+	 * Renamed from its `wcf_addons_` spelling in 4.2.0. The old name is
+	 * declared by the paid add-on (inc/Compat/legacy-functions.php
+	 * there, since Pro 4.3) and by nothing here — the released add-on calls it
+	 * on seven lines, so that add-on must be updated together with this one.
+	 *
+	 * @since 4.2.0
+	 *
+	 * @param array|null $args Optional `get_posts()` overrides.
+	 * @return array<int,string>
+	 */
+	function aaeaddon_get_saved_template_list( $args = null ) {
 
 		static $cache = null;
 
@@ -94,8 +61,8 @@ if ( ! function_exists( 'wcf_addons_get_saved_template_list' ) ) :
 	}
 endif;
 
-if ( ! function_exists( 'aae_validate_content_json' ) ) {
-	function aae_validate_content_json( $input ) {
+if ( ! function_exists( 'aaeaddon_validate_content_json' ) ) {
+	function aaeaddon_validate_content_json( $input ) {
 		// Check if the input is a valid string and not empty
 		if ( ! is_string( $input ) || empty( $input ) ) {
 			return false;  // Invalid input
@@ -122,8 +89,8 @@ if ( ! function_exists( 'aae_validate_content_json' ) ) {
  *
  * @return false|mixed|string
  */
-if ( ! function_exists( 'wcf_addons_get_widget_element_settings' ) ) :
-	function wcf_addons_get_widget_element_settings( $elements, $widget_id ) {
+if ( ! function_exists( 'aaeaddon_get_widget_element_settings' ) ) :
+	function aaeaddon_get_widget_element_settings( $elements, $widget_id ) {
 
 		if ( is_array( $elements ) ) {
 			foreach ( $elements as $d ) {
@@ -131,7 +98,7 @@ if ( ! function_exists( 'wcf_addons_get_widget_element_settings' ) ) :
 					return $d;
 				}
 				if ( $d && ! empty( $d['elements'] ) && is_array( $d['elements'] ) ) {
-					$value = wcf_addons_get_widget_element_settings( $d['elements'], $widget_id );
+					$value = aaeaddon_get_widget_element_settings( $d['elements'], $widget_id );
 					if ( $value ) {
 						return $value;
 					}
@@ -143,7 +110,7 @@ if ( ! function_exists( 'wcf_addons_get_widget_element_settings' ) ) :
 	}
 endif;
 
-if ( ! function_exists( 'wcf_addons_get_widget_settings' ) ) {
+if ( ! function_exists( 'aaeaddon_get_widget_settings' ) ) {
 	/**
 	 * Get database settings of a widget by widget id and post id
 	 *
@@ -152,7 +119,7 @@ if ( ! function_exists( 'wcf_addons_get_widget_settings' ) ) {
 	 *
 	 * @return false|mixed|string
 	 */
-	function wcf_addons_get_widget_settings( $post_id, $widget_id ) {
+	function aaeaddon_get_widget_settings( $post_id, $widget_id ) {
 		$document = \Elementor\Plugin::$instance->documents->get( $post_id );
 
 		if ( $document ) {
@@ -167,7 +134,7 @@ if ( ! function_exists( 'wcf_addons_get_widget_settings' ) ) {
 			return array();
 		}
 
-		$element = wcf_addons_get_widget_element_settings( $elementor_data, $widget_id );
+		$element = aaeaddon_get_widget_element_settings( $elementor_data, $widget_id );
 
 		return ! empty( $element['settings'] ) && is_array( $element['settings'] )
 			? $element['settings']
@@ -182,14 +149,14 @@ if ( ! function_exists( 'wcf_addons_get_widget_settings' ) ) {
  *
  * @return false|mixed|string
  */
-if ( ! function_exists( 'wcf_addons_get_local_plugin_data' ) ) :
-	function wcf_addons_get_local_plugin_data( $basename = '' ) {
+if ( ! function_exists( 'aaeaddon_get_local_plugin_data' ) ) :
+	function aaeaddon_get_local_plugin_data( $basename = '' ) {
 		if ( empty( $basename ) ) {
 			return false;
 		}
 
 		if ( ! function_exists( 'get_plugins' ) ) {
-			include_once ABSPATH . 'wp-admin/includes/plugin.php';
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		}
 
 		$plugins = get_plugins();
@@ -207,11 +174,11 @@ endif;
  *
  * @return numeric
  */
-if ( ! function_exists( 'wcf_addons_get_all_widgets_count' ) ) :
-	function wcf_addons_get_all_widgets_count() {
+if ( ! function_exists( 'aaeaddon_get_all_widgets_count' ) ) :
+	function aaeaddon_get_all_widgets_count() {
 
 		$total  = 0;
-		$config = wcf_get_config();
+		$config = aaeaddon_get_config();
 
 		if ( empty( $config['widgets'] ) ) {
 			return 0;
@@ -232,10 +199,10 @@ endif;
  *
  * @return numeric
  */
-if ( ! function_exists( 'wcf_addons_get_active_widgets_count' ) ) :
-	function wcf_addons_get_active_widgets_count() {
+if ( ! function_exists( 'aaeaddon_get_active_widgets_count' ) ) :
+	function aaeaddon_get_active_widgets_count() {
 
-		return get_option( 'wcf_save_widgets' ) ? count( get_option( 'wcf_save_widgets' ) ) : 0;
+		return get_option( 'aaeaddon_save_widgets' ) ? count( get_option( 'aaeaddon_save_widgets' ) ) : 0;
 	}
 endif;
 /**
@@ -243,9 +210,9 @@ endif;
  *
  * @return numeric
  */
-if ( ! function_exists( 'wcf_addons_get_inactive_widgets_count' ) ) :
-	function wcf_addons_get_inactive_widgets_count() {
-		return wcf_addons_get_all_widgets_count() - wcf_addons_get_active_widgets_count();
+if ( ! function_exists( 'aaeaddon_get_inactive_widgets_count' ) ) :
+	function aaeaddon_get_inactive_widgets_count() {
+		return aaeaddon_get_all_widgets_count() - aaeaddon_get_active_widgets_count();
 	}
 endif;
 
@@ -254,11 +221,11 @@ endif;
  *
  * @return numeric
  */
-if ( ! function_exists( 'wcf_addons_get_all_extensions_count' ) ) :
-	function wcf_addons_get_all_extensions_count() {
+if ( ! function_exists( 'aaeaddon_get_all_extensions_count' ) ) :
+	function aaeaddon_get_all_extensions_count() {
 
 		$total  = 0;
-		$config = wcf_get_config();
+		$config = aaeaddon_get_config();
 
 		if ( empty( $config['extensions'] ) ) {
 			return 0;
@@ -279,15 +246,15 @@ endif;
  *
  *  @return false|mixed|numeric
  */
-if ( ! function_exists( 'wcf_addons_element_status' ) ) :
-	function wcf_addons_element_status( $option_name, $key, $element = null ) {
-		$status = checked( 1, wcf_addons_get_settings( $option_name, $key ), false );
+if ( ! function_exists( 'aaeaddon_element_status' ) ) :
+	function aaeaddon_element_status( $option_name, $key, $element = null ) {
+		$status = checked( 1, aaeaddon_get_settings( $option_name, $key ), false );
 
 		if ( ! is_null( $element ) ) {
 			if ( $element['is_pro'] || $element['is_extension'] ) {
 
 				// pro elements
-				if ( $element['is_pro'] && ! defined( 'WCF_ADDONS_PRO_VERSION' ) ) {
+				if ( $element['is_pro'] && ! aaeaddon_pro_defined( 'VERSION' ) ) {
 					$status = 'disabled';
 				}
 
@@ -302,22 +269,34 @@ if ( ! function_exists( 'wcf_addons_element_status' ) ) :
 	}
 endif;
 
-if ( ! function_exists( 'wcf_addons_get_settings' ) ) {
+if ( ! function_exists( 'aaeaddon_get_settings' ) ) {
 
 	/**
-	 * Return saved settings
+	 * Return saved settings.
+	 *
+	 * Renamed in 4.2.0 (the `aaeaddon_` prefix replaced the pre-4.2 family).
+	 * The old spelling is declared by the paid add-on (inc/Compat/legacy-functions.php
+	 * there, since Pro 4.3) and by nothing here. The RELEASED add-on calls it
+	 * unguarded on its boot path, so that add-on must be updated before — or
+	 * together with — this plugin; see that file's header for the trade.
+	 *
+	 * @since 4.2.0
+	 *
+	 * @param string      $option_name Option to read.
+	 * @param string|null $element     Single key to return, or null for every truthy key.
+	 * @return mixed
 	 */
-	function wcf_addons_get_settings( $option_name, $element = null ) {
+	function aaeaddon_get_settings( $option_name, $element = null ) {
 		$elements = get_option( $option_name );
 		return ( isset( $element ) ? ( isset( $elements[ $element ] ) ? $elements[ $element ] : 0 ) : array_keys( array_filter( $elements ) ) );
 	}
 }
 
-if ( ! function_exists( 'wcf_set_postview' ) ) {
+if ( ! function_exists( 'aaeaddon_set_postview' ) ) {
 	/**
 	 * save single post view count
 	 */
-	function wcf_set_postview() {
+	function aaeaddon_set_postview() {
 
 		// Avoid admin / ajax
 		if ( is_admin() || wp_doing_ajax() ) {
@@ -326,6 +305,14 @@ if ( ! function_exists( 'wcf_set_postview' ) ) {
 
 		// Only single posts (change if needed)
 		if ( ! is_singular('post') ) {
+			return;
+		}
+
+		// Pro counts the same key on the same `wp` hook (its counter also feeds
+		// the trending score and skips logged-in / cookied repeat views). With
+		// both running every uncached visit added 2 -- measured 3 -> 4 in one
+		// request -- and paid three UPDATEs. One owner: Pro when it is there.
+		if ( function_exists( 'aaeaddon_track_post_views_and_update_score' ) ) {
 			return;
 		}
 
@@ -340,8 +327,8 @@ if ( ! function_exists( 'wcf_set_postview' ) ) {
 	}
 }
 
-if ( ! function_exists( 'wcf_get_nested_config_keys' ) ) {
-	function wcf_get_nested_config_keys( $array, &$foundKeys, &$active ) {
+if ( ! function_exists( 'aaeaddon_get_nested_config_keys' ) ) {
+	function aaeaddon_get_nested_config_keys( $array, &$foundKeys, &$active ) {
 		foreach ( $array as $key => $value ) {
 			// Check if the current key is one we're looking for
 			if ( isset( $value['is_active'] ) && $value['is_active'] == true ) {
@@ -353,14 +340,14 @@ if ( ! function_exists( 'wcf_get_nested_config_keys' ) ) {
 
 			// If value is an array, recurse into it
 			if ( is_array( $value ) ) {
-				wcf_get_nested_config_keys( $value, $foundKeys, $active );
+				aaeaddon_get_nested_config_keys( $value, $foundKeys, $active );
 			}
 		}
 	}
 }
 
-if ( ! function_exists( 'wcf_get_nested_active_config_keys' ) ) {
-	function wcf_get_nested_active_config_keys( $array, &$foundKeys, &$active ) {
+if ( ! function_exists( 'aaeaddon_get_nested_active_config_keys' ) ) {
+	function aaeaddon_get_nested_active_config_keys( $array, &$foundKeys, &$active ) {
 		foreach ( $array as $key => $value ) {
 			// Check if the current key is one we're looking for
 			if ( isset( $value['is_upcoming'] ) && isset( $value['is_pro'] ) && isset( $value['is_active'] ) && $value['is_active'] == true ) {
@@ -374,15 +361,15 @@ if ( ! function_exists( 'wcf_get_nested_active_config_keys' ) ) {
 
 			// If value is an array, recurse into it
 			if ( is_array( $value ) ) {
-				wcf_get_nested_active_config_keys( $value, $foundKeys, $active );
+				aaeaddon_get_nested_active_config_keys( $value, $foundKeys, $active );
 			}
 		}
 	}
 }
 
-if ( ! function_exists( 'wcf_get_db_updated_config' ) ) {
+if ( ! function_exists( 'aaeaddon_get_db_updated_config' ) ) {
 
-	function wcf_get_db_updated_config( array &$configs, array $dbActiveElements ) {
+	function aaeaddon_get_db_updated_config( array &$configs, array $dbActiveElements ) {
 		// Loop through each item in the configs array
 		foreach ( $configs as $key => &$element ) {
 
@@ -396,15 +383,15 @@ if ( ! function_exists( 'wcf_get_db_updated_config' ) ) {
 
 			// Recursively call the function for any nested elements
 			if ( is_array( $element ) ) {
-				wcf_get_db_updated_config( $element, $dbActiveElements );
+				aaeaddon_get_db_updated_config( $element, $dbActiveElements );
 			}
 		}
 	}
 }
 
 
-if ( ! function_exists( 'wcf_get_total_config_elements_by_key' ) ) {
-	function wcf_get_total_config_elements_by_key( $array, &$foundKeys = 0 ) {
+if ( ! function_exists( 'aaeaddon_get_total_config_elements_by_key' ) ) {
+	function aaeaddon_get_total_config_elements_by_key( $array, &$foundKeys = 0 ) {
 		foreach ( $array as $key => $value ) {
 			// Check if the current key is one we're looking for
 			if ( isset( $value['is_active'] ) && isset( $value['is_extension'] ) && isset( $value['is_pro'] ) ) {
@@ -413,15 +400,15 @@ if ( ! function_exists( 'wcf_get_total_config_elements_by_key' ) ) {
 
 			// If value is an array, recurse into it
 			if ( is_array( $value ) ) {
-				wcf_get_total_config_elements_by_key( $value, $foundKeys );
+				aaeaddon_get_total_config_elements_by_key( $value, $foundKeys );
 			}
 		}
 	}
 }
 
 
-if ( ! function_exists( 'wcf_get_search_active_keys' ) ) {
-	function wcf_get_search_active_keys( $array, $keysToFind, &$foundKeys, &$active ) {
+if ( ! function_exists( 'aaeaddon_get_search_active_keys' ) ) {
+	function aaeaddon_get_search_active_keys( $array, $keysToFind, &$foundKeys, &$active ) {
 		foreach ( $array as $key => $value ) {
 			// Check if the current key is one we're looking for
 			if ( in_array( $key, $keysToFind ) && is_array( $value ) && array_key_exists( 'is_extension', $value ) ) {
@@ -431,19 +418,72 @@ if ( ! function_exists( 'wcf_get_search_active_keys' ) ) {
 				$value['is_active'] = 1;
 				$active[ $key ]     = $value;
 			}
-			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			if ( is_array( $value ) ) {
-				wcf_get_search_active_keys( $value, $keysToFind, $foundKeys, $active );
+				aaeaddon_get_search_active_keys( $value, $keysToFind, $foundKeys, $active );
 			}
 		}
 	}
 }
 
-if ( ! function_exists( 'wcf_get_addon_active_extension_by_key' ) ) {
+if ( ! function_exists( 'aaeaddon_config_index' ) ) {
+	/**
+	 * Flat `key => node` index of every activatable node in a config section.
+	 *
+	 * aaeaddon_get_search_active_keys() re-walks the whole ~2,125-node config tree on
+	 * every call, and get_widgets()/get_extensions() are called several times per
+	 * request (include_files() at plugins_loaded, the widget registrar, and Pro).
+	 * Indexing once turns each of those from O(tree) into O(saved keys).
+	 *
+	 * Traversal order and last-wins-on-duplicate-keys match the recursive
+	 * version exactly, and eligibility is the same `is_extension` test, so the
+	 * resulting set is identical — only the cost changes.
+	 *
+	 * The recursive function is deliberately left in place: the admin screens
+	 * (dashboard.php, setup-wizard.php) still use it, and they are not on a hot
+	 * path.
+	 *
+	 * @param string $section 'widgets' or 'extensions'.
+	 * @return array<string,array>
+	 */
+	function aaeaddon_config_index( $section ) {
+		static $index = [];
 
-	function wcf_get_addon_active_extension_by_key( $search ) {
+		if ( isset( $index[ $section ] ) ) {
+			return $index[ $section ];
+		}
 
-		$ext = get_option( 'wcf_save_extensions' );
+		$config = aaeaddon_get_config();
+		$flat   = [];
+
+		$walk = static function ( $nodes ) use ( &$walk, &$flat ) {
+			foreach ( $nodes as $key => $value ) {
+				if ( ! is_array( $value ) ) {
+					continue;
+				}
+				if ( array_key_exists( 'is_extension', $value ) ) {
+					$flat[ $key ] = $value;
+				}
+				// Keep descending even after a match — the original does, and a
+				// deeper node with the same key is meant to win.
+				$walk( $value );
+			}
+		};
+
+		if ( ! empty( $config[ $section ] ) ) {
+			$walk( $config[ $section ] );
+		}
+
+		$index[ $section ] = $flat;
+
+		return $flat;
+	}
+}
+
+if ( ! function_exists( 'aaeaddon_get_active_extension_by_key' ) ) {
+
+	function aaeaddon_get_active_extension_by_key( $search ) {
+
+		$ext = get_option( 'aaeaddon_save_extensions' );
 		if ( is_array( $ext ) ) {
 			$saved_ext = array_keys( $ext );
 			$found_key = array_search( $search, $saved_ext );
@@ -458,8 +498,8 @@ if ( ! function_exists( 'wcf_get_addon_active_extension_by_key' ) ) {
 	}
 }
 
-if ( ! function_exists( 'wcfaddon_get_current_user_roles' ) ) {
-	function wcfaddon_get_current_user_roles() {
+if ( ! function_exists( 'aaeaddon_get_current_user_roles' ) ) {
+	function aaeaddon_get_current_user_roles() {
 
 		if ( is_user_logged_in() ) {
 
@@ -480,9 +520,9 @@ if ( ! function_exists( 'wcfaddon_get_current_user_roles' ) ) {
 	}
 }
 
-if ( ! function_exists( 'wcfaddon_get_pronotice_html' ) ) {
-	function wcfaddon_get_pronotice_html() {
-		$img_src     = esc_url( WCF_ADDONS_URL . 'assets/images/get-pro.png' ); // Replace '#' with the actual URL or dynamic value
+if ( ! function_exists( 'aaeaddon_get_pronotice_html' ) ) {
+	function aaeaddon_get_pronotice_html() {
+		$img_src     = esc_url( AAEADDON_URL . 'assets/images/get-pro.png' ); // Replace '#' with the actual URL or dynamic value
 		$upgrade_url = esc_url( 'https://animation-addons.com/' ); // Replace '#' with the actual upgrade URL
 
 		return sprintf(
@@ -517,8 +557,9 @@ if ( ! function_exists( 'aaeaddon_format_number_count' ) ) {
 	}
 }
 
+if ( ! function_exists( 'aaeaddon_filter_search_by_date_and_category' ) ) :
 // Search Filtering
-function filter_search_by_date_and_category( $query ) {
+function aaeaddon_filter_search_by_date_and_category( $query ) {
 	if ( is_admin() || wp_doing_ajax() ) return; // added v-2.6.0
  	if ( ! $query->is_search() || ! $query->is_main_query() ) return; // added v-2.6.0
 
@@ -551,10 +592,11 @@ function filter_search_by_date_and_category( $query ) {
 		}
 	}
 }
+endif;
 
-add_action( 'pre_get_posts', 'filter_search_by_date_and_category' );
+add_action( 'pre_get_posts', 'aaeaddon_filter_search_by_date_and_category' );
 
-if ( ! function_exists( 'aae_addon_breadcrumbs' ) ) {
+if ( ! function_exists( 'aaeaddon_breadcrumbs' ) ) {
 	/**
 	 * AAE Breadcrumbs.
 	 *
@@ -563,7 +605,7 @@ if ( ! function_exists( 'aae_addon_breadcrumbs' ) ) {
 	 *
 	 * @return void
 	 */
-	function aae_addon_breadcrumbs( $html_tag = 'div', $separator = ' &raquo; ' ) {
+	function aaeaddon_breadcrumbs( $html_tag = 'div', $separator = ' &raquo; ' ) {
 		global $post;
 
 		$breadcrumbs   = array();
@@ -758,17 +800,173 @@ add_filter(
 );
 
 
-function wcf_get_config() {
+if ( ! function_exists( 'aaeaddon_get_config' ) ) :
+/**
+ * The widget/extension config tree from config.php.
+ *
+ * A `static` rather than the object cache, for two reasons:
+ *
+ * 1. SPEED. config.php is ~128 KB / 3,553 lines. Without a persistent object
+ *    cache backend wp_cache_get() is request-scoped anyway, so the round trip
+ *    bought nothing while still costing a cache lookup on every call.
+ * 2. CORRECTNESS on sites that DO have Redis/Memcached. The old code cached a
+ *    serialized copy of the file's contents under a key with no version in it,
+ *    so a plugin update could keep serving the PREVIOUS release's config until
+ *    the cache was flushed by hand. A static cannot outlive the request, so it
+ *    can never be stale.
+ */
+function aaeaddon_get_config() {
 
-    $config = wp_cache_get('wcf_addons_config');
+    static $config = null;
 
-    if ($config === false) {
-        $config = require WCF_ADDONS_PATH . 'config.php';
-        wp_cache_set('wcf_addons_config', $config);
+    if (null === $config) {
+        $config = require AAEADDON_PATH . 'config.php';
     }
 
     return $config;
 
 }
+endif;
 
 
+
+if ( ! function_exists( 'aaeaddon_asset_version' ) ) :
+/**
+ * Version string for this plugin's own admin assets.
+ *
+ * DEV: a timestamp, so an edited bundle is picked up without a hard refresh.
+ * PRODUCTION: the plugin version, so the browser can actually cache the file.
+ *
+ * Seven enqueues used to pass a bare `time()` with no condition at all, which
+ * meant every visitor to the dashboard, the importer or the plugins screen
+ * re-downloaded the bundle on EVERY page load — the dashboard's is ~620 KB of
+ * JS plus its CSS — and no `Cache-Control` could ever help, because the URL
+ * changed each second. It defeated browser and CDN caching alike, on live
+ * sites, permanently.
+ *
+ * Dev is decided by `Atomic::is_dev_environment()` — SCRIPT_DEBUG, a
+ * localhost/127.0.0.1 host, a `.local`/`.test` domain, or a loopback SERVER_ADDR
+ * — reusing the existing rule rather than inventing a second one that could
+ * disagree with it. Deliberately NOT WP_DEBUG: that is about error reporting,
+ * and plenty of live sites run with it on.
+ *
+ * The timestamp is resolved ONCE per request, so every asset on a page shares
+ * one version rather than straddling a second boundary.
+ *
+ * @return string
+ */
+function aaeaddon_asset_version() {
+	static $version = null;
+
+	if ( null !== $version ) {
+		return $version;
+	}
+
+	$is_dev = false;
+
+	// Guarded: the atomic registry is a separate subsystem and this helper is
+	// loaded on every request, including ones where that class may not be.
+	if ( class_exists( '\Wealcoder\AnimationAddons\AtomicWidgets\Atomic' ) ) {
+		$atomic = \Wealcoder\AnimationAddons\AtomicWidgets\Atomic::instance();
+
+		if ( method_exists( $atomic, 'is_dev_environment_public' ) ) {
+			$is_dev = $atomic->is_dev_environment_public();
+		}
+	}
+
+	$version = $is_dev ? (string) time() : AAEADDON_VERSION;
+
+	return $version;
+}
+endif;
+
+if ( ! function_exists( 'aaeaddon_kses_builder_html' ) ) {
+	/**
+	 * Escape markup another renderer produced -- an Elementor template, a
+	 * theme-builder document, a Loop Item, a post's the_content -- for output.
+	 *
+	 * It is wp_kses() with the allow-list a page builder's output needs (SVG,
+	 * iframe, form, media), <style> blocks carried beside kses with their
+	 * CSS tag-stripped, <script> blocks removed with their contents. A plain
+	 * function rather than the static method it wraps because that is what an
+	 * escaping-function list can name. The whole of it: \Wealcoder\AnimationAddons\Kses.
+	 *
+	 * @param string $html Rendered markup.
+	 * @return string
+	 */
+	function aaeaddon_kses_builder_html( $html ) {
+		return \Wealcoder\AnimationAddons\Kses::builder_html( $html );
+	}
+}
+
+if ( ! function_exists( 'aaeaddon_print_builder_html' ) ) {
+	/**
+	 * Print markup another renderer produced -- the `echo` form of
+	 * aaeaddon_kses_builder_html(), with the same allow-list and the same
+	 * result on the page. Every piece goes out through core: the markup by
+	 * `echo wp_kses()`, a <style> block by WP_Styles' inline printer, a data
+	 * <script> by wp_print_inline_script_tag(). See Kses::print_builder_html().
+	 *
+	 * @param string $html Rendered markup.
+	 * @return void
+	 */
+	function aaeaddon_print_builder_html( $html ) {
+		\Wealcoder\AnimationAddons\Kses::print_builder_html( $html );
+	}
+}
+
+if ( ! function_exists( 'aaeaddon_print_css' ) ) {
+	/**
+	 * Print CSS inside a <style> element through WP_Styles' own inline
+	 * printer: tag-stripped, registered on a src-less handle, printed by
+	 * core. Works in the head, the body, the footer and an admin-ajax
+	 * response alike. The element's id is `aae-css-<id>-inline-css`.
+	 *
+	 * @param string       $css   CSS text.
+	 * @param string|array $attrs Handle suffix, or an attribute map (`id`, `media`).
+	 * @return void
+	 */
+	function aaeaddon_print_css( $css, $attrs = '' ) {
+		\Wealcoder\AnimationAddons\Kses::print_css( $css, $attrs );
+	}
+}
+
+if ( ! function_exists( 'aaeaddon_key_map' ) ) {
+	/**
+	 * The key map: every persisted name this plugin and the paid add-on own,
+	 * old spelling => `aaeaddon_` spelling. See inc/Compat/key-map.php.
+	 *
+	 * @return array
+	 */
+	function aaeaddon_key_map() {
+		return \Wealcoder\AnimationAddons\Compat\Key_Bridge::map();
+	}
+}
+
+if ( ! function_exists( 'aaeaddon_option_name' ) ) {
+	/**
+	 * The spelling a bridged option is LIVE under right now — for a caller that
+	 * must address the row without going through get_option() (a $wpdb query,
+	 * wp_load_alloptions()). Everything else just uses the new name.
+	 *
+	 * @param string $name Either spelling.
+	 * @return string
+	 */
+	function aaeaddon_option_name( $name ) {
+		return \Wealcoder\AnimationAddons\Compat\Key_Bridge::live_name( $name );
+	}
+}
+
+if ( ! function_exists( 'aaeaddon_delete_option' ) ) {
+	/**
+	 * delete_option() for a bridged name: removes BOTH spellings, so "the option
+	 * is gone" stays true whichever name a reader uses. A bare delete_option()
+	 * on the non-live spelling finds no row and silently does nothing.
+	 *
+	 * @param string $name Either spelling.
+	 * @return bool
+	 */
+	function aaeaddon_delete_option( $name ) {
+		return \Wealcoder\AnimationAddons\Compat\Key_Bridge::delete_option( $name );
+	}
+}
