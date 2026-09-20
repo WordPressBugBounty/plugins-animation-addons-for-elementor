@@ -1,11 +1,11 @@
 === Animation Addons for Elementor – GSAP Motion Elementor Addons & Website Templates ===
-Contributors: wealcoder, wcrayhan, jhshakil, ahsanriad, hamimbepari, raselsec
+Contributors: wealcoder, wcrayhan, ahsanriad, hamimbepar
 Donate link: https://buy.stripe.com/3cs3dI7DQauI0py9AC
 Tags: animation, elementor, elementor addons, elementor templates, elementor widgets
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 4.2.1
+Stable tag: 4.2.2
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -690,21 +690,38 @@ your site. Both go only where you configure them.
 == Source Code ==
 
 Every compiled file ships with its human-readable source inside the plugin, and
-the build tooling ships too, so the build can be reproduced from the plugin as
-distributed:
+the build tooling ships too (package.json, webpack.config.js, gulpfile.js), so
+the build can be reproduced from the plugin as distributed. With Node.js 18 or
+newer installed, from the plugin directory:
 
-  npm install
-  npm run build
+  npm install          # installs webpack, gulp, sass and the rest from package.json
+  npm run build        # empties /assets/atomic, then webpack builds /assets/build
+                       # and /assets/atomic/js, and gulp compiles the atomic
+                       # widgets' SCSS into /assets/atomic/css and writes the
+                       # .min files there
+  npm run build-win    # gulp: /assets/src -> /assets/css and /assets/js, plus
+                       # their .min files (works on every OS despite the name;
+                       # "build-g" is the same task for a POSIX shell)
+  npm run start        # webpack and gulp in watch mode while developing
+  npm run release      # both builds, then the distributable zip in /dist
+
+Where each compiled file comes from (see webpack.config.js and gulpfile.js):
 
 * /src -- React and JavaScript for the dashboard, page importer and editor
-  bundles, compiled by webpack into /assets/build (see webpack.config.js)
+  bundles, compiled by webpack into /assets/build
 * /inc/AtomicWidgets/Widgets/<Widget>/assets/js and .../assets/scss -- the
   atomic widgets' front-end scripts and styles, bundled by webpack into
-  /assets/atomic/js and /assets/atomic/css; each .min file there is the
-  gulp minification of the file of the same name beside it
-* /assets/src -- SCSS, compiled by gulp into /assets/css (see gulpfile.js)
-* /assets/js and /assets/js/widgets -- front-end scripts; each .min.js is the
-  build of the .js of the same name beside it
+  /assets/atomic/js and compiled by gulp into /assets/atomic/css; each .min
+  file there is the gulp minification of the file of the same name beside it
+* /inc/AtomicWidgets/assets/js/atomic-editor.js and .../js/atomic-editor/ --
+  the atomic widgets' editor script, bundled by webpack into
+  /assets/atomic/js/atomic-editor.js (and its .min.js by gulp)
+* /assets/src/scss, /assets/src/code-snippet, /assets/src/notices -- SCSS,
+  compiled by gulp into /assets/css; each .min.css is the minification of
+  the .css of the same name beside it
+* /assets/src/js -- front-end and admin scripts, copied by gulp into
+  /assets/js (unchanged, so the .js there is readable); each .min.js is the
+  minification of the .js of the same name beside it
 
 Every npm dependency is listed in package.json. The same sources are also at
 https://github.com/Wealcoder/animation-addons-for-elementor
@@ -717,6 +734,14 @@ upstream, so their projects are the source:
 * Select2 4.1.0 (admin select control) -- https://github.com/select2/select2
 
 == Changelog ==
+
+= 🌀 Animation Addons for Elementor v4.2.2 – 20th September 2026 =
+
+  - **Fixed:** A site running Animation Addons Pro 4.2 or older produced a fatal error on every page once this plugin updated to 4.2.1 — the add-on calls two helper functions by their previous names. Both names are back, as compatibility wrappers, and stay for the next five releases; update the Pro add-on when its update is offered.
+  - **Fixed:** On a multilingual (WPML) site the dashboard could go blank when switching to the Legacy (V3) list. The browser's page translation was rewriting the dashboard's text while it updated; the dashboard now opts out of page translation, and if anything else ever interrupts it, it shows a message with a Reload button instead of an empty page.
+  - **Fixed:** The form tables are no longer re-created on a site where they already exist — a database reset that kept the plugin's tables logged `Table 'wp_aae_forms' already exists` on the next page load. Each table is now checked first; an existing one is only brought up to date.
+  - **Fixed:** A starter-template import now reports which files it could not download instead of finishing as if nothing had gone wrong, and no longer loses an import's progress in three cases where it silently did.
+  - **Changed:** The build now empties its output folder first, so a compiled file whose source has been removed can never ship again; two unused preset stylesheets were removed on the same rule. The Source Code section of this readme names the source of every compiled file and the exact build commands.
 
 = 🌀 Animation Addons for Elementor v4.2.1 – 17th September 2026 =
 
