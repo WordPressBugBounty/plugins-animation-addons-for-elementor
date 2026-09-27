@@ -64,6 +64,45 @@ class Plugin
 	public $api_url = 'https://block.animation-addons.com/wp-json/api/v2/list';
 
 	/**
+	 * The block library host, without a trailing slash.
+	 *
+	 * @return string
+	 */
+	public static function block_library_host() {
+		return untrailingslashit( AAEADDON_BLOCK_LIBRARY_URL );
+	}
+
+	/**
+	 * Which eras this site actually USES — an era is on when at least one of
+	 * its widgets is switched on. Decided on the saved widget options alone:
+	 * an extension does not make a section renderable, so it does not count.
+	 *
+	 * The editor's Template Library uses this for the DEFAULT its Version
+	 * filter opens on and for one hint line, and for nothing else — every
+	 * version is always listed and always in the filter. It briefly hid the
+	 * unused era instead, which left a V4 site with no way to reach the V3
+	 * catalogue and no control on screen saying one existed; the dependency
+	 * dialog on Insert already offers to switch on whatever a template needs,
+	 * so there was never anything to protect against.
+	 *
+	 * @return array{v3:bool,v4:bool}
+	 */
+	public static function template_library_eras() {
+		$v3 = count( self::get_widgets() ) > 0;
+		$v4 = false;
+
+		if ( class_exists( '\Wealcoder\AnimationAddons\AtomicWidgets\Atomic' ) ) {
+			$counts = \Wealcoder\AnimationAddons\AtomicWidgets\Atomic::instance()->count_active_atomic();
+			$v4     = ! empty( $counts['widgets'] );
+		}
+
+		return [
+			'v3' => $v3,
+			'v4' => $v4,
+		];
+	}
+
+	/**
 	 * Instance
 	 *
 	 * @since 1.0.0
@@ -351,6 +390,16 @@ class Plugin
 
 		// templates Library
 		if (class_exists('\Wealcoder\AnimationAddons\Library_Source')) {
+			// Versioned by file time as well as release: this bundle changes
+			// between releases and a browser holding ?ver=<release> kept
+			// serving the previous one (measured: the era rule and the
+			// dependency dialog absent in a browser that had the old file).
+			$library_js  = AAEADDON_PATH . 'assets/js/wcf-template-library.js';
+			$library_css = AAEADDON_PATH . 'assets/css/wcf-template-library.css';
+			$library_ver = static function ( $file ) {
+				return AAEADDON_VERSION . ( file_exists( $file ) ? '.' . filemtime( $file ) : '' );
+			};
+
 			wp_enqueue_script(
 				'wcf-template-library',
 				plugins_url('/assets/js/wcf-template-library.js', __FILE__),
@@ -358,7 +407,7 @@ class Plugin
 					'jquery',
 					'wp-util',
 				),
-				AAEADDON_VERSION,
+				$library_ver( $library_js ),
 				true
 			);
 
@@ -373,6 +422,58 @@ class Plugin
 					'config'         => apply_filters('wcf_addons_editor_config', array()), // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 					'pro_installed'  => file_exists(WP_PLUGIN_DIR . '/animation-addons-for-elementor-pro/animation-addons-for-elementor-pro'), // change below code at version 2.5.9
 					'pro_active' 	 => aaeaddon_pro_defined( 'VERSION' ),
+					// Whether THIS editor can insert a V4 (atomic) block: Elementor's
+					// atomic experiment is on. Decides the Version filter's default
+					// (V4 here, V3 otherwise) and whether a V4 card's Insert is offered.
+					'atomic_available' => \Wealcoder\AnimationAddons\AtomicWidgets\Atomic::is_elementor_atomic_active(),
+					// The block library host (AAEADDON_BLOCK_LIBRARY_URL; a staging
+					// site overrides it in wp-config.php to a local copy).
+					'block_host'       => self::block_library_host(),
+					// Which eras this site USES. Decides which version the filter
+					// opens on and one hint line — never what is listed or
+					// offered. See template_library_eras().
+					'eras'             => self::template_library_eras(),
+					'widgets_link'     => admin_url( 'admin.php?page=aaeaddon_settings&tab=widgets' ),
+					'i18n'           => array(
+						'needs_v4'        => esc_html__( 'Needs Elementor V4 (atomic elements) to insert', 'animation-addons-for-elementor' ),
+						'v4'              => esc_html__( 'V4', 'animation-addons-for-elementor' ),
+						'animated'        => esc_html__( 'Animated', 'animation-addons-for-elementor' ),
+						'insert'          => esc_html__( 'Insert', 'animation-addons-for-elementor' ),
+						/* translators: %s: comma-separated list of widget names. */
+						'switched_on'     => esc_html__( 'Switched on %s. Saving and reloading the editor to finish the insert…', 'animation-addons-for-elementor' ),
+						/* translators: %s: comma-separated list of widget names. */
+						'missing_widgets' => esc_html__( 'This block uses widgets that are switched off on this site (%s). An administrator has to switch them on in Animation Addons → Widgets before it can be inserted.', 'animation-addons-for-elementor' ),
+						/* translators: %d: number of images. */
+						'linked'          => esc_html__( '%d image(s) could not be copied and stay linked to the template server.', 'animation-addons-for-elementor' ),
+						'failed'          => esc_html__( 'The block could not be inserted.', 'animation-addons-for-elementor' ),
+						'empty'           => esc_html__( 'No templates found.', 'animation-addons-for-elementor' ),
+						'empty_v4'        => esc_html__( 'No Elementor V4 blocks in this list yet — switch the version filter to V3 or All.', 'animation-addons-for-elementor' ),
+						'empty_v4_pages'  => esc_html__( 'No Elementor V4 pages in this list yet — switch the version filter to V3 or All.', 'animation-addons-for-elementor' ),
+						// The load-more footer. The bundle's sprintf() understands
+						// %1$s / %2$s, so a translation may reorder them.
+						/* translators: 1: how many are on screen, 2: how many match the filter. */
+						'showing'         => esc_html__( 'Showing %1$s of %2$s — keep scrolling for more', 'animation-addons-for-elementor' ),
+						/* translators: %s: how many templates match the filter. */
+						'all_shown'       => esc_html__( 'All %s shown', 'animation-addons-for-elementor' ),
+						// The hint under the toolbar when the list can show cards from
+						// an era whose every widget is switched off. They still insert.
+						/* translators: %s: link to the Widgets screen. */
+						'era_off_v3'      => esc_html__( 'Every Elementor V3 widget is switched off on this site. V3 sections still insert — the editor offers to switch on the widgets each one needs. You can also switch them on first in %s.', 'animation-addons-for-elementor' ),
+						/* translators: %s: link to the Widgets screen. */
+						'era_off_v4'      => esc_html__( 'Every Elementor V4 widget is switched off on this site. V4 blocks still insert — the editor offers to switch on the widgets each one needs. You can also switch them on first in %s.', 'animation-addons-for-elementor' ),
+						'widgets_screen'  => esc_html__( 'Animation Addons → Widgets', 'animation-addons-for-elementor' ),
+						// The dependency dialog: what the block/page needs that is off.
+						'deps_title'      => esc_html__( 'This template uses widgets that are switched off', 'animation-addons-for-elementor' ),
+						'deps_body'       => esc_html__( 'Switch them on to insert it. The editor saves and reloads once to register them.', 'animation-addons-for-elementor' ),
+						'deps_body_admin' => esc_html__( 'An administrator has to switch them on in Animation Addons → Widgets before it can be inserted.', 'animation-addons-for-elementor' ),
+						'deps_enable'     => esc_html__( 'Switch on & insert', 'animation-addons-for-elementor' ),
+						'deps_cancel'     => esc_html__( 'Cancel', 'animation-addons-for-elementor' ),
+						'deps_close'      => esc_html__( 'Close', 'animation-addons-for-elementor' ),
+						'deps_widget'     => esc_html__( 'Widget', 'animation-addons-for-elementor' ),
+						'deps_extension'  => esc_html__( 'Extension', 'animation-addons-for-elementor' ),
+						'deps_unavailable' => esc_html__( 'Not available on this site — needs Animation Addons Pro', 'animation-addons-for-elementor' ),
+						'deps_unavailable_note' => esc_html__( 'The parts marked as unavailable will be left out of the insert.', 'animation-addons-for-elementor' ),
+					),
 					// 'pro_installed'  => array_key_exists('animation-addons-for-elementor-pro/animation-addons-for-elementor-pro.php', get_plugins()),
 					// 'pro_active'     => aaeaddon_pro_defined( 'VERSION' ) && array_key_exists('animation-addons-for-elementor-pro/animation-addons-for-elementor-pro.php', get_plugins()),
 				)
@@ -382,7 +483,7 @@ class Plugin
 				'wcf-template-library',
 				plugins_url('/assets/css/wcf-template-library.css', __FILE__),
 				array(),
-				AAEADDON_VERSION
+				$library_ver( $library_css )
 			);
 		}
 	}
@@ -1234,7 +1335,14 @@ class Plugin
 		\Wealcoder\AnimationAddons\Forms\Bootstrap::init();
 
 		/*
-		 * Template Library, gated on the V4 (Atomic) dashboard extension toggle.
+		 * Template Library -- switchable from EITHER dashboard, like Code Snippet
+		 * below and the three admin extensions in register_extensions().
+		 *
+		 * The modal inserts V3 sections AND V4 blocks, so it belongs to no era.
+		 * Until 2026-09-21 only the atomic toggle was read, while the v3
+		 * General Extensions tab kept showing a "Template library" card that
+		 * nothing consulted -- a site with that card ON and the atomic list
+		 * empty had no library in the editor and no error anywhere.
 		 *
 		 * This is the ONLY require of class-template-library.php in the
 		 * plugin, and that file is the only require of inc/library-source.php —
@@ -1249,7 +1357,10 @@ class Plugin
 		 * animation-addons-for-elementor.php only requires it AFTER
 		 * class-plugin.php) and calls instance() itself.
 		 */
-		if (\Wealcoder\AnimationAddons\AtomicWidgets\Atomic::instance()->is_extension_active('template-library')) {
+		$template_library_active = aaeaddon_get_settings('aaeaddon_save_extensions', 'template-library')
+			|| \Wealcoder\AnimationAddons\AtomicWidgets\Atomic::instance()->is_extension_active('template-library');
+
+		if ($template_library_active) {
 			require_once AAEADDON_PATH . 'inc/class-template-library.php';
 		}
 
@@ -1425,6 +1536,15 @@ class Plugin
 									</select>
 								</div>
 								</div>
+								<div id="elementor-template-library-builder-toolbar-remote" class="elementor-template-library-color-toolbar">
+								<div id="elementor-template-library-builder">
+									<select id="wcf-template-library-builder" class="elementor-template-library-color-select" data-aae-builder-filter tabindex="-1">
+										<option value="all"><?php echo esc_html__('All versions', 'animation-addons-for-elementor'); ?></option>
+										<option value="v3"><?php echo esc_html__('Elementor V3', 'animation-addons-for-elementor'); ?></option>
+										<option value="v4"><?php echo esc_html__('Elementor V4 (Atomic)', 'animation-addons-for-elementor'); ?></option>
+									</select>
+								</div>
+								</div>
 														
 														</div>
 							<div id="elementor-template-library-filter-text-wrapper">
@@ -1512,8 +1632,8 @@ class Plugin
 						<div id="elementor-template-library-header-tools">
 							<div id="elementor-template-library-header-preview">
 								<div id="elementor-template-library-header-preview-insert-wrapper" class="elementor-templates-modal__header__item">
-									<# if(WCF_TEMPLATE_LIBRARY?.config?.wcf_valid && WCF_TEMPLATE_LIBRARY?.config?.wcf_valid === true){ #> 
-										<button class="library--action insert">
+									<# if( data.valid ){ #>
+										<button class="library--action insert" data-id="{{ data.template_id }}" data-jurl="{{ data.jurl }}" data-builder="{{ data.builder }}" <# if ( data.insert_disabled ) { #>disabled title="{{ data.insert_disabled }}"<# } #>>
 											<i class="eicon-file-download"></i>
 											<?php echo esc_html__('Insert', 'animation-addons-for-elementor'); ?>
 										</button>
@@ -1843,6 +1963,7 @@ class Plugin
 	 */
 	public function __construct()
 	{
+		$this->api_url = self::block_library_host() . '/wp-json/api/v2/list';
 
 		add_action('elementor/elements/categories_registered', array($this, 'widget_categories'));
 
@@ -1940,6 +2061,8 @@ class Plugin
 
 		// WPML Support 
 		add_filter('wpml_elementor_widgets_to_translate', [WPML\WPML_Manager::class, 'add_widgets_to_translate']);
+		// A translation WPML just wrote must not render from Elementor's cache of the previous one.
+		add_action('wpml_pb_finished_adding_string_translations', [WPML\WPML_Manager::class, 'invalidate_render_cache'], 20, 1);
 	}
 }
 

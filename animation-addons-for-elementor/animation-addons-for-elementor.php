@@ -3,7 +3,7 @@
  * Plugin Name:                Animation Addons
  * Description:                Animation Addons for Elementor comes with GSAP Animation Builder, Customizable Widgets, Header Footer, Single Post, Archive Page Builder, and more.
  * Plugin URI:                 https://animation-addons.com/
- * Version:                    4.2.2
+ * Version:                    4.2.3
  * Author:                     Wealcoder
  * Author URI:                 https://animation-addons.com/
  * License:                    GPL v2 or later
@@ -96,7 +96,7 @@ aaeaddon_define( 'AAEADDON_DASHBOARD_V2', true, 'WCF_ADDONS_DASHBOARD_V2' );
 /**
  * Plugin Version.
  */
-aaeaddon_define( 'AAEADDON_VERSION', '4.2.2', 'WCF_ADDONS_VERSION' );
+aaeaddon_define( 'AAEADDON_VERSION', '4.2.3', 'WCF_ADDONS_VERSION' );
 
 /**
  * Plugin File Ref.
@@ -130,6 +130,16 @@ aaeaddon_define( 'AAEADDON_WIDGETS_PATH', AAEADDON_PATH . 'widgets/', 'WCF_ADDON
  * reason `aaeaddon_define()` prefers the old spelling.
  */
 aaeaddon_define( 'AAEADDON_TEMPLATE_STARTER_BASE_URL', 'https://www.themecrowdy.com/', 'WCF_TEMPLATE_STARTER_BASE_URL' );
+
+/**
+ * Block library host — the editor's Template Library (blocks / pages).
+ *
+ * Same override pattern as the template server above: wp-config.php on a
+ * staging site points it at a local copy of the block library (no trailing
+ * slash). Read by `Aaeaddon_Plugin::block_library_host()` for both the V3
+ * `api/v2/list` requests and the editor JS (`WCF_TEMPLATE_LIBRARY.block_host`).
+ */
+aaeaddon_define( 'AAEADDON_BLOCK_LIBRARY_URL', 'https://block.animation-addons.com', 'WCF_BLOCK_LIBRARY_URL' );
 
 aaeaddon_define( 'AAEADDON_FEATURE_REQUEST_ENDPOINT', 'https://animation-addons.com/wp-json/aae/v1/request-new-feature', 'WCF_FEATURE_REQUEST_ENDPOINT' );
 
@@ -648,8 +658,17 @@ final class Aaeaddon_Plugin {
  *
  * @since 4.2.0
  */
-// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedClassnameFound -- the pre-4.2 name being aliased.
-class_alias( 'Aaeaddon_Plugin', 'WCF_ADDONS_Plugin' );
+//
+// Guarded, because the name can already exist: Pro declares an empty stub of
+// it at `plugins_loaded` PHP_INT_MAX when this plugin is inactive, and the
+// request that ACTIVATES this plugin includes this file after that. An
+// unguarded alias then warned "Cannot declare class WCF_ADDONS_Plugin", and
+// WordPress reported it as "268 characters of unexpected output during
+// activation". The stub only lives for that one request.
+if ( ! class_exists( 'WCF_ADDONS_Plugin', false ) ) {
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedClassnameFound -- the pre-4.2 name being aliased.
+	class_alias( 'Aaeaddon_Plugin', 'WCF_ADDONS_Plugin' );
+}
 
 // ✅ Register hooks here (outside class)
 register_activation_hook( AAEADDON_FILE, ['Aaeaddon_Plugin', 'plugin_activation_hook'] );
