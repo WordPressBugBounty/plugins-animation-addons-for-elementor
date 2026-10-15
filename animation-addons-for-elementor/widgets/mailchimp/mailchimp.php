@@ -151,9 +151,12 @@ class Mailchimp extends Widget_Base
 				'label'       => __('MailChimp API', 'animation-addons-for-elementor'),
 				'type'        => Controls_Manager::TEXT,
 				'label_block' => true,
-				'placeholder' => __('Enter your mailchimp api here', 'animation-addons-for-elementor'),
+				'placeholder' => __('Leave empty to use the site-wide key', 'animation-addons-for-elementor'),
 				'dynamic'     => ['active' => true],
-				'default' => get_option('aaeaddon_mailchimp_api')
+				// No default: a default is sent to everyone who can open the
+				// editor, Contributors included. An empty key falls back to the
+				// site-wide one on the server (Mailchimp_Api, ajax-handler).
+				'default' => ''
 			]
 		);
 
@@ -1191,9 +1194,16 @@ class Mailchimp extends Widget_Base
 	{
 		$settings = $this->get_settings_for_display();
 
-		$post_id = get_the_ID();
-		if ( empty( $post_id ) && class_exists( '\Elementor\Plugin' ) && \Elementor\Plugin::$instance->documents->get_current() ) {
+		// The subscribe handler looks the widget up in THIS id's Elementor data,
+		// so it must be the document the widget lives in. Inside a header,
+		// footer or other template, get_the_ID() is the surrounding page, not
+		// the template, so prefer the document Elementor is rendering.
+		$post_id = 0;
+		if ( class_exists( '\Elementor\Plugin' ) && \Elementor\Plugin::$instance->documents->get_current() ) {
 			$post_id = \Elementor\Plugin::$instance->documents->get_current()->get_main_id();
+		}
+		if ( empty( $post_id ) ) {
+			$post_id = get_the_ID();
 		}
 
 		$this->add_render_attribute('wrapper', 'class', 'wcf--mailchimp');

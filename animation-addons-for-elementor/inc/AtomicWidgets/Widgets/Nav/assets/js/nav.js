@@ -941,10 +941,58 @@ function fetchDropdownIconSvg( url ) {
 	}
 	const promise = window.fetch( url )
 		.then( ( r ) => ( r.ok ? r.text() : '' ) )
-		.then( ( text ) => ( /<svg[\s>]/i.test( text ) ? text : '' ) )
-		.catch( () => '' );
+		.then( ( text ) => sanitizeDropdownIconSvg( text ) )
+		.catch( () => null );
 	dropdownIconCache.set( url, promise );
 	return promise;
+}
+
+/* The icon URL is author-controlled, so the fetched markup is untrusted: parse it
+ * as XML (never innerHTML) and keep only an allowlist of plain SVG shapes and
+ * presentation attributes before it is inlined. The root and every descendant
+ * must be in the SVG namespace: an XHTML-namespaced node would render as live
+ * HTML (a form with a javascript: action, a full-page button, a meta refresh).
+ * Presentation (fill/stroke/class/viewBox/paths) is kept so `currentColor` works.
+ * Returns a detached <svg> element, or null if the file is not a usable SVG. */
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const SVG_ALLOWED_TAGS = [
+	'svg', 'g', 'path', 'circle', 'rect', 'line', 'polyline', 'polygon', 'ellipse',
+	'defs', 'symbol', 'use', 'title', 'desc', 'lineargradient', 'radialgradient',
+	'stop', 'clippath', 'mask',
+];
+const SVG_ALLOWED_ATTRS = [
+	'xmlns', 'xmlns:xlink', 'id', 'class', 'viewbox', 'width', 'height', 'x', 'y',
+	'x1', 'x2', 'y1', 'y2', 'cx', 'cy', 'r', 'rx', 'ry', 'd', 'points', 'transform',
+	'fill', 'fill-opacity', 'fill-rule', 'clip-rule', 'clip-path', 'mask', 'opacity',
+	'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit',
+	'stroke-dasharray', 'stroke-dashoffset', 'stroke-opacity', 'offset', 'stop-color',
+	'stop-opacity', 'gradientunits', 'gradienttransform', 'preserveaspectratio',
+	'aria-hidden', 'role', 'focusable', 'version', 'href', 'xlink:href',
+];
+function sanitizeDropdownIconSvg( text ) {
+	if ( ! text || ! /<svg[\s>]/i.test( text ) ) {
+		return null;
+	}
+	const doc = new window.DOMParser().parseFromString( text, 'image/svg+xml' );
+	const root = doc.documentElement;
+	if ( ! root || root.namespaceURI !== SVG_NS || root.localName !== 'svg' || doc.getElementsByTagName( 'parsererror' ).length ) {
+		return null;
+	}
+	Array.from( root.querySelectorAll( '*' ) ).forEach( ( el ) => {
+		if ( el.namespaceURI !== SVG_NS || ! SVG_ALLOWED_TAGS.includes( el.localName.toLowerCase() ) ) {
+			el.remove();
+		}
+	} );
+	[ root, ...root.querySelectorAll( '*' ) ].forEach( ( el ) => {
+		Array.from( el.attributes ).forEach( ( attr ) => {
+			const name = attr.name.toLowerCase();
+			const isHref = name === 'href' || name === 'xlink:href';
+			if ( ! SVG_ALLOWED_ATTRS.includes( name ) || ( isHref && ! /^#[\w-]*$/.test( attr.value.trim() ) ) ) {
+				el.removeAttribute( attr.name );
+			}
+		} );
+	} );
+	return root;
 }
 
 /* Inline the nav's chosen dropdown icon next to the label of every item that has
@@ -960,6 +1008,7 @@ function injectDropdownIcons( nav ) {
 		return;
 	}
 	fetchDropdownIconSvg( url ).then( ( svg ) => {
+		// `svg` is a sanitized, detached <svg> element (see sanitizeDropdownIconSvg).
 		if ( ! svg ) {
 			return;
 		}
@@ -971,7 +1020,7 @@ function injectDropdownIcons( nav ) {
 			const span = document.createElement( 'span' );
 			span.className = 'aae-a-nav-dropdown-icon';
 			span.setAttribute( 'aria-hidden', 'true' );
-			span.innerHTML = svg;
+			span.appendChild( document.importNode( svg, true ) );
 			label.appendChild( span );
 		} );
 	} );

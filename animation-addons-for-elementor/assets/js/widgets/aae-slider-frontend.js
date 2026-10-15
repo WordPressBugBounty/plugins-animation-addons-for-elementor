@@ -111,14 +111,47 @@
                 const editorSettings = this.getElementSettings();
                 const device = elementorFrontend.getCurrentDeviceMode();
 
+                // The icon URL is author-controlled, so the fetched SVG is untrusted:
+                // keep only an allowlist of plain SVG shapes and presentation attributes
+                // before it reaches the DOM (XSS). Root and children must be in the SVG
+                // namespace: an XHTML-namespaced node would render as live HTML.
+                function sanitizeSvgNode(svgNode, doc) {
+                    const svgNs = 'http://www.w3.org/2000/svg';
+                    if (!svgNode || svgNode.namespaceURI !== svgNs || svgNode.localName !== 'svg' || doc.getElementsByTagName('parsererror').length) {
+                        return false;
+                    }
+                    const allowedTags = ['svg', 'g', 'path', 'circle', 'rect', 'line', 'polyline', 'polygon', 'ellipse',
+                        'defs', 'symbol', 'use', 'title', 'desc', 'lineargradient', 'radialgradient', 'stop', 'clippath', 'mask'];
+                    const allowedAttrs = ['xmlns', 'xmlns:xlink', 'id', 'class', 'viewbox', 'width', 'height', 'x', 'y',
+                        'x1', 'x2', 'y1', 'y2', 'cx', 'cy', 'r', 'rx', 'ry', 'd', 'points', 'transform',
+                        'fill', 'fill-opacity', 'fill-rule', 'clip-rule', 'clip-path', 'mask', 'opacity',
+                        'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit',
+                        'stroke-dasharray', 'stroke-dashoffset', 'stroke-opacity', 'offset', 'stop-color',
+                        'stop-opacity', 'gradientunits', 'gradienttransform', 'preserveaspectratio',
+                        'aria-hidden', 'role', 'focusable', 'version', 'href', 'xlink:href'];
+                    Array.from(svgNode.querySelectorAll('*')).forEach((el) => {
+                        if (el.namespaceURI !== svgNs || !allowedTags.includes(el.localName.toLowerCase())) {
+                            el.remove();
+                        }
+                    });
+                    [svgNode, ...svgNode.querySelectorAll('*')].forEach((el) => {
+                        Array.from(el.attributes).forEach((attr) => {
+                            const name = attr.name.toLowerCase();
+                            const isHref = name === 'href' || name === 'xlink:href';
+                            if (!allowedAttrs.includes(name) || (isHref && !/^#[\w-]*$/.test(attr.value.trim()))) {
+                                el.removeAttribute(attr.name);
+                            }
+                        });
+                    });
+                    return document.importNode(svgNode, true);
+                }
+
                 async function inlineSvg(imgEl) {
                     try {
                         const response = await fetch(imgEl, { mode: 'cors' });
                         const svgText = await response.text();
-                        const svgNode = new DOMParser()
-                            .parseFromString(svgText, 'image/svg+xml')
-                            .documentElement;
-                        return svgNode;
+                        const svgDoc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
+                        return sanitizeSvgNode(svgDoc.documentElement, svgDoc);
                     } catch (e) {
                         return false;
                     }
@@ -218,20 +251,22 @@
 
                     if (propertyName === 'navigation_previous_icon' || propertyName === 'navigation_next_icon' || propertyName === 'navigation') {
                         if (editorSettings?.navigation_previous_icon && editorSettings.navigation_previous_icon.library !== 'svg' && editorSettings.navigation_previous_icon.value != '') {
-                            this.$element.find('.wcf-arrow-prev').html(`<i class="${editorSettings.navigation_previous_icon.value}"></i>`);
+                            this.$element.find('.wcf-arrow-prev').empty().append($('<i>').attr('class', editorSettings.navigation_previous_icon.value));
                         } else if (editorSettings?.navigation_previous_icon && editorSettings.navigation_previous_icon.library == 'svg' && editorSettings.navigation_previous_icon.value?.url != '') {
                             const iprevsvg = inlineSvg(editorSettings.navigation_previous_icon.value.url);
                             iprevsvg.then((svgNode) => {
-                                this.$element.find('.wcf-arrow-prev').html(svgNode);
+                                if (!svgNode) return;
+                                this.$element.find('.wcf-arrow-prev').empty().append(svgNode);
                             });
                         }
 
                         if (editorSettings?.navigation_next_icon && editorSettings.navigation_next_icon.library !== 'svg' && editorSettings.navigation_next_icon.value != '') {
-                            this.$element.find('.wcf-arrow-next').html(`<i class="${editorSettings.navigation_next_icon.value}"></i>`);
+                            this.$element.find('.wcf-arrow-next').empty().append($('<i>').attr('class', editorSettings.navigation_next_icon.value));
                         } else if (editorSettings?.navigation_next_icon && editorSettings.navigation_next_icon.library == 'svg' && editorSettings.navigation_next_icon.value?.url != '') {
                             const inextsvg = inlineSvg(editorSettings.navigation_next_icon.value.url);
                             inextsvg.then((svgNode) => {
-                                this.$element.find('.wcf-arrow-next').html(svgNode);
+                                if (!svgNode) return;
+                                this.$element.find('.wcf-arrow-next').empty().append(svgNode);
                             });
                         }
                     }

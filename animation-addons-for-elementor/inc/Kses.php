@@ -66,8 +66,10 @@ final class Kses {
 		// `transform-style`). Hooked around the one wp_kses() and removed
 		// after, so no other kses call on the site is widened.
 		add_filter( 'safe_style_css', array( __CLASS__, 'safe_style_css' ) );
+		add_filter( 'wp_kses_uri_attributes', array( __CLASS__, 'uri_attributes' ) );
 		$html = wp_kses( $html, self::allowed_html() );
 		remove_filter( 'safe_style_css', array( __CLASS__, 'safe_style_css' ) );
+		remove_filter( 'wp_kses_uri_attributes', array( __CLASS__, 'uri_attributes' ) );
 
 		if ( $blocks ) {
 			$html = preg_replace_callback(
@@ -118,6 +120,7 @@ final class Kses {
 		}
 
 		add_filter( 'safe_style_css', array( __CLASS__, 'safe_style_css' ) );
+		add_filter( 'wp_kses_uri_attributes', array( __CLASS__, 'uri_attributes' ) );
 		foreach ( $parts as $i => $part ) {
 			if ( 0 === $i % 2 ) {
 				if ( '' !== $part ) {
@@ -136,6 +139,7 @@ final class Kses {
 			}
 		}
 		remove_filter( 'safe_style_css', array( __CLASS__, 'safe_style_css' ) );
+		remove_filter( 'wp_kses_uri_attributes', array( __CLASS__, 'uri_attributes' ) );
 	}
 
 	/**
@@ -282,6 +286,22 @@ final class Kses {
 	}
 
 	/**
+	 * `wp_kses_uri_attributes` filter, scoped like safe_style_css() to this
+	 * class's own wp_kses() calls: core does not list `xlink:href`, so an
+	 * allowed SVG `<use>`/`<image>`/gradient could carry `javascript:` in it
+	 * unchecked. Listing it puts it through the same protocol check as href.
+	 *
+	 * @param string[] $attrs Core's list.
+	 * @return string[]
+	 */
+	public static function uri_attributes( $attrs ) {
+		$attrs   = (array) $attrs;
+		$attrs[] = 'xlink:href';
+
+		return array_values( array_unique( $attrs ) );
+	}
+
+	/**
 	 * CSS properties allowed inside a `style` attribute, on top of core's.
 	 *
 	 * @param string[] $props Core's list.
@@ -331,7 +351,12 @@ final class Kses {
 	 * @return bool
 	 */
 	private static function is_data_script( $raw ) {
-		if ( ! preg_match( '/\btype\s*=\s*("([^"]*)"|\'([^\']*)\')/i', $raw, $m ) ) {
+		// Anchored to a whole attribute name: `\btype` would also match the
+		// `type` inside `data-type=`, and a runnable script would pass as data.
+		// More than one `type` is ambiguous (the printer and the browser could
+		// each pick a different one), so it is treated as code.
+		if ( preg_match_all( '/(?<![\w-])type\s*=/i', $raw ) !== 1
+			|| ! preg_match( '/(?<![\w-])type\s*=\s*("([^"]*)"|\'([^\']*)\')/i', $raw, $m ) ) {
 			return false;
 		}
 		$type = strtolower( trim( isset( $m[3] ) && '' !== $m[3] ? $m[3] : $m[2] ) );
@@ -349,7 +374,7 @@ final class Kses {
 	private static function script_attributes( $raw ) {
 		$out  = array();
 		$seen = array();
-		if ( preg_match_all( '/\b(type|id|data-[a-z0-9_-]+)\s*=\s*("([^"]*)"|\'([^\']*)\')/i', $raw, $m, PREG_SET_ORDER ) ) {
+		if ( preg_match_all( '/(?<![\w-])(type|id|data-[a-z0-9_-]+)\s*=\s*("([^"]*)"|\'([^\']*)\')/i', $raw, $m, PREG_SET_ORDER ) ) {
 			foreach ( $m as $a ) {
 				$name         = strtolower( $a[1] );
 				$out[ $name ] = isset( $a[4] ) && '' !== $a[4] ? $a[4] : $a[3];
@@ -643,28 +668,23 @@ final class Kses {
 				'k4'       => true,
 				'result'   => true,
 			),
+			// No attributename/values/from/to/by: with them an <animate> can
+			// rewrite its parent's href to `javascript:` AFTER kses ran. Nothing
+			// this plugin renders uses SMIL animation.
 			'animate'          => array(
-				'attributename' => true,
-				'values'        => true,
 				'dur'           => true,
 				'repeatcount'   => true,
 				'begin'         => true,
-				'from'          => true,
-				'to'            => true,
 				'fill'          => true,
 				'calcmode'      => true,
 				'keytimes'      => true,
 				'keysplines'    => true,
 			),
 			'animatetransform' => array(
-				'attributename' => true,
 				'type'          => true,
-				'values'        => true,
 				'dur'           => true,
 				'repeatcount'   => true,
 				'begin'         => true,
-				'from'          => true,
-				'to'            => true,
 				'additive'      => true,
 			),
 		);
