@@ -380,6 +380,7 @@ return [
 				'keywords'     => ['create user', 'registration', 'signup', 'account'],
 				'category'     => 'form',
 				'order'        => 18,
+				'doc_url'      => 'https://animation-addons.com/docs/v4-extentions/create-user/',
 				'requires'     => ['aae-a-form'],
 				'requires_note' => 'Requires the Form widget. Configured per form in the Actions dialog.',
 			],
@@ -481,8 +482,8 @@ return [
 				'keywords'     => ['custom fonts', 'fonts', 'typography', 'webfont', 'woff', 'font upload'],
 				'category'     => 'utility',
 				'order'        => 21,
-				'demo_url'     => 'https://animation-addons.com/docs/general-extensions/custom-fonts/',
-				'doc_url'      => 'https://animation-addons.com/docs/general-extensions/custom-fonts/',
+				'demo_url'     => 'https://animation-addons.com/docs/v4-extentions/custom-fonts-v4/',
+				'doc_url'      => 'https://animation-addons.com/docs/v4-extentions/custom-fonts-v4/',
 			],
 
 			'custom-cpt' => [
@@ -497,7 +498,7 @@ return [
 				'keywords'     => ['post type builder', 'custom post type', 'cpt', 'taxonomy', 'content type'],
 				'category'     => 'utility',
 				'order'        => 22,
-				'demo_url'     => 'https://animation-addons.com/docs/general-extensions/post-type-builder/',
+				'demo_url'     => 'https://animation-addons.com/docs/v4-extentions/post-type-builder/',
 				'doc_url'      => 'https://animation-addons.com/docs/v4-extentions/post-type-builder/',
 			],
 
@@ -513,8 +514,8 @@ return [
 				'keywords'     => ['custom icon', 'icons', 'icon font', 'icomoon', 'fontello', 'svg icons'],
 				'category'     => 'utility',
 				'order'        => 23,
-				'demo_url'     => 'https://animation-addons.com/docs/general-extensions/custom-icon/',
-				'doc_url'      => 'https://animation-addons.com/docs/general-extensions/custom-icon/',
+				'demo_url'     => 'https://animation-addons.com/docs/v4-extentions/custom-icon-v4/',
+				'doc_url'      => 'https://animation-addons.com/docs/v4-extentions/custom-icon-v4/',
 			],
 
 			'code-snippet' => [

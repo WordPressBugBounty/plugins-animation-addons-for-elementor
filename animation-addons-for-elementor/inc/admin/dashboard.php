@@ -316,6 +316,14 @@ class Aaeaddon_Admin_Init
 		require_once 'plugin-installer.php';
 		require_once 'base/Helpers.php';
 		require_once 'base/Downloader.php';
+		// Required, not autoloaded: PSR-4 maps Admin\Notices\Notices to
+		// inc/Admin/..., but this folder is inc/admin/, so on a case-sensitive
+		// (Linux) server the autoloader never finds it and
+		// plugin_dashboard_entry_page() fatals. On Windows it may already be
+		// autoloaded under the other spelling, hence the class check.
+		if ( ! class_exists( '\Wealcoder\AnimationAddons\Admin\Notices\Notices', false ) ) {
+			require_once 'Notices/Notices.php';
+		}
 
 		// The import engine is NOT loaded here: Importer.php itself, plus
 		// WPImporterLogger, WPImporterLoggerCLI, AaeaddonWXRImporter, AaeaddonWXRImportInfo,
@@ -651,6 +659,11 @@ class Aaeaddon_Admin_Init
 		// admin <html lang> is not English while this UI is: Chrome offers to
 		// translate, and once it has, the first tab switch blanks the page. The
 		// attribute is what Google documents for opting a subtree out.
+
+		// remove_all_notices() strips admin_notices on this screen, so the
+		// seasonal upgrade banner (free users only) is printed here instead.
+		// It sits outside the translate="no" app root on purpose.
+		\Wealcoder\AnimationAddons\Admin\Notices\Notices::instance()->admin_notices();
 ?>
 		<div class="wrap wcf-admin-wrapper notranslate" id="wcf-admin-ds-cr-js" translate="no"></div>
 <?php

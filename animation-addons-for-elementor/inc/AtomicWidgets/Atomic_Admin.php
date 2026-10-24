@@ -458,24 +458,85 @@ final class Atomic_Admin
 		check_ajax_referer( Nonce::action( Nonce::LOOP_GRID, 'nonce' ), 'nonce' );
 
 		if (! current_user_can('edit_posts')) {
-			wp_send_json_error(['message' => 'Access denied.'], 403);
+			wp_send_json_error(['message' => __('Access denied.', 'animation-addons-for-elementor')], 403);
 		}
 
-		$menus = wp_get_nav_menus();
-		$out   = [];
+		$menus     = wp_get_nav_menus();
+		$out       = [];
+		$locations = function_exists('get_nav_menu_locations') ? (array) get_nav_menu_locations() : [];
 
 		if (! is_wp_error($menus)) {
 			foreach ($menus as $menu) {
 				$items = wp_get_nav_menu_items($menu->term_id);
 				$out[] = [
-					'id'    => (int) $menu->term_id,
-					'name'  => $menu->name,
-					'items' => Atomic::build_nav_menu_tree(is_array($items) ? $items : []),
+					'id'        => (int) $menu->term_id,
+					'name'      => $menu->name,
+					'items'     => Atomic::build_nav_menu_tree(is_array($items) ? $items : []),
+					// Theme locations this menu is assigned to (additive; lets the
+					// editor pick the site's main menu for a freshly dropped Nav).
+					'locations' => array_values(array_keys($locations, (int) $menu->term_id, true)),
 				];
 			}
 		}
 
 		wp_send_json_success(['menus' => $out]);
+	}
+
+	/**
+	 * AJAX handler — search the site's content for a Nav item's Link field.
+	 *
+	 * Pages, posts and every public custom post type, published only (a menu
+	 * link is for visitors). Queried directly rather than through
+	 * `wp/v2/search`, which only sees post types registered with show_in_rest,
+	 * so many plugins' CPTs would be missing.
+	 */
+	public static function ajax_search_nav_links(): void
+	{
+		check_ajax_referer( Nonce::action( Nonce::LOOP_GRID, 'nonce' ), 'nonce' );
+
+		if (! current_user_can('edit_posts')) {
+			wp_send_json_error(['message' => __('Access denied.', 'animation-addons-for-elementor')], 403);
+		}
+
+		$search = isset($_POST['search']) ? sanitize_text_field(wp_unslash($_POST['search'])) : '';
+		if ('' === $search) {
+			wp_send_json_success(['results' => []]);
+		}
+
+		// Builder internals are public post types too, but never a page to link to:
+		// Elementor's library, and this plugin's theme-builder templates, fonts and icons.
+		$types = array_values(array_diff(
+			get_post_types(['public' => true], 'names'),
+			['attachment', 'elementor_library', 'e-landing-page', 'e-floating-buttons', 'wcf-addons-template', 'wcf-custom-fonts', 'wcf-custom-icons']
+		));
+
+		$query = new \WP_Query([
+			's'                   => $search,
+			'post_type'           => $types,
+			'post_status'         => 'publish',
+			'posts_per_page'      => 15,
+			'no_found_rows'       => true,
+			'ignore_sticky_posts' => true,
+		]);
+
+		$results = [];
+		foreach ($query->posts as $post) {
+			$type  = get_post_type_object($post->post_type);
+			$title = html_entity_decode(wp_strip_all_tags(get_the_title($post)), ENT_QUOTES, 'UTF-8');
+
+			$results[] = [
+				'id'    => (int) $post->ID,
+				'title' => '' !== $title ? $title : sprintf(
+					/* translators: %d: post ID. */
+					__('(no title) #%d', 'animation-addons-for-elementor'),
+					$post->ID
+				),
+				'url'   => get_permalink($post),
+				'type'  => $type ? $type->labels->singular_name : $post->post_type,
+			];
+		}
+
+		wp_send_json_success(['results' => $results]);
 	}
 
 	/**
@@ -1393,7 +1454,7 @@ final class Atomic_Admin
 		check_ajax_referer( Nonce::action( Nonce::LOOP_GRID, 'nonce' ), 'nonce' );
 
 		if (! current_user_can('edit_posts')) {
-			wp_send_json_error(['message' => 'Access denied.'], 403);
+			wp_send_json_error(['message' => __('Access denied.', 'animation-addons-for-elementor')], 403);
 		}
 
 		$kind = isset($_POST['kind']) ? sanitize_key(wp_unslash($_POST['kind'])) : 'post';
@@ -1443,7 +1504,7 @@ final class Atomic_Admin
 			// Public taxonomies only — or an admin-UI one this user may assign
 			// terms of anyway. Private/internal taxonomies are not listed.
 			if (! $tax_obj || ! ($tax_obj->public || ($tax_obj->show_ui && current_user_can($tax_obj->cap->assign_terms)))) {
-				wp_send_json_error(['message' => 'Invalid taxonomy.'], 400);
+				wp_send_json_error(['message' => __('Invalid taxonomy.', 'animation-addons-for-elementor')], 400);
 			}
 			$terms = get_terms([
 				'taxonomy'   => $taxonomy,
@@ -1508,7 +1569,7 @@ final class Atomic_Admin
 		check_ajax_referer( Nonce::action( Nonce::LOOP_GRID, 'nonce' ), 'nonce' );
 
 		if (! current_user_can('edit_posts')) {
-			wp_send_json_error(['message' => 'Access denied.'], 403);
+			wp_send_json_error(['message' => __('Access denied.', 'animation-addons-for-elementor')], 403);
 		}
 
 		Atomic::load_loop_grid_class();
@@ -1577,12 +1638,12 @@ final class Atomic_Admin
 		check_ajax_referer( Nonce::action( Nonce::LOOP_GRID, 'nonce' ), 'nonce' );
 
 		if (! current_user_can('edit_posts')) {
-			wp_send_json_error(['message' => 'Access denied.'], 403);
+			wp_send_json_error(['message' => __('Access denied.', 'animation-addons-for-elementor')], 403);
 		}
 
 		$post = isset($_POST['sample_id']) ? get_post(absint($_POST['sample_id'])) : null;
 		if (! $post || 'publish' !== $post->post_status) {
-			wp_send_json_error(['message' => 'Invalid sample post.'], 404);
+			wp_send_json_error(['message' => __('Invalid sample post.', 'animation-addons-for-elementor')], 404);
 		}
 
 		wp_send_json_success(array_merge([
@@ -1674,12 +1735,12 @@ final class Atomic_Admin
 		$paged    = isset($_POST['paged']) ? max(1, absint($_POST['paged'])) : 1;
 
 		if (! $post_id || ! $grid_id) {
-			wp_send_json_error(['message' => 'Missing post_id or grid_id.'], 400);
+			wp_send_json_error(['message' => __('Missing post_id or grid_id.', 'animation-addons-for-elementor')], 400);
 		}
 
 		$post = get_post($post_id);
 		if (! $post || ('publish' !== $post->post_status && ! current_user_can('read_post', $post_id)) || post_password_required($post)) {
-			wp_send_json_error(['message' => 'Access denied.'], 403);
+			wp_send_json_error(['message' => __('Access denied.', 'animation-addons-for-elementor')], 403);
 		}
 
 
@@ -1696,7 +1757,7 @@ final class Atomic_Admin
 
 		$doc = \Elementor\Plugin::$instance->documents->get($post_id);
 		if (! $doc) {
-			wp_send_json_error(['message' => 'Document not found.'], 404);
+			wp_send_json_error(['message' => __('Document not found.', 'animation-addons-for-elementor')], 404);
 		}
 
 		$data = $doc->get_elements_data();
@@ -1727,7 +1788,7 @@ final class Atomic_Admin
 		$find_grid($data);
 
 		if (! $grid_el) {
-			wp_send_json_error(['message' => 'Loop grid not found.'], 404);
+			wp_send_json_error(['message' => __('Loop grid not found.', 'animation-addons-for-elementor')], 404);
 		}
 
 		$item_el = null;
@@ -1748,7 +1809,7 @@ final class Atomic_Admin
 		$find_item([$grid_el]);
 
 		if (! $item_el) {
-			wp_send_json_error(['message' => 'Loop item not found.'], 404);
+			wp_send_json_error(['message' => __('Loop item not found.', 'animation-addons-for-elementor')], 404);
 		}
 
 		// Build the paged query args from the grid's saved settings — the same
@@ -1774,7 +1835,7 @@ final class Atomic_Admin
 		// keeps the existing pagination runtime working untouched.
 		$path = isset($_POST['path']) ? (string) wp_unslash($_POST['path']) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- set_request_url() is the validator: same-host only, capped, no traversal.
 		if ('' !== $path && ! \Wealcoder\AnimationAddons\AtomicWidgets\Widgets\LoopGrid\Loop_Filter_Auth::set_request_url($path)) {
-			wp_send_json_error(['message' => 'Invalid path.'], 400);
+			wp_send_json_error(['message' => __('Invalid path.', 'animation-addons-for-elementor')], 400);
 		}
 
 		// Related source: the anchor is the post the visitor is READING, which
@@ -1840,7 +1901,7 @@ final class Atomic_Admin
 		} elseif (isset($_POST['filters'])) {
 			$raw = \Wealcoder\AnimationAddons\AtomicWidgets\Widgets\LoopGrid\Loop_Filter_Auth::decode_payload(wp_unslash($_POST['filters'])); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- decoded + capped, then every value is authorised
 			if (null === $raw) {
-				wp_send_json_error(['message' => 'Invalid filters payload.'], 400);
+				wp_send_json_error(['message' => __('Invalid filters payload.', 'animation-addons-for-elementor')], 400);
 			}
 			// current() is the one authorisation pipeline the first render also
 			// uses, so page 2 can never be authorised on different terms than
