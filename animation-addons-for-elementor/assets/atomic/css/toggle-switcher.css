@@ -1,8 +1,9 @@
 .aae-a-toggle-switcher .aae-ts-pane:not(.show) {
   display: none;
 }
-.aae-a-toggle-switcher .aae-ts-switch.active .aae-ts-knob {
-  transform: translate(20px, -50%);
+.aae-a-toggle-switcher .aae-ts-switch.active .aae-ts-knob:not(.aae-ts-knob--pill) {
+  inset-inline-start: 100%;
+  translate: -100%;
 }
 .aae-a-toggle-switcher .aae-ts-label-before.active .aae-ts-highlight,
 .aae-a-toggle-switcher .aae-ts-label-after.active .aae-ts-highlight {
@@ -25,5 +26,6 @@
   display: none !important;
 }
 .aae-a-toggle-switcher .elementor-widget-e-aae-a-toggle-switcher-knob {
+  display: contents !important;
   position: static !important;
 }

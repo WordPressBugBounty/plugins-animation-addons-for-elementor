@@ -1275,6 +1275,20 @@ final class Atomic
 		update_option(self::V3_ADMIN_BACKFILL_OPTION_NAME, true);
 	}
 
+	/**
+	 * Does this site hold a valid PRO licence right now?
+	 *
+	 * Reads the option the Pro plugin writes rather than calling into Pro, so
+	 * this stays a plain free-plugin check that is simply false when Pro is not
+	 * installed. Same source the dashboard's own `wcf_valid` flag comes from
+	 * (aaeaddon_pro_dashboard_config() in the Pro plugin's hook.php), so the
+	 * screen and the seeder can never disagree about what 'licensed' means.
+	 */
+	private static function has_pro_licence(): bool
+	{
+		return 'valid' === get_option('wcf_addon_sl_license_status');
+	}
+
 	private function migrate_newly_offered_extensions(): void
 	{
 		$saved = get_option(self::EXTENSIONS_OPTION_NAME);
@@ -1315,10 +1329,39 @@ final class Atomic
 		$newly_offered  = array_diff($registry_slugs, $offered);
 
 		if ($newly_offered) {
+			// Read once: the loop runs over the whole registry.
+			$licensed = self::has_pro_licence();
+
 			foreach ($newly_offered as $slug) {
-				if (! empty($this->extensions_registry()[$slug]['default'])) {
-					$saved[$slug] = true;
+				$entry = $this->extensions_registry()[$slug] ?? [];
+
+				if (empty($entry['default'])) {
+					continue;
 				}
+
+				// A PRO extension is only switched on by itself for a site that has
+				// paid for it. 19 of the 29 registry entries are `is_pro` AND
+				// `default`, so without this the first boot after an update handed
+				// every unlicensed site a dashboard with the whole PRO animation and
+				// interaction set already switched on -- a licence prompt in the
+				// corner and nineteen toggles saying otherwise.
+				//
+				// Note what this does NOT do: it never switches anything OFF. A site
+				// that already has these enabled -- from a licence it used to hold,
+				// from an earlier build of this migration, or by hand -- keeps them,
+				// because tearing working features out of live pages is not a
+				// licensing check, it is a broken site.
+				//
+				// The slug is still recorded as offered below, licence or not. That
+				// is deliberate: re-offering it later would re-enable a card the user
+				// had deliberately switched off, which is the exact fault the offered
+				// list was introduced to stop. Someone who activates a licence after
+				// this ran turns the ones they want on in the dashboard.
+				if (! empty($entry['is_pro']) && ! $licensed) {
+					continue;
+				}
+
+				$saved[$slug] = true;
 			}
 
 			update_option(self::EXTENSIONS_OPTION_NAME, $saved);
@@ -3166,9 +3209,12 @@ final class Atomic
 
 		$file_path = $base . $path;
 
+		$exists = file_exists($file_path);
+
 		return $cache[$key] = [
 			'path'    => $path,
-			'version' => file_exists($file_path) ? filemtime($file_path) : AAEADDON_VERSION,
+			'exists'  => $exists,
+			'version' => $exists ? filemtime($file_path) : AAEADDON_VERSION,
 		];
 	}
 
@@ -3261,6 +3307,15 @@ JS;
 				$asset   = $this->resolve_asset_meta($widget_data, 'script');
 				$path    = $asset['path'];
 				$version = $asset['version'];
+
+				// A registry entry can point at a file this install does not
+				// have: a Pro-owned widget's entry stays in the free registry
+				// while the Pro plugin is inactive, and its assets live in Pro.
+				// Registering it anyway made every page that rendered the widget
+				// request a 404. An unregistered handle is a no-op to enqueue.
+				if ( empty( $asset['exists'] ) ) {
+					continue;
+				}
 
 				$deps = [ 'elementor-v2-frontend-handlers' ]; // Required for @elementor/frontend-handlers register API
 				if ( ! empty( $widget_data['script_deps'] ) ) {
@@ -3461,13 +3516,17 @@ JS;
 					$file_path = AAEADDON_PATH . $path;
 					$version   = file_exists( $file_path ) ? filemtime( $file_path ) : AAEADDON_VERSION;
 
-					wp_register_script(
-						$widget_data['script_handle'],
-						self::asset_url( $path ),
-						[ 'elementor-v2-frontend-handlers' ],
-						$version,
-						true
-					);
+					// Only register a file that exists here; a Pro-owned entry
+					// whose assets live in Pro would otherwise 404 in the editor.
+					if ( file_exists( $file_path ) ) {
+						wp_register_script(
+							$widget_data['script_handle'],
+							self::asset_url( $path ),
+							[ 'elementor-v2-frontend-handlers' ],
+							$version,
+							true
+						);
+					}
 				}
 
 				wp_enqueue_script( $widget_data['script_handle'] );
@@ -3510,13 +3569,16 @@ JS;
 					$style_file = AAEADDON_PATH . $style_path;
 					$style_ver  = file_exists( $style_file ) ? filemtime( $style_file ) : AAEADDON_VERSION;
 
-					wp_register_style(
-						$widget_data['style_handle'],
-						self::asset_url( $style_path ),
-						[],
-						$style_ver
-					);
-					self::add_style_rtl( $widget_data['style_handle'], $style_path );
+					// Same guard as the script above: no file here, no handle.
+					if ( file_exists( $style_file ) ) {
+						wp_register_style(
+							$widget_data['style_handle'],
+							self::asset_url( $style_path ),
+							[],
+							$style_ver
+						);
+						self::add_style_rtl( $widget_data['style_handle'], $style_path );
+					}
 				}
 
 				wp_enqueue_style( $widget_data['style_handle'] );
@@ -3534,6 +3596,13 @@ JS;
 				$asset   = $this->resolve_asset_meta($widget_data, 'style');
 				$path    = $asset['path'];
 				$version = $asset['version'];
+
+				// See register_atomic_scripts(): never register a stylesheet that
+				// is not on disk, or enqueueing it is a guaranteed 404.
+				if ( empty( $asset['exists'] ) ) {
+					continue;
+				}
+
 				wp_register_style(
 					$widget_data['style_handle'],
 					self::asset_url($path, self::widget_base_url($widget_data)),
