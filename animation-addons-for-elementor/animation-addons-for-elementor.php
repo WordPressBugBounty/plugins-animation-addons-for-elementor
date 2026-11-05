@@ -3,7 +3,7 @@
  * Plugin Name:                Animation Addons
  * Description:                Animation Addons for Elementor comes with GSAP Animation Builder, Customizable Widgets, Header Footer, Single Post, Archive Page Builder, and more.
  * Plugin URI:                 https://animation-addons.com/
- * Version:                    4.2.9
+ * Version:                    4.2.10
  * Author:                     Wealcoder
  * Author URI:                 https://animation-addons.com/
  * License:                    GPL v2 or later
@@ -13,14 +13,13 @@
  * Requires at least: 		   6.6
  * Requires PHP:               7.4
  * Requires Plugins:           elementor
- * Elementor tested up to:     4.2.4
- * Elementor Pro tested up to: 4.2.3
+ * Elementor tested up to:     4.3.6
+ * Elementor Pro tested up to: 4.3.3
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 } // Exit if accessed directly
-
 
 
 if ( ! function_exists( 'aaeaddon_define' ) ) :
@@ -98,7 +97,7 @@ aaeaddon_define( 'AAEADDON_DASHBOARD_V2', true, 'WCF_ADDONS_DASHBOARD_V2' );
 /**
  * Plugin Version.
  */
-aaeaddon_define( 'AAEADDON_VERSION', '4.2.9', 'WCF_ADDONS_VERSION' );
+aaeaddon_define( 'AAEADDON_VERSION', '4.2.10', 'WCF_ADDONS_VERSION' );
 
 /**
  * Plugin File Ref.
