@@ -397,5 +397,3 @@
 })(jQuery);
 
 
-
-//# sourceMappingURL=editor.js.map

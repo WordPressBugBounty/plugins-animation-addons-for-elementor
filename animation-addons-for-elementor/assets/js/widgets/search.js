@@ -266,5 +266,3 @@
         );
     });
 })(jQuery);
-
-//# sourceMappingURL=search.js.map

@@ -291,5 +291,3 @@
     });
 
 })(jQuery);
-
-//# sourceMappingURL=image-gallery.js.map
